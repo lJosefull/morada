@@ -1,82 +1,112 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import apiClient from '../lib/api';
+import { api, ApiError } from '@/lib/api';
 
 interface User {
   id: string;
   email: string;
+  name: string;
   role: string;
-  name?: string;
+}
+
+interface AuthResponse {
+  user: User;
+  accessToken: string;
+  refreshToken: string;
+  token?: string; // Alternative field name for access token
 }
 
 interface AuthState {
-  token: string | null;
   user: User | null;
+  isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  isAuthenticated: boolean;
-  
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name?: string) => Promise<void>;
+  register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
   clearError: () => void;
-  fetchProfile: () => Promise<void>;
+  checkAuth: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      token: null,
       user: null,
+      isAuthenticated: false,
       isLoading: false,
       error: null,
-      isAuthenticated: false,
 
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await apiClient.post<{
-            accessToken: string;
-            user: User;
-          }>('/auth/login', { email, password });
-          
+          const response = await api.post<AuthResponse>('/auth/login', { email, password });
+
+          // Handle both response formats for backend compatibility
+          const accessToken = response.accessToken || response.token || '';
+          const refreshToken = response.refreshToken || '';
+          const user = response.user;
+
+          if (!accessToken || !refreshToken || !user) {
+            throw new Error('Invalid response from server: missing authentication data');
+          }
+
+          api.setAuthData(accessToken, refreshToken, user);
           set({
-            token: response.accessToken,
-            user: response.user,
+            user,
             isAuthenticated: true,
             isLoading: false,
+            error: null,
           });
-        } catch (error) {
-          const message = error instanceof Error ? error.message : 'Login failed';
-          set({ error: message, isLoading: false });
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error 
+            ? error.message 
+            : (error as ApiError)?.message || 'Login failed. Please check your credentials.';
+          
+          set({
+            isLoading: false,
+            error: errorMessage,
+          });
           throw error;
         }
       },
 
-      register: async (email: string, password: string, name?: string) => {
+      register: async (email: string, password: string, name: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await apiClient.post<{
-            accessToken: string;
-            user: User;
-          }>('/auth/register', { email, password, name });
-          
+          const response = await api.post<AuthResponse>('/auth/register', { email, password, name });
+
+          // Handle both response formats for backend compatibility
+          const accessToken = response.accessToken || response.token || '';
+          const refreshToken = response.refreshToken || '';
+          const user = response.user;
+
+          if (!accessToken || !refreshToken || !user) {
+            throw new Error('Invalid response from server: missing authentication data');
+          }
+
+          api.setAuthData(accessToken, refreshToken, user);
           set({
-            token: response.accessToken,
-            user: response.user,
+            user,
             isAuthenticated: true,
             isLoading: false,
+            error: null,
           });
-        } catch (error) {
-          const message = error instanceof Error ? error.message : 'Registration failed';
-          set({ error: message, isLoading: false });
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error 
+            ? error.message 
+            : (error as ApiError)?.message || 'Registration failed. Please try again.';
+          
+          set({
+            isLoading: false,
+            error: errorMessage,
+          });
           throw error;
         }
       },
 
       logout: () => {
+        api.logout();
         set({
-          token: null,
           user: null,
           isAuthenticated: false,
           error: null,
@@ -87,22 +117,52 @@ export const useAuthStore = create<AuthState>()(
         set({ error: null });
       },
 
-      fetchProfile: async () => {
+      checkAuth: async () => {
+        const { user } = get();
+        if (!user) {
+          set({ isAuthenticated: false });
+          return;
+        }
+
         try {
-          const user = await apiClient.get<User>('/auth/profile');
-          set({ user, isAuthenticated: true });
-        } catch (error) {
-          set({ user: null, isAuthenticated: false, token: null });
+          const token = localStorage.getItem('accessToken');
+          if (!token) {
+            set({ user: null, isAuthenticated: false });
+            return;
+          }
+
+          // Verify token is still valid by fetching user profile
+          // Handle both response formats: direct User object or wrapped response
+          const response = await api.get<unknown>('/auth/profile');
+          
+          let userData: User;
+          if (typeof response === 'object' && response !== null && 'user' in (response as Record<string, unknown>)) {
+            // Response is wrapped: { user: User }
+            userData = (response as { user: User }).user;
+          } else {
+            // Response is the User object directly
+            userData = response as User;
+          }
+
+          if (userData && userData.id) {
+            set({ user: userData, isAuthenticated: true });
+          } else {
+            throw new Error('Invalid user data');
+          }
+        } catch {
+          set({ user: null, isAuthenticated: false });
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
         }
       },
     }),
     {
       name: 'auth-storage',
       partialize: (state) => ({
-        token: state.token,
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
-    }
-  )
+    },
+  ),
 );

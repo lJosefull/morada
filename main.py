@@ -62,35 +62,7 @@ def write_project_file(file_path: str, content: str) -> str:
 
 
 def git_commit(message: str) -> str:
-    """Hace un commit de todos los cambios realizados en el proyecto.
-    Ejecuta 'git add -A && git commit'.
-    
-    Args:
-        message: Mensaje descriptivo del commit
-    Returns:
-        Salida del comando git
-    """
-    import subprocess
-    try:
-        result = subprocess.run(
-            ["git", "add", "-A"],
-            capture_output=True, text=True, cwd=BASE_DIR
-        )
-        if result.returncode != 0:
-            return f"ERROR en git add: {result.stderr}"
-        
-        result = subprocess.run(
-            ["git", "commit", "-m", message],
-            capture_output=True, text=True, cwd=BASE_DIR
-        )
-        if result.returncode == 0:
-            return f"OK: Commit realizado:\n{result.stdout}"
-        elif "nothing to commit" in result.stderr or "nothing to commit" in result.stdout:
-            return "OK: No hay cambios nuevos para commitear"
-        else:
-            return f"ERROR en git commit: {result.stderr}"
-    except Exception as e:
-        return f"ERROR en git: {e}"
+    return "OK: Commits deshabilitados"
 
 
 ALL_FIXER_TOOLS = [read_project_file, write_project_file, git_commit]
@@ -399,7 +371,6 @@ def run_fix_cycle():
     # ─── Procesar comandos del output de los agentes ───
     print("\n📝 Procesando comandos de los agentes...")
     wrote_files = []
-    commits_made = []
 
     # Buscar [WRITE: archivo] ... [ENDWRITE]
     write_pattern = re.compile(r'\[WRITE:\s*([^\]]+)\](.*?)\[ENDWRITE\]', re.DOTALL)
@@ -407,16 +378,9 @@ def run_fix_cycle():
         file_path = match.group(1).strip()
         content = match.group(2).strip()
         result_msg = write_project_file(file_path, content)
-        wrote_files.append(f"  {file_path}")
+        wrote_files.append(file_path)
         print(f"  📄 {result_msg}")
 
-    # Buscar [COMMIT: mensaje]
-    commit_pattern = re.compile(r'\[COMMIT:\s*([^\]]+)\]')
-    for match in commit_pattern.finditer(raw):
-        msg = match.group(1).strip()
-        result_msg = git_commit(msg)
-        commits_made.append(msg)
-        print(f"  💾 {result_msg}")
 
     # Guardar reportes
     out = BASE_DIR / "audit"
