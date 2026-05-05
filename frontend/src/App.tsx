@@ -1,30 +1,43 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import { useAuthStore } from './store/auth'
-import Layout from './components/Layout'
-import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
-import DashboardPage from './pages/DashboardPage'
-import PropertiesPage from './pages/PropertiesPage'
-import CreatePropertyPage from './pages/CreatePropertyPage'
-import PropertyDetailPage from './pages/PropertyDetailPage'
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import ErrorBoundary from './components/ErrorBoundary';
+import LoadingSpinner from './components/LoadingSpinner';
+import ProtectedRoute from './components/ProtectedRoute';
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const token = useAuthStore((s) => s.accessToken)
-  if (!token) return <Navigate to="/login" replace />
-  return <>{children}</>
-}
+// Lazy load pages for better performance
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 
-export default function App() {
+const PageLoader: React.FC = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <LoadingSpinner size="lg" message="Loading page..." />
+  </div>
+);
+
+const App: React.FC = () => {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-        <Route index element={<DashboardPage />} />
-        <Route path="propiedades" element={<PropertiesPage />} />
-        <Route path="propiedades/nueva" element={<CreatePropertyPage />} />
-        <Route path="propiedades/:id" element={<PropertyDetailPage />} />
-      </Route>
-    </Routes>
-  )
-}
+    <ErrorBoundary>
+      <Router>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Suspense>
+      </Router>
+    </ErrorBoundary>
+  );
+};
+
+export default App;
