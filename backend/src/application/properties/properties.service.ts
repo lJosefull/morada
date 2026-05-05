@@ -1,22 +1,25 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import {
-  IPropertyRepository,
-  PROPERTY_REPOSITORY,
-  PropertyFilters,
-} from '../../domain/properties/property.repository';
-import { IProperty, CreatePropertyInput, UpdatePropertyInput } from '../../domain/properties/property.entity';
-import { IAiService, AI_SERVICE } from '../../domain/ai/ai.types';
+```typescript
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { PropertyRepository } from '../../domain/properties/property.repository';
+import { CreatePropertyDto, UpdatePropertyDto, PropertyQueryDto } from '../../interfaces/properties/properties.dto';
 
 @Injectable()
 export class PropertiesService {
-  constructor(
-    @Inject(PROPERTY_REPOSITORY)
-    private readonly propertyRepository: IPropertyRepository,
-    @Inject(AI_SERVICE)
-    private readonly aiService: IAiService,
-  ) {}
+  constructor(private readonly propertyRepository: PropertyRepository) {}
 
-  async findById(id: string): Promise<IProperty> {
+  async findAll(query: PropertyQueryDto) {
+    const { page = 1, limit = 20, ...filters } = query;
+    const skip = (page - 1) * limit;
+    
+    return this.propertyRepository.findAll({
+      skip,
+      take: limit,
+      where: this.buildWhereClause(filters),
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findOne(id: string) {
     const property = await this.propertyRepository.findById(id);
     if (!property) {
       throw new NotFoundException('Property not found');
@@ -24,69 +27,86 @@ export class PropertiesService {
     return property;
   }
 
-  async findMany(
-    filters: PropertyFilters,
-    page: number = 1,
-    limit: number = 20,
-  ): Promise<{ data: IProperty[]; total: number; page: number; limit: number }> {
-    const skip = (page - 1) * limit;
-    const [data, total] = await this.propertyRepository.findMany(filters, skip, limit);
-    return { data, total, page, limit };
-  }
-
-  async create(input: CreatePropertyInput, userId: string): Promise<IProperty> {
-    const property = await this.propertyRepository.create({ ...input, userId });
-
-    this.enrichWithAi(property.id, input).catch((err) => {
-      console.error('AI enrichment failed:', err);
+  async create(createPropertyDto: CreatePropertyDto, userId: string, files?: Express.Multer.File[]) {
+    const property = await this.propertyRepository.create({
+      ...createPropertyDto,
+      ownerId: userId,
     });
+
+    // If files are provided, upload them
+    if (files && files.length > 0) {
+      // Handle file uploads here
+      // This would typically involve uploading to a cloud storage service
+    }
 
     return property;
   }
 
-  async update(id: string, input: UpdatePropertyInput, userId: string): Promise<IProperty> {
-    const property = await this.findById(id);
-    if (property.userId !== userId) {
+  async update(id: string, updatePropertyDto: UpdatePropertyDto, userId: string) {
+    const property = await this.propertyRepository.findById(id);
+    if (!property) {
       throw new NotFoundException('Property not found');
     }
-    return this.propertyRepository.update(id, input);
+
+    if (property.ownerId !== userId) {
+      throw new ForbiddenException('You can only update your own properties');
+    }
+
+    return this.propertyRepository.update(id, updatePropertyDto);
   }
 
-  async delete(id: string, userId: string): Promise<void> {
-    const property = await this.findById(id);
-    if (property.userId !== userId) {
+  async remove(id: string, userId: string) {
+    const property = await this.propertyRepository.findById(id);
+    if (!property) {
       throw new NotFoundException('Property not found');
     }
-    await this.propertyRepository.delete(id);
+
+    if (property.ownerId !== userId) {
+      throw new ForbiddenException('You can only delete your own properties');
+    }
+
+    return this.propertyRepository.delete(id);
   }
 
-  private async enrichWithAi(propertyId: string, input: CreatePropertyInput): Promise<void> {
-    try {
-      await this.propertyRepository.update(propertyId, { aiStatus: 'processing' as any });
+  private buildWhereClause(filters: Partial<PropertyQueryDto>) {
+    const where: any = {};
 
-      const result = await this.aiService.enhanceProperty({
-        title: input.title,
-        description: input.description,
-        price: input.price,
-        currency: input.currency || 'CLP',
-        propertyType: input.propertyType,
-        listingType: input.listingType,
-        bedrooms: input.bedrooms ?? null,
-        bathrooms: input.bathrooms ?? null,
-        surface: input.surface ?? null,
-        location: input.location,
-      });
-
-      await this.propertyRepository.update(propertyId, {
-        aiTitle: result.optimizedTitle,
-        aiDescription: result.improvedDescription,
-        aiStatus: 'completed',
-      });
-    } catch (error) {
-      await this.propertyRepository.update(propertyId, {
-        aiStatus: 'failed' as any,
-      });
-      throw error;
+    if (filters.search) {
+      where.OR = [
+        { title: { contains: filters.search, mode: 'insensitive' } },
+        { description: { contains: filters.search, mode: 'insensitive' } },
+        { address: { contains: filters.search, mode: 'insensitive' } },
+        { city: { contains: filters.search, mode: 'insensitive' } },
+      ];
     }
+
+    if (filters.status) {
+      where.status = filters.status;
+    }
+
+    if (filters.type) {
+      where.type = filters.type;
+    }
+
+    if (filters.city) {
+      where.city = { contains: filters.city, mode: 'insensitive' };
+    }
+
+    if (filters.minPrice || filters.maxPrice) {
+      where.price = {};
+      if (filters.minPrice) where.price.gte = filters.minPrice;
+      if (filters.maxPrice) where.price.lte = filters.maxPrice;
+    }
+
+    if (filters.minBedrooms) {
+      where.bedrooms = { gte: filters.minBedrooms };
+    }
+
+    if (filters.minBathrooms) {
+      where.bathrooms = { gte: filters.minBathrooms };
+    }
+
+    return where;
   }
 }
+```

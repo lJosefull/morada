@@ -1,3 +1,4 @@
+```typescript
 import {
   Controller,
   Get,
@@ -7,62 +8,70 @@ import {
   Body,
   Param,
   Query,
+  UseGuards,
   Req,
-  HttpCode,
-  HttpStatus,
+  UseInterceptors,
+  UploadedFiles,
+  BadRequestException,
 } from '@nestjs/common';
-import { Request } from 'express';
 import { PropertiesService } from '../../application/properties/properties.service';
-import { CreatePropertyDto, UpdatePropertyDto, QueryPropertiesDto } from './properties.dto';
+import { CreatePropertyDto, UpdatePropertyDto, PropertyQueryDto } from './properties.dto';
+import { JwtAuthGuard } from '../../infrastructure/auth/jwt-auth.guard';
 import { Public } from '../../infrastructure/auth/public.decorator';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagger';
 
+@ApiTags('properties')
 @Controller('properties')
 export class PropertiesController {
   constructor(private readonly propertiesService: PropertiesService) {}
 
   @Public()
   @Get()
-  async findAll(@Query() query: QueryPropertiesDto) {
-    return this.propertiesService.findMany(
-      {
-        propertyType: query.propertyType,
-        listingType: query.listingType,
-        minPrice: query.minPrice,
-        maxPrice: query.maxPrice,
-        bedrooms: query.bedrooms,
-        location: query.location,
-      },
-      query.page || 1,
-      Math.min(query.limit || 20, 100),
-    );
+  @ApiOperation({ summary: 'Get all properties with filters' })
+  async findAll(@Query() query: PropertyQueryDto) {
+    return this.propertiesService.findAll(query);
   }
 
   @Public()
   @Get(':id')
+  @ApiOperation({ summary: 'Get property by ID' })
   async findOne(@Param('id') id: string) {
-    return this.propertiesService.findById(id);
+    return this.propertiesService.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  async create(@Body() dto: CreatePropertyDto, @Req() req: Request) {
-    const userId = (req as any).user.id;
-    return this.propertiesService.create(dto as any, userId);
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create a new property' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor('images', 10))
+  async create(
+    @Body() createPropertyDto: CreatePropertyDto,
+    @UploadedFiles() files: Express.Multer.File[],
+    @Req() req: any,
+  ) {
+    return this.propertiesService.create(createPropertyDto, req.user.id, files);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update a property' })
   async update(
     @Param('id') id: string,
-    @Body() dto: UpdatePropertyDto,
-    @Req() req: Request,
+    @Body() updatePropertyDto: UpdatePropertyDto,
+    @Req() req: any,
   ) {
-    const userId = (req as any).user.id;
-    return this.propertiesService.update(id, dto as any, userId);
+    return this.propertiesService.update(id, updatePropertyDto, req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id') id: string, @Req() req: Request) {
-    const userId = (req as any).user.id;
-    await this.propertiesService.delete(id, userId);
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a property' })
+  async remove(@Param('id') id: string, @Req() req: any) {
+    return this.propertiesService.remove(id, req.user.id);
   }
 }
+```

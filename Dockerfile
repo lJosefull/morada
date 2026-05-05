@@ -1,5 +1,8 @@
 FROM python:3.11-slim
 
+# Instalar git para que los agentes puedan hacer commits
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 RUN pip install --no-cache-dir \
@@ -10,5 +13,9 @@ RUN pip install --no-cache-dir \
     python-multipart==0.0.6
 
 COPY . .
+
+# Configurar git para que los commits funcionen
+RUN git config --global user.email "agents@inmobiliaria.ai" && \
+    git config --global user.name "InmobiliarIA Fixer Agent"
 
 CMD ["python", "main.py"]

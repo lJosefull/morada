@@ -1,3 +1,4 @@
+```prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,57 +8,74 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String     @id @default(uuid())
-  email         String     @unique
-  passwordHash  String
-  name          String
-  phone         String?
-  role          String     @default("user") // user | admin
-  refreshToken  String?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+enum UserRole {
+  USER
+  ADMIN
+  AGENT
+}
 
-  properties    Property[]
+enum PropertyType {
+  HOUSE
+  APARTMENT
+  CONDO
+  LAND
+  COMMERCIAL
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  PENDING
+  SOLD
+  RENTED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  properties Property[]
+  images     Image[]
 }
 
 model Property {
-  id            String   @id @default(uuid())
+  id            String         @id @default(uuid())
   title         String
   description   String
   price         Float
-  currency      String   @default("CLP")
-  propertyType  String   // house | apartment | land | commercial
-  listingType   String   // sale | rent
-  bedrooms      Int?
-  bathrooms     Int?
-  surface       Float?
-  surfaceUnit   String   @default("m²")
-  location      String
-  latitude      Float?
-  longitude     Float?
-  isActive      Boolean  @default(true)
-  aiTitle       String?
-  aiDescription String?
-  aiStatus      String   @default("pending") // pending | processing | completed | failed
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  type          PropertyType
+  status        PropertyStatus @default(AVAILABLE)
+  address       String
+  city          String
+  state         String
+  zipCode       String
+  squareFootage Float
+  bedrooms      Int
+  bathrooms     Int
+  amenities     String[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
-  userId        String
-  user          User     @relation(fields: [userId], references: [id])
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id])
 
-  images        Image[]
+  images Image[]
 }
 
 model Image {
-  id          String   @id @default(uuid())
-  url         String
-  filename    String
-  mimetype    String
-  size        Int
-  isPrimary   Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  url       String
+  publicId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  propertyId  String
-  property    Property @relation(fields: [propertyId], references: [id])
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id])
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id])
 }
+```

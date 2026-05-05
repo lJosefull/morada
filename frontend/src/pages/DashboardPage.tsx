@@ -1,119 +1,129 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Building2, Plus, Sparkles } from 'lucide-react'
-import api from '../lib/api'
-import type { Property } from '../types'
+import { useEffect, useState } from 'react';
+import { useAuthStore } from '../stores/authStore';
+import { api } from '../lib/api';
+import { ErrorBoundary } from '../components/ErrorBoundary';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
-export default function DashboardPage() {
-  const [properties, setProperties] = useState<Property[]>([])
-  const [stats, setStats] = useState({ total: 0, active: 0, pendingAI: 0 })
+interface DashboardData {
+  totalProperties: number;
+  activeListings: number;
+  recentActivity: Array<{
+    id: string;
+    type: string;
+    message: string;
+    timestamp: string;
+  }>;
+}
+
+export function DashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { user, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    api.get('/properties', { params: { limit: 5 } }).then(({ data }) => {
-      setProperties(data.data || [])
-    })
-    api.get('/properties', { params: { limit: 1 } }).then(({ data }) => {
-      setStats((s) => ({ ...s, total: data.total || 0 }))
-    })
-  }, [])
+    let isMounted = true;
+
+    async function fetchDashboardData() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        // FIX: Changed from /api/v1/dashboard to /dashboard to match backend routes
+        const response = await api.get<DashboardData>('/dashboard');
+        
+        if (isMounted) {
+          setData(response.data);
+        }
+      } catch (err) {
+        if (isMounted) {
+          // FIX: Properly extract error message from API error response
+          const errorMessage = err instanceof Error 
+            ? (err as any).message || 'Failed to load dashboard data'
+            : 'Failed to load dashboard data';
+          setError(errorMessage);
+          console.error('Dashboard fetch error:', err);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    if (isAuthenticated && user) {
+      fetchDashboardData();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, user]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="large" message="Loading dashboard..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <ErrorBoundary>
+        <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
+          <h3 className="text-lg font-semibold text-red-800">Error Loading Dashboard</h3>
+          <p className="mt-2 text-red-600">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </ErrorBoundary>
+    );
+  }
+
+  if (!data) {
+    return null;
+  }
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <Link
-          to="/propiedades/nueva"
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Nueva Propiedad
-        </Link>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <Building2 className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total Propiedades</p>
-              <p className="text-2xl font-bold">{stats.total}</p>
-            </div>
-          </div>
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-lg font-semibold text-gray-700">Total Properties</h2>
+          <p className="text-3xl font-bold text-blue-600 mt-2">{data.totalProperties}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-green-50 rounded-lg">
-              <Sparkles className="w-6 h-6 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Con IA Completa</p>
-              <p className="text-2xl font-bold">{stats.active}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-yellow-50 rounded-lg">
-              <Sparkles className="w-6 h-6 text-yellow-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">IA Pendiente</p>
-              <p className="text-2xl font-bold">{stats.pendingAI}</p>
-            </div>
-          </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-lg font-semibold text-gray-700">Active Listings</h2>
+          <p className="text-3xl font-bold text-green-600 mt-2">{data.activeListings}</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-lg font-semibold">Últimas Propiedades</h2>
-        </div>
-        <div className="divide-y divide-gray-100">
-          {properties.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">
-              No hay propiedades aún. ¡Publica tu primera propiedad!
-            </div>
-          ) : (
-            properties.map((p) => (
-              <Link
-                key={p.id}
-                to={`/propiedades/${p.id}`}
-                className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
-              >
+      <div className="bg-white p-6 rounded-lg shadow">
+        <h2 className="text-lg font-semibold text-gray-700 mb-4">Recent Activity</h2>
+        {data.recentActivity.length === 0 ? (
+          <p className="text-gray-500">No recent activity</p>
+        ) : (
+          <ul className="space-y-3">
+            {data.recentActivity.map((activity) => (
+              <li key={activity.id} className="flex items-start space-x-3">
+                <div className="flex-shrink-0 w-2 h-2 mt-2 bg-blue-400 rounded-full" />
                 <div>
-                  <p className="font-medium">{p.aiTitle || p.title}</p>
-                  <p className="text-sm text-gray-500">
-                    {p.location} · {p.listingType === 'sale' ? 'Venta' : 'Arriendo'}
+                  <p className="text-sm text-gray-600">{activity.message}</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {new Date(activity.timestamp).toLocaleString()}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="font-semibold text-blue-600">
-                    ${p.price.toLocaleString('es-CL')}
-                  </p>
-                  <p className={`text-xs ${
-                    p.aiStatus === 'completed' ? 'text-green-600' :
-                    p.aiStatus === 'processing' ? 'text-yellow-600' : 'text-gray-400'
-                  }`}>
-                    IA: {p.aiStatus === 'completed' ? 'Completa' :
-                          p.aiStatus === 'processing' ? 'Procesando...' :
-                          p.aiStatus === 'pending' ? 'Pendiente' : 'Falló'}
-                  </p>
-                </div>
-              </Link>
-            ))
-          )}
-          {properties.length > 0 && (
-            <Link
-              to="/propiedades"
-              className="block p-4 text-center text-blue-600 hover:bg-blue-50 font-medium text-sm"
-            >
-              Ver todas las propiedades
-            </Link>
-          )}
-        </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
-  )
+  );
 }

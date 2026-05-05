@@ -1,31 +1,60 @@
+```typescript
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './infrastructure/database/prisma.module';
-import { AuthInfrastructureModule } from './infrastructure/auth/auth.module';
-import { AiInfrastructureModule } from './infrastructure/ai/ai.module';
+import { AuthModule } from './infrastructure/auth/auth.module';
+import { AuthController } from './interfaces/auth/auth.controller';
+import { AuthService } from './application/auth/auth.service';
+import { PropertiesController } from './interfaces/properties/properties.controller';
+import { PropertiesService } from './application/properties/properties.service';
+import { ImagesController } from './interfaces/images/images.controller';
+import { ImagesService } from './application/images/images.service';
+import { UsersController } from './interfaces/users/users.controller';
+import { UsersService } from './application/users/users.service';
+import { AiModule } from './infrastructure/ai/ai.module';
 import { ServeStaticModule } from './infrastructure/upload/serve-static.module';
-import { AuthModule } from './interfaces/auth/auth.module';
-import { UserModule } from './interfaces/users/users.module';
-import { PropertiesModule } from './interfaces/properties/properties.module';
-import { ImagesModule } from './interfaces/images/images.module';
-import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
+import { UserRepository } from './domain/users/user.repository';
+import { PropertyRepository } from './domain/properties/property.repository';
+import { ImageRepository } from './domain/images/image.repository';
+import { PrismaUserRepository } from './infrastructure/database/prisma-user.repository';
+import { PrismaPropertyRepository } from './infrastructure/database/prisma-property.repository';
+import { PrismaImageRepository } from './infrastructure/database/prisma-image.repository';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
     PrismaModule,
-    AuthInfrastructureModule,
-    AiInfrastructureModule,
-    ServeStaticModule,
     AuthModule,
-    UserModule,
-    PropertiesModule,
-    ImagesModule,
+    AiModule,
+    ServeStaticModule,
+  ],
+  controllers: [
+    AuthController,
+    PropertiesController,
+    ImagesController,
+    UsersController,
   ],
   providers: [
+    AuthService,
+    PropertiesService,
+    ImagesService,
+    UsersService,
     {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
+      provide: UserRepository,
+      useClass: PrismaUserRepository,
+    },
+    {
+      provide: PropertyRepository,
+      useClass: PrismaPropertyRepository,
+    },
+    {
+      provide: ImageRepository,
+      useClass: PrismaImageRepository,
     },
   ],
 })
 export class AppModule {}
+```
