@@ -1,133 +1,106 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { api } from '../lib/api';
+import { persist } from 'zustand/middleware';
+import apiClient from '../lib/api';
 
 interface User {
   id: string;
   email: string;
   name: string;
-  role: 'USER' | 'ADMIN' | 'AGENT';
+  role: string;
 }
 
 interface AuthState {
   user: User | null;
-  token: string | null;
-  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
   
-  // Actions
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
-  logout: () => void;
-  setToken: (token: string) => void;
+  register: (name: string, email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
   clearError: () => void;
+  setUser: (user: User | null) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
-      token: null,
-      refreshToken: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
 
       login: async (email: string, password: string) => {
+        set({ isLoading: true, error: null });
         try {
-          set({ isLoading: true, error: null });
-          
-          const response = await api.post<{
-            token: string;
-            refreshToken: string;
-            user: User;
-          }>('/auth/login', { email, password });
-          
-          const { token, refreshToken, user } = response.data;
-          
+          const response = await apiClient.login(email, password);
           set({
-            user,
-            token,
-            refreshToken,
+            user: response.user,
             isAuthenticated: true,
             isLoading: false,
             error: null,
           });
         } catch (error: any) {
-          const errorMessage = error?.message || 'Login failed. Please check your credentials.';
           set({
             isLoading: false,
-            error: errorMessage,
+            error: error.message || 'Login failed. Please try again.',
             isAuthenticated: false,
+            user: null,
           });
-          throw new Error(errorMessage);
+          throw error;
         }
       },
 
-      register: async (email: string, password: string, name: string) => {
+      register: async (name: string, email: string, password: string) => {
+        set({ isLoading: true, error: null });
         try {
-          set({ isLoading: true, error: null });
-          
-          const response = await api.post<{
-            token: string;
-            refreshToken: string;
-            user: User;
-          }>('/auth/register', { email, password, name });
-          
-          const { token, refreshToken, user } = response.data;
-          
+          const response = await apiClient.register(name, email, password);
           set({
-            user,
-            token,
-            refreshToken,
+            user: response.user,
             isAuthenticated: true,
             isLoading: false,
             error: null,
           });
         } catch (error: any) {
-          const errorMessage = error?.message || 'Registration failed. Please try again.';
           set({
             isLoading: false,
-            error: errorMessage,
+            error: error.message || 'Registration failed. Please try again.',
             isAuthenticated: false,
+            user: null,
           });
-          throw new Error(errorMessage);
+          throw error;
         }
       },
 
-      logout: () => {
+      logout: async () => {
+        set({ isLoading: true });
+        try {
+          await apiClient.logout();
+        } catch {
+          // Clear local state even if API call fails
+        } finally {
+          set({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+            error: null,
+          });
+        }
+      },
+
+      clearError: () => set({ error: null }),
+
+      setUser: (user: User | null) => {
         set({
-          user: null,
-          token: null,
-          refreshToken: null,
-          isAuthenticated: false,
-          isLoading: false,
-          error: null,
+          user,
+          isAuthenticated: !!user,
         });
-        
-        // Clear persisted storage
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('auth-storage');
-        }
-      },
-
-      setToken: (token: string) => {
-        set({ token });
-      },
-
-      clearError: () => {
-        set({ error: null });
       },
     }),
     {
       name: 'auth-storage',
-      storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         user: state.user,
-        token: state.token,
-        refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
     }
