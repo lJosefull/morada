@@ -1,198 +1,205 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { api } from '../lib/api';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { PropertyCard } from '../components/PropertyCard';
-import { toast } from 'react-hot-toast';
+import type { Property } from '../types/property';
 
-interface Property {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  location: string;
-  images: string[];
-  status: string;
-  createdAt: string;
+interface DashboardState {
+  properties: Property[];
+  isLoading: boolean;
+  error: string | null;
+  stats: {
+    totalProperties: number;
+    availableProperties: number;
+    soldProperties: number;
+  };
 }
 
-interface PaginationMeta {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-const DashboardPage = () => {
-  const { user, token, logout } = useAuthStore();
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [meta, setMeta] = useState<PaginationMeta>({ total: 0, page: 1, limit: 10, totalPages: 0 });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-
-  const fetchProperties = useCallback(async () => {
-    if (!token) {
-      setError('Authentication required');
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      // FIX: Use relative path since api.ts already has baseURL
-      const response = await api.get('/v1/properties', {
-        params: { page, limit: 10 },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      // FIX: Handle both response formats (data.data or data)
-      const responseData = response.data?.data || response.data;
-      if (responseData && responseData.data) {
-        setProperties(responseData.data);
-        setMeta(responseData.meta || { total: 0, page: 1, limit: 10, totalPages: 0 });
-      } else if (Array.isArray(responseData)) {
-        setProperties(responseData);
-        setMeta({ total: responseData.length, page: 1, limit: responseData.length, totalPages: 1 });
-      } else {
-        throw new Error('Invalid response format');
-      }
-    } catch (err: any) {
-      // FIX: Handle 401 specifically
-      if (err.response?.status === 401) {
-        logout();
-        window.location.href = '/login';
-        return;
-      }
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch properties';
-      setError(errorMessage);
-      toast.error(errorMessage);
-      console.error('Dashboard fetch error:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [token, page, logout]);
+export function DashboardPage() {
+  const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAuthStore();
+  const [state, setState] = useState<DashboardState>({
+    properties: [],
+    isLoading: true,
+    error: null,
+    stats: {
+      totalProperties: 0,
+      availableProperties: 0,
+      soldProperties: 0,
+    },
+  });
 
   useEffect(() => {
-    fetchProperties();
-  }, [fetchProperties]);
+    if (!isAuthenticated) {
+      navigate('/login', { replace: true });
+      return;
+    }
+    fetchDashboardData();
+  }, [isAuthenticated, navigate]);
 
-  const handleDelete = async (propertyId: string) => {
+  const fetchDashboardData = async () => {
     try {
-      // FIX: Use relative path
-      await api.delete(`/v1/properties/${propertyId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
+      const [propertiesResponse] = await Promise.all([
+        api.get<Property[]>('/properties', {
+          params: { ownerId: user?.id }
+        }),
+      ]);
+
+      const properties = propertiesResponse.data;
+      const stats = {
+        totalProperties: properties.length,
+        availableProperties: properties.filter(p => p.status === 'AVAILABLE').length,
+        soldProperties: properties.filter(p => p.status === 'SOLD').length,
+      };
+
+      setState({
+        properties,
+        isLoading: false,
+        error: null,
+        stats,
       });
-      setProperties((prev) => prev.filter((p) => p.id !== propertyId));
-      toast.success('Property deleted successfully');
-    } catch (err: any) {
-      // FIX: Handle 401 specifically
-      if (err.response?.status === 401) {
-        logout();
-        window.location.href = '/login';
-        return;
-      }
-      const errorMessage = err.response?.data?.message || 'Failed to delete property';
-      toast.error(errorMessage);
-      console.error('Delete error:', err);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load dashboard data';
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: errorMessage,
+      }));
+      
+      // Log error for debugging
+      console.error('Dashboard fetch error:', error);
     }
   };
 
-  if (loading) {
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
+
+  if (state.isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner size="lg" />
+        <LoadingSpinner size="large" />
       </div>
     );
   }
 
-  if (error) {
+  if (state.error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md w-full text-center">
-          <h2 className="text-xl font-semibold text-red-700 mb-2">Error Loading Dashboard</h2>
-          <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={() => fetchProperties()}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-          >
-            Retry
-          </button>
+      <ErrorBoundary>
+        <div className="flex flex-col items-center justify-center min-h-screen p-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-red-800 text-lg font-semibold mb-2">Error Loading Dashboard</h2>
+            <p className="text-red-600 mb-4">{state.error}</p>
+            <button
+              onClick={fetchDashboardData}
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
         </div>
-      </div>
+      </ErrorBoundary>
     );
   }
 
   return (
-    <ErrorBoundary fallback={<div className="p-4 text-red-600">Something went wrong with the dashboard.</div>}>
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600 mt-1">
-              Welcome back, {user?.name || 'User'}
-            </p>
-          </div>
-          <div className="text-sm text-gray-500">
-            Total Properties: {meta.total}
-          </div>
-        </div>
-
-        {properties.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No properties found</h3>
-            <p className="text-gray-500">Get started by adding your first property.</p>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {properties.map((property) => (
-                <PropertyCard
-                  key={property.id}
-                  property={property}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </div>
-
-            {meta.totalPages > 1 && (
-              <div className="flex justify-center items-center space-x-4 mt-8">
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+                <p className="text-sm text-gray-500 mt-1">
+                  Welcome back, {user?.name || 'User'}
+                </p>
+              </div>
+              <div className="flex items-center space-x-4">
                 <button
-                  onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                  disabled={page === 1}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
+                  onClick={() => navigate('/properties/new')}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  Previous
+                  Add Property
                 </button>
-                <span className="text-gray-600">
-                  Page {meta.page} of {meta.totalPages}
-                </span>
                 <button
-                  onClick={() => setPage((prev) => Math.min(meta.totalPages, prev + 1))}
-                  disabled={page === meta.totalPages}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
+                  onClick={handleLogout}
+                  className="text-gray-600 hover:text-gray-900 transition-colors"
                 >
-                  Next
+                  Logout
                 </button>
               </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-sm font-medium text-gray-500">Total Properties</h3>
+              <p className="text-3xl font-bold text-gray-900 mt-2">
+                {state.stats.totalProperties}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-sm font-medium text-gray-500">Available</h3>
+              <p className="text-3xl font-bold text-green-600 mt-2">
+                {state.stats.availableProperties}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-sm font-medium text-gray-500">Sold</h3>
+              <p className="text-3xl font-bold text-red-600 mt-2">
+                {state.stats.soldProperties}
+              </p>
+            </div>
+          </div>
+
+          {/* Properties List */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">Your Properties</h2>
+            </div>
+            
+            {state.properties.length === 0 ? (
+              <div className="p-6 text-center">
+                <p className="text-gray-500">No properties found</p>
+                <button
+                  onClick={() => navigate('/properties/new')}
+                  className="mt-4 text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  Add your first property
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                {state.properties.map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    property={property}
+                    onEdit={() => navigate(`/properties/${property.id}/edit`)}
+                    onDelete={async () => {
+                      try {
+                        await api.delete(`/properties/${property.id}`);
+                        fetchDashboardData();
+                      } catch (error) {
+                        console.error('Delete failed:', error);
+                      }
+                    }}
+                  />
+                ))}
+              </div>
             )}
-          </>
-        )}
+          </div>
+        </main>
       </div>
     </ErrorBoundary>
   );
-};
-
-export default DashboardPage;
+}
