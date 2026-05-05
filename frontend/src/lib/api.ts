@@ -1,34 +1,34 @@
-import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '../stores/authStore';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
 
 class ApiClient {
   private client: AxiosInstance;
   private isRefreshing = false;
   private failedQueue: Array<{
-    resolve: (value: unknown) => void;
-    reject: (reason: unknown) => void;
+    resolve: (value: any) => void;
+    reject: (reason: any) => void;
   }> = [];
 
   constructor() {
     this.client = axios.create({
       baseURL: API_BASE_URL,
+      timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
       },
-      timeout: 30000,
     });
 
     this.setupInterceptors();
   }
 
   private setupInterceptors(): void {
-    // Request interceptor to add auth token
+    // Request interceptor for auth token
     this.client.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
         const token = useAuthStore.getState().token;
-        if (token && config.headers) {
+        if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
@@ -38,20 +38,19 @@ class ApiClient {
       }
     );
 
-    // Response interceptor for error handling with token refresh
+    // Response interceptor for error handling
     this.client.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
+        // Handle 401 Unauthorized errors
         if (error.response?.status === 401 && !originalRequest._retry) {
           if (this.isRefreshing) {
             return new Promise((resolve, reject) => {
               this.failedQueue.push({ resolve, reject });
             }).then((token) => {
-              if (originalRequest.headers) {
-                originalRequest.headers.Authorization = `Bearer ${token}`;
-              }
+              originalRequest.headers.Authorization = `Bearer ${token}`;
               return this.client(originalRequest);
             });
           }
@@ -60,160 +59,109 @@ class ApiClient {
           this.isRefreshing = true;
 
           try {
+            // Attempt to refresh token
             const refreshToken = useAuthStore.getState().refreshToken;
             if (refreshToken) {
-              const { data } = await this.client.post('/auth/refresh', { refreshToken });
-              const { accessToken, refreshToken: newRefreshToken } = data;
-              useAuthStore.getState().setToken(accessToken, newRefreshToken);
-              this.processQueue(accessToken, null);
-              if (originalRequest.headers) {
-                originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-              }
+              const response = await this.client.post('/auth/refresh', {
+                refreshToken,
+              });
+              const { accessToken } = response.data;
+              useAuthStore.getState().setToken(accessToken);
+              
+              // Process failed queue
+              this.processQueue(null, accessToken);
+              
+              originalRequest.headers.Authorization = `Bearer ${accessToken}`;
               return this.client(originalRequest);
-            } else {
-              // No refresh token available, force logout
-              useAuthStore.getState().logout();
-              this.processQueue(null, error);
-              return Promise.reject(error);
             }
           } catch (refreshError) {
-            this.processQueue(null, refreshError);
+            this.processQueue(refreshError, null);
+            // Logout user on refresh failure
             useAuthStore.getState().logout();
+            window.location.href = '/login';
             return Promise.reject(refreshError);
           } finally {
             this.isRefreshing = false;
           }
         }
 
-        // Transform error messages - handle backend error format
-        const message = this.getErrorMessage(error);
-        return Promise.reject(new ApiError(message, error.response?.status || 500));
+        // Handle network errors
+        if (!error.response) {
+          return Promise.reject(new Error('Network error. Please check your connection.'));
+        }
+
+        // Handle rate limiting
+        if (error.response.status === 429) {
+          return Promise.reject(new Error('Too many requests. Please try again later.'));
+        }
+
+        // Handle server errors
+        if (error.response.status >= 500) {
+          return Promise.reject(new Error('Server error. Please try again later.'));
+        }
+
+        return Promise.reject(error);
       }
     );
   }
 
-  private processQueue(token: unknown, error: unknown): void {
-    this.failedQueue.forEach((promise) => {
+  private processQueue(error: any, token: string | null): void {
+    this.failedQueue.forEach(({ resolve, reject }) => {
       if (error) {
-        promise.reject(error);
+        reject(error);
       } else {
-        promise.resolve(token);
+        resolve(token);
       }
     });
     this.failedQueue = [];
   }
 
-  private getErrorMessage(error: AxiosError): string {
-    if (error.response?.data) {
-      const data = error.response.data as Record<string, unknown>;
-      // Handle various backend error formats
-      if (typeof data.message === 'string') {
-        return data.message;
-      }
-      if (Array.isArray(data.message)) {
-        return (data.message as string[]).join(', ');
-      }
-      if (typeof data.error === 'string') {
-        return data.error;
-      }
-      if (typeof data.detail === 'string') {
-        return data.detail;
-      }
-    }
-    if (error.message === 'Network Error') {
-      return 'Unable to connect to the server. Please check your internet connection.';
-    }
-    if (error.code === 'ECONNABORTED') {
-      return 'Request timed out. Please try again.';
-    }
-    return error.message || 'An unexpected error occurred';
+  // HTTP Methods
+  async get<T>(url: string, params?: Record<string, any>): Promise<T> {
+    const response = await this.client.get<T>(url, { params });
+    return response.data;
   }
 
-  // Auth endpoints - FIXED: Added /api prefix to match backend routes
-  async login(email: string, password: string) {
-    const { data } = await this.client.post('/api/auth/login', { email, password });
-    return data;
+  async post<T>(url: string, data?: any): Promise<T> {
+    const response = await this.client.post<T>(url, data);
+    return response.data;
   }
 
-  async register(email: string, password: string, name: string) {
-    const { data } = await this.client.post('/api/auth/register', { email, password, name });
-    return data;
+  async put<T>(url: string, data?: any): Promise<T> {
+    const response = await this.client.put<T>(url, data);
+    return response.data;
   }
 
-  async refreshToken(refreshToken: string) {
-    const { data } = await this.client.post('/api/auth/refresh', { refreshToken });
-    return data;
-  }
-
-  // Property endpoints - FIXED: Added /api prefix to match backend routes
-  async getProperties(params?: Record<string, string>) {
-    const { data } = await this.client.get('/api/properties', { params });
-    return data;
-  }
-
-  async getProperty(id: string) {
-    const { data } = await this.client.get(`/api/properties/${id}`);
-    return data;
-  }
-
-  async createProperty(propertyData: {
-    title: string;
-    description: string;
-    price: number;
-    address: string;
-    status?: string;
-  }) {
-    const { data } = await this.client.post('/api/properties', propertyData);
-    return data;
-  }
-
-  async updateProperty(id: string, propertyData: Partial<{
-    title: string;
-    description: string;
-    price: number;
-    address: string;
-    status: string;
-  }>) {
-    const { data } = await this.client.put(`/api/properties/${id}`, propertyData);
-    return data;
-  }
-
-  async deleteProperty(id: string) {
-    const { data } = await this.client.delete(`/api/properties/${id}`);
-    return data;
-  }
-
-  // Generic request methods
-  async get<T>(url: string, params?: Record<string, unknown>): Promise<T> {
-    const { data } = await this.client.get<T>(url, { params });
-    return data;
-  }
-
-  async post<T>(url: string, body?: unknown): Promise<T> {
-    const { data } = await this.client.post<T>(url, body);
-    return data;
-  }
-
-  async put<T>(url: string, body?: unknown): Promise<T> {
-    const { data } = await this.client.put<T>(url, body);
-    return data;
+  async patch<T>(url: string, data?: any): Promise<T> {
+    const response = await this.client.patch<T>(url, data);
+    return response.data;
   }
 
   async delete<T>(url: string): Promise<T> {
-    const { data } = await this.client.delete<T>(url);
-    return data;
+    const response = await this.client.delete<T>(url);
+    return response.data;
+  }
+
+  // File upload with progress
+  async upload<T>(
+    url: string,
+    formData: FormData,
+    onProgress?: (progress: number) => void
+  ): Promise<T> {
+    const response = await this.client.post<T>(url, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress: (progressEvent) => {
+        if (onProgress && progressEvent.total) {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress(progress);
+        }
+      },
+    });
+    return response.data;
   }
 }
 
-export class ApiError extends Error {
-  public status: number;
-
-  constructor(message: string, status: number) {
-    super(message);
-    this.name = 'ApiError';
-    this.status = status;
-  }
-}
-
-export const api = new ApiClient();
-export default api;
+export const apiClient = new ApiClient();
+export default apiClient;
