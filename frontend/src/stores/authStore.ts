@@ -1,138 +1,134 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { apiClient } from '../lib/api';
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-}
+import { User, LoginRequest, RegisterRequest, AuthResponse } from '../types/auth';
+import { api } from '../lib/api';
 
 interface AuthState {
   user: User | null;
-  token: string | null;
+  accessToken: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  
+
   // Actions
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  login: (credentials: LoginRequest) => Promise<void>;
+  register: (data: RegisterRequest) => Promise<void>;
   logout: () => void;
-  setToken: (token: string) => void;
+  setTokens: (accessToken: string, refreshToken: string) => void;
   clearError: () => void;
-  checkAuth: () => Promise<void>;
+  fetchCurrentUser: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
-      token: null,
+      accessToken: null,
       refreshToken: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
 
-      login: async (email: string, password: string) => {
+      login: async (credentials: LoginRequest) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await apiClient.post<{
-            accessToken: string;
-            refreshToken?: string;
-            user: User;
-          }>('/auth/login', { email, password });
-
+          // FIX: The backend might return the response in a different structure
+          // Handle both { user, tokens } and { data: { user, tokens } } patterns
+          const response = await api.post<AuthResponse>('/auth/login', credentials);
+          
+          // FIX: Handle potential nested response
+          const authData = (response as any).data || response;
+          
           set({
-            user: response.user,
-            token: response.accessToken,
-            refreshToken: response.refreshToken || null,
+            user: authData.user,
+            accessToken: authData.tokens.accessToken,
+            refreshToken: authData.tokens.refreshToken,
             isAuthenticated: true,
             isLoading: false,
             error: null,
           });
         } catch (error: any) {
-          const errorMessage = error.response?.data?.message || error.message || 'Login failed';
           set({
             isLoading: false,
-            error: errorMessage,
+            error: error.message || 'Login failed',
             isAuthenticated: false,
           });
-          throw new Error(errorMessage);
+          throw error;
         }
       },
 
-      register: async (email: string, password: string, name: string) => {
+      register: async (data: RegisterRequest) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await apiClient.post<{
-            accessToken: string;
-            refreshToken?: string;
-            user: User;
-          }>('/auth/register', { email, password, name });
-
+          // FIX: Handle potential nested response
+          const response = await api.post<AuthResponse>('/auth/register', data);
+          const authData = (response as any).data || response;
+          
           set({
-            user: response.user,
-            token: response.accessToken,
-            refreshToken: response.refreshToken || null,
+            user: authData.user,
+            accessToken: authData.tokens.accessToken,
+            refreshToken: authData.tokens.refreshToken,
             isAuthenticated: true,
             isLoading: false,
             error: null,
           });
         } catch (error: any) {
-          const errorMessage = error.response?.data?.message || error.message || 'Registration failed';
           set({
             isLoading: false,
-            error: errorMessage,
+            error: error.message || 'Registration failed',
             isAuthenticated: false,
           });
-          throw new Error(errorMessage);
+          throw error;
         }
       },
 
       logout: () => {
+        // FIX: Call backend logout endpoint to invalidate tokens
+        try {
+          const refreshToken = get().refreshToken;
+          if (refreshToken) {
+            // Fire and forget - don't block logout
+            api.post('/auth/logout', { refreshToken }).catch(() => {});
+          }
+        } catch {
+          // Ignore errors during logout
+        }
+        
         set({
           user: null,
-          token: null,
+          accessToken: null,
           refreshToken: null,
           isAuthenticated: false,
           isLoading: false,
           error: null,
         });
+        // Clear persisted state
+        localStorage.removeItem('auth-storage');
       },
 
-      setToken: (token: string) => {
-        set({ token });
+      setTokens: (accessToken: string, refreshToken: string) => {
+        set({ accessToken, refreshToken });
       },
 
       clearError: () => {
         set({ error: null });
       },
 
-      checkAuth: async () => {
-        const { token } = get();
-        if (!token) {
-          set({ isAuthenticated: false, user: null });
-          return;
-        }
-
+      fetchCurrentUser: async () => {
         set({ isLoading: true });
         try {
-          const response = await apiClient.get<{ user: User }>('/auth/me');
+          // FIX: The backend might return the user directly or nested
+          const response = await api.get<User>('/auth/me');
+          const userData = (response as any).data || response;
+          
+          set({ user: userData, isAuthenticated: true, isLoading: false });
+        } catch (error: any) {
           set({
-            user: response.user,
-            isAuthenticated: true,
             isLoading: false,
-          });
-        } catch (error) {
-          set({
-            user: null,
-            token: null,
-            refreshToken: null,
+            error: error.message || 'Failed to fetch user',
             isAuthenticated: false,
-            isLoading: false,
+            user: null,
           });
         }
       },
@@ -140,9 +136,10 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       partialize: (state) => ({
-        token: state.token,
+        accessToken: state.accessToken,
         refreshToken: state.refreshToken,
         user: state.user,
+        isAuthenticated: state.isAuthenticated,
       }),
     }
   )

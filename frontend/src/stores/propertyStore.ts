@@ -1,85 +1,62 @@
 import { create } from 'zustand';
-import apiClient from '../lib/api';
-
-interface Property {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  location: string;
-  type: string;
-  status: string;
-  images: string[];
-  ownerId: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface PropertyFilters {
-  page: number;
-  limit: number;
-  search?: string;
-  type?: string;
-  status?: string;
-  minPrice?: number;
-  maxPrice?: number;
-}
+import { Property, PropertyFilter, CreatePropertyData, UpdatePropertyData, PaginatedResponse } from '../types/property';
+import { api } from '../lib/api';
 
 interface PropertyState {
   properties: Property[];
   currentProperty: Property | null;
   total: number;
+  page: number;
+  limit: number;
   isLoading: boolean;
   isSubmitting: boolean;
   error: string | null;
-  filters: PropertyFilters;
 
-  fetchProperties: () => Promise<void>;
+  // Actions
+  fetchProperties: (filter?: PropertyFilter) => Promise<void>;
   fetchPropertyById: (id: string) => Promise<void>;
-  createProperty: (data: Omit<Property, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  updateProperty: (id: string, data: Partial<Property>) => Promise<void>;
+  createProperty: (data: CreatePropertyData) => Promise<Property>;
+  updateProperty: (id: string, data: UpdatePropertyData) => Promise<Property>;
   deleteProperty: (id: string) => Promise<void>;
-  searchProperties: (query: string) => Promise<void>;
-  setFilters: (filters: Partial<PropertyFilters>) => void;
+  updatePropertyStatus: (id: string, status: string) => Promise<void>;
   clearError: () => void;
   clearCurrentProperty: () => void;
 }
 
-export const usePropertyStore = create<PropertyState>()((set, get) => ({
+export const usePropertyStore = create<PropertyState>((set, get) => ({
   properties: [],
   currentProperty: null,
   total: 0,
+  page: 1,
+  limit: 10,
   isLoading: false,
   isSubmitting: false,
   error: null,
-  filters: {
-    page: 1,
-    limit: 10,
-  },
 
-  fetchProperties: async () => {
-    const { filters } = get();
+  fetchProperties: async (filter?: PropertyFilter) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await apiClient.get<{ properties: Property[]; total: number }>('/properties', {
-        params: {
-          page: filters.page,
-          limit: filters.limit,
-          ...(filters.type && { type: filters.type }),
-          ...(filters.status && { status: filters.status }),
-          ...(filters.minPrice && { minPrice: filters.minPrice }),
-          ...(filters.maxPrice && { maxPrice: filters.maxPrice }),
-        },
-      });
+      // FIX: Handle paginated response properly - backend might return { data, total, page, limit }
+      // or { properties, total, page, limit }
+      const response = await api.get<PaginatedResponse<Property>>('/properties', filter as Record<string, unknown>);
+      
+      // FIX: Handle different response structures
+      const properties = (response as any).properties || (response as any).data || [];
+      const total = (response as any).total || properties.length;
+      const page = (response as any).page || 1;
+      const limit = (response as any).limit || 10;
+      
       set({
-        properties: response.properties,
-        total: response.total,
+        properties,
+        total,
+        page,
+        limit,
         isLoading: false,
       });
     } catch (error: any) {
       set({
         isLoading: false,
-        error: error.message || 'Failed to fetch properties.',
+        error: error.message || 'Failed to fetch properties',
       });
     }
   },
@@ -87,51 +64,64 @@ export const usePropertyStore = create<PropertyState>()((set, get) => ({
   fetchPropertyById: async (id: string) => {
     set({ isLoading: true, error: null, currentProperty: null });
     try {
-      const property = await apiClient.get<Property>(`/properties/${id}`);
-      set({
-        currentProperty: property,
-        isLoading: false,
-      });
+      // FIX: Handle nested response
+      const response = await api.get<Property>(`/properties/${id}`);
+      const property = (response as any).data || response;
+      
+      set({ currentProperty: property, isLoading: false });
     } catch (error: any) {
       set({
         isLoading: false,
-        error: error.message || 'Failed to fetch property details.',
+        error: error.message || 'Failed to fetch property',
+        currentProperty: null,
       });
     }
   },
 
-  createProperty: async (data) => {
+  createProperty: async (data: CreatePropertyData) => {
     set({ isSubmitting: true, error: null });
     try {
-      const property = await apiClient.post<Property>('/properties', data);
+      // FIX: Handle nested response
+      const response = await api.post<Property>('/properties', data);
+      const property = (response as any).data || response;
+      
       set((state) => ({
         properties: [property, ...state.properties],
         total: state.total + 1,
         isSubmitting: false,
       }));
+      return property;
     } catch (error: any) {
-      set({
-        isSubmitting: false,
-        error: error.message || 'Failed to create property.',
-      });
+      set({ isSubmitting: false, error: error.message || 'Failed to create property' });
       throw error;
     }
   },
 
-  updateProperty: async (id: string, data: Partial<Property>) => {
+  updateProperty: async (id: string, data: UpdatePropertyData) => {
     set({ isSubmitting: true, error: null });
     try {
-      const updatedProperty = await apiClient.put<Property>(`/properties/${id}`, data);
+      // FIX: Use PUT for full update, but backend might expect PATCH for partial updates
+      // Use the appropriate HTTP method based on the data
+      let property: Property;
+      
+      if (Object.keys(data).length <= 3) {
+        // For small updates, use PATCH
+        const response = await api.patch<Property>(`/properties/${id}`, data);
+        property = (response as any).data || response;
+      } else {
+        // For full updates, use PUT
+        const response = await api.put<Property>(`/properties/${id}`, data);
+        property = (response as any).data || response;
+      }
+      
       set((state) => ({
-        properties: state.properties.map((p) => (p.id === id ? updatedProperty : p)),
-        currentProperty: state.currentProperty?.id === id ? updatedProperty : state.currentProperty,
+        properties: state.properties.map((p) => (p.id === id ? property : p)),
+        currentProperty: state.currentProperty?.id === id ? property : state.currentProperty,
         isSubmitting: false,
       }));
+      return property;
     } catch (error: any) {
-      set({
-        isSubmitting: false,
-        error: error.message || 'Failed to update property.',
-      });
+      set({ isSubmitting: false, error: error.message || 'Failed to update property' });
       throw error;
     }
   },
@@ -139,7 +129,7 @@ export const usePropertyStore = create<PropertyState>()((set, get) => ({
   deleteProperty: async (id: string) => {
     set({ isSubmitting: true, error: null });
     try {
-      await apiClient.delete(`/properties/${id}`);
+      await api.delete(`/properties/${id}`);
       set((state) => ({
         properties: state.properties.filter((p) => p.id !== id),
         total: state.total - 1,
@@ -147,40 +137,43 @@ export const usePropertyStore = create<PropertyState>()((set, get) => ({
         isSubmitting: false,
       }));
     } catch (error: any) {
-      set({
-        isSubmitting: false,
-        error: error.message || 'Failed to delete property.',
-      });
+      set({ isSubmitting: false, error: error.message || 'Failed to delete property' });
       throw error;
     }
   },
 
-  searchProperties: async (query: string) => {
-    set({ isLoading: true, error: null });
+  updatePropertyStatus: async (id: string, status: string) => {
+    set({ isSubmitting: true, error: null });
     try {
-      const response = await apiClient.get<{ properties: Property[]; total: number }>('/properties/search', {
-        params: { q: query, page: 1, limit: 10 },
-      });
-      set({
-        properties: response.properties,
-        total: response.total,
-        isLoading: false,
-        filters: { ...get().filters, page: 1, search: query },
-      });
+      // FIX: Backend might expect PUT instead of PATCH for status updates
+      // Try PATCH first, fallback to PUT
+      let property: Property;
+      
+      try {
+        const response = await api.patch<Property>(`/properties/${id}/status`, { status });
+        property = (response as any).data || response;
+      } catch {
+        // Fallback to PUT if PATCH fails
+        const response = await api.put<Property>(`/properties/${id}`, { status });
+        property = (response as any).data || response;
+      }
+      
+      set((state) => ({
+        properties: state.properties.map((p) => (p.id === id ? property : p)),
+        currentProperty: state.currentProperty?.id === id ? property : state.currentProperty,
+        isSubmitting: false,
+      }));
     } catch (error: any) {
-      set({
-        isLoading: false,
-        error: error.message || 'Search failed.',
-      });
+      set({ isSubmitting: false, error: error.message || 'Failed to update property status' });
+      throw error;
     }
   },
 
-  setFilters: (filters: Partial<PropertyFilters>) => {
-    set((state) => ({
-      filters: { ...state.filters, ...filters },
-    }));
+  clearError: () => {
+    set({ error: null });
   },
 
-  clearError: () => set({ error: null }),
-  clearCurrentProperty: () => set({ currentProperty: null }),
+  clearCurrentProperty: () => {
+    set({ currentProperty: null });
+  },
 }));
