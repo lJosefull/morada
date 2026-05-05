@@ -1,0 +1,84 @@
+version: "3.9"
+
+services:
+  # ─── PostgreSQL ───
+  postgres:
+    image: postgres:16-alpine
+    container_name: realestate-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: realestate
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Backend NestJS ───
+  backend:
+    image: node:24-alpine
+    container_name: realestate-backend
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/realestate?schema=public
+      - JWT_SECRET=super-secret-jwt-key-change-in-production-123456
+      - JWT_EXPIRES_IN=15m
+      - JWT_REFRESH_SECRET=super-secret-refresh-key-change-in-production-789012
+      - JWT_REFRESH_EXPIRES_IN=7d
+      - AI_SERVICE_URL=http://crewai:8000
+      - PORT=3000
+      - NODE_ENV=development
+      - FRONTEND_URL=http://localhost:5173
+    command: sh -c "npx prisma generate && npx prisma migrate dev --name init && npm run start:dev"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ─── Frontend Vite ───
+  frontend:
+    image: node:24-alpine
+    container_name: realestate-frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # ─── CrewAI - TODOS LOS AGENTES (24/7) ───
+  # Agentes de propiedades: CEO, Copywriter, QA
+  # Agentes desarrolladores: Backend Dev, Frontend Dev, QA Engineer
+  crewai:
+    build: .
+    container_name: crewai
+    environment:
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - OPENAI_API_KEY=${DEEPSEEK_API_KEY:-${OPENAI_API_KEY}}
+      - OPENAI_API_BASE=${OPENAI_API_BASE:-https://api.deepseek.com/v1}
+      - AI_MODEL=${AI_MODEL:-deepseek-chat}
+      - AI_SERVICE_PORT=8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    command: python main.py --develop
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

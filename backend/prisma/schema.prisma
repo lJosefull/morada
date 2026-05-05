@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String     @id @default(uuid())
+  email         String     @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  role          String     @default("user") // user | admin
+  refreshToken  String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  properties    Property[]
+}
+
+model Property {
+  id            String   @id @default(uuid())
+  title         String
+  description   String
+  price         Float
+  currency      String   @default("CLP")
+  propertyType  String   // house | apartment | land | commercial
+  listingType   String   // sale | rent
+  bedrooms      Int?
+  bathrooms     Int?
+  surface       Float?
+  surfaceUnit   String   @default("m²")
+  location      String
+  latitude      Float?
+  longitude     Float?
+  isActive      Boolean  @default(true)
+  aiTitle       String?
+  aiDescription String?
+  aiStatus      String   @default("pending") // pending | processing | completed | failed
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+
+  images        Image[]
+}
+
+model Image {
+  id          String   @id @default(uuid())
+  url         String
+  filename    String
+  mimetype    String
+  size        Int
+  isPrimary   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id])
+}
