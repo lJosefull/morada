@@ -256,6 +256,10 @@ def create_fix_tasks(agents, project_files):
         "fix_backend": Task(
             description=f"""You are the BACKEND FIXER. Your ONLY job is to output file fixes using EXACTLY this format.
 
+## CRITICAL SCOPE RULE:
+You ONLY modify files that start with "backend/". NEVER touch frontend files.
+Your allowed files: backend/src/**, backend/prisma/**, backend/package.json
+
 ## Project files:
 ```
 {tree[:1500]}
@@ -294,7 +298,11 @@ export interface JwtPayload {{
             expected_output="[WRITE: path] content [ENDWRITE] blocks with real fixed code",
         ),
         "fix_frontend": Task(
-            description=f"""You are the FRONTEND FIXER. Your ONLY job is to output file fixes using EXACTLY this format:
+            description=f"""You are the FRONTEND FIXER. Your ONLY job is to output file fixes using EXACTLY this format.
+
+## CRITICAL SCOPE RULE:
+You ONLY modify files that start with "frontend/". NEVER touch backend files.
+Your allowed files: frontend/src/**, frontend/package.json, frontend/tsconfig.json, frontend/vite.config.ts, frontend/tailwind.config.js, frontend/index.html
 
 ## CORRECT FORMAT (mandatory):
 [WRITE: frontend/src/pages/DashboardPage.tsx]
@@ -306,8 +314,6 @@ import {{ useEffect, useState }} from 'react';
 import axios from 'axios';
 // ... rest of COMPLETE file content
 [ENDWRITE]
-
-[COMMIT: fix(frontend): add error boundaries and loading states]
 
 ## RULES (read carefully):
 - EVERY [WRITE:path] MUST be followed by the COMPLETE new file content
@@ -321,12 +327,14 @@ import axios from 'axios';
         "fix_qa": Task(
             description=f"""You are the QA FIXER. Your ONLY job is to verify backend/frontend alignment and fix integration issues.
 
+## CRITICAL SCOPE RULE:
+You can modify BOTH backend/ and frontend/ files, but ONLY to fix API mismatches.
+Do NOT refactor or rewrite files unless there is a clear integration bug.
+
 ## FORMAT:
 [WRITE: path/to/file.ts]
 COMPLETE fixed file content here
 [ENDWRITE]
-
-[COMMIT: fix(integration): description]
 
 ## CHECKLIST:
 1. Do frontend API paths match backend controller routes?
@@ -368,18 +376,34 @@ def run_fix_cycle():
     elapsed = time.time() - start
     raw = str(result)
 
-    # ─── Procesar comandos del output de los agentes ───
+    # ─── Procesar comandos del output de los agentes con validación de alcance ───
     print("\n📝 Procesando comandos de los agentes...")
-    wrote_files = []
 
-    # Buscar [WRITE: archivo] ... [ENDWRITE]
+    # Alcances permitidos por cada agente
+    agent_scopes = {
+        "fix_backend": lambda p: p.startswith("backend/"),
+        "fix_frontend": lambda p: p.startswith("frontend/"),
+        "fix_qa": lambda p: True,  # QA puede tocar ambos
+    }
+
+    wrote_files = []
     write_pattern = re.compile(r'\[WRITE:\s*([^\]]+)\](.*?)\[ENDWRITE\]', re.DOTALL)
-    for match in write_pattern.finditer(raw):
-        file_path = match.group(1).strip()
-        content = match.group(2).strip()
-        result_msg = write_project_file(file_path, content)
-        wrote_files.append(file_path)
-        print(f"  📄 {result_msg}")
+
+    for key, task in tasks.items():
+        task_output = str(task.output) if hasattr(task, "output") else ""
+        is_allowed = agent_scopes.get(key, lambda p: True)
+
+        for match in write_pattern.finditer(task_output):
+            file_path = match.group(1).strip()
+            content = match.group(2).strip()
+
+            if not is_allowed(file_path):
+                print(f"  ⛔ BLOQUEADO: {key} intentó escribir en '{file_path}' (no está en su alcance)")
+                continue
+
+            result_msg = write_project_file(file_path, content)
+            wrote_files.append(file_path)
+            print(f"  📄 {result_msg}")
 
 
     # Guardar reportes
@@ -396,18 +420,13 @@ def run_fix_cycle():
     summary = {
         "status": "ok",
         "files_fixed": len(wrote_files),
-        "commits": len(commits_made),
         "elapsed": f"{elapsed:.1f}s",
     }
     print(f"\n✅ Ronda de mejora completada en {elapsed:.1f}s")
     if wrote_files:
-        print(f"� Archivos modificados ({len(wrote_files)}):")
+        print(f"📄 Archivos modificados ({len(wrote_files)}):")
         for f in wrote_files:
             print(f"  - {f}")
-    if commits_made:
-        print(f"💾 Commits realizados ({len(commits_made)}):")
-        for c in commits_made:
-            print(f"  - {c}")
     print(f"📁 Reportes guardados en: {out}")
     print(json.dumps(summary))
 

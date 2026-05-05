@@ -1,107 +1,90 @@
-import React from 'react';
-import { Property, PropertyStatus } from '../types/property';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Property } from '../types/property';
+import { formatCurrency } from '../lib/utils';
 
 interface PropertyCardProps {
   property: Property;
-  onEdit?: (property: Property) => void;
-  onDelete?: (property: Property) => void;
-  onStatusChange?: (property: Property, newStatus: PropertyStatus) => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onView?: () => void;
 }
 
-const statusColors: Record<PropertyStatus, string> = {
-  [PropertyStatus.AVAILABLE]: 'bg-green-100 text-green-800',
-  [PropertyStatus.PENDING]: 'bg-yellow-100 text-yellow-800',
-  [PropertyStatus.SOLD]: 'bg-red-100 text-red-800',
-  [PropertyStatus.RENTED]: 'bg-blue-100 text-blue-800',
-  [PropertyStatus.UNDER_MAINTENANCE]: 'bg-gray-100 text-gray-800',
-};
+export function PropertyCard({ property, onEdit, onDelete, onView }: PropertyCardProps) {
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
-const formatPrice = (price: number): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(price);
-};
-
-export const PropertyCard: React.FC<PropertyCardProps> = ({
-  property,
-  onEdit,
-  onDelete,
-  onStatusChange,
-}) => {
-  const [imageError, setImageError] = React.useState(false);
-  const mainImage = property.images?.[0];
-
-  // FIX: Handle date formatting for different backend date formats
-  const formatDate = (date: Date | string): string => {
-    if (!date) return '';
-    const d = new Date(date);
-    return d.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+  const statusColors: Record<string, string> = {
+    available: 'bg-green-100 text-green-800',
+    sold: 'bg-red-100 text-red-800',
+    pending: 'bg-yellow-100 text-yellow-800',
+    rented: 'bg-blue-100 text-blue-800',
   };
+
+  const defaultImage = '/placeholder-property.jpg';
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
       {/* Property Image */}
       <div className="relative h-48 bg-gray-200">
-        {mainImage && !imageError ? (
-          <img
-            src={mainImage}
-            alt={property.title}
-            className="w-full h-full object-cover"
-            onError={() => setImageError(true)}
-            loading="lazy"
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full">
+        {!isImageLoaded && !imageError && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="animate-pulse">
+              <svg className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+          </div>
+        )}
+        {imageError ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
             <svg className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
+        ) : (
+          <img
+            src={property.images?.[0] || defaultImage}
+            alt={property.title}
+            className={`w-full h-full object-cover transition-opacity duration-300 ${
+              isImageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            onLoad={() => setIsImageLoaded(true)}
+            onError={() => {
+              setImageError(true);
+              setIsImageLoaded(true);
+            }}
+            loading="lazy"
+          />
         )}
+        
         {/* Status Badge */}
         <span
-          className={`absolute top-2 right-2 px-2 py-1 text-xs font-semibold rounded-full ${
-            statusColors[property.status]
+          className={`absolute top-2 right-2 px-2 py-1 text-xs font-medium rounded-full ${
+            statusColors[property.status] || 'bg-gray-100 text-gray-800'
           }`}
         >
-          {property.status.replace('_', ' ').toUpperCase()}
+          {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
         </span>
       </div>
 
       {/* Property Details */}
       <div className="p-4">
-        <div className="flex items-start justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 truncate flex-1">
-            {property.title}
-          </h3>
-          <span className="text-lg font-bold text-indigo-600 ml-2">
-            {formatPrice(property.price)}
-          </span>
-        </div>
-
-        <p className="mt-1 text-sm text-gray-500 line-clamp-2">
-          {property.description}
+        <h3 className="text-lg font-semibold text-gray-900 truncate" title={property.title}>
+          {property.title}
+        </h3>
+        <p className="mt-1 text-sm text-gray-500 truncate">
+          {property.address}, {property.city}, {property.state} {property.zipCode}
         </p>
-
-        {/* Location */}
-        <div className="mt-2 flex items-center text-sm text-gray-500">
-          <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          <span className="truncate">
-            {property.address.city}, {property.address.state}
-          </span>
+        
+        <div className="mt-2 flex items-center justify-between">
+          <p className="text-xl font-bold text-blue-600">
+            {formatCurrency(property.price)}
+          </p>
+          <p className="text-sm text-gray-500">
+            {property.propertyType}
+          </p>
         </div>
 
-        {/* Property Features */}
         <div className="mt-3 flex items-center space-x-4 text-sm text-gray-500">
           <span className="flex items-center">
             <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -123,48 +106,29 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
           </span>
         </div>
 
-        {/* Property Type */}
-        <div className="mt-2">
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-            {property.type.charAt(0).toUpperCase() + property.type.slice(1)}
-          </span>
-        </div>
-
-        {/* FIX: Add created/updated date display */}
-        <div className="mt-2 text-xs text-gray-400">
-          {property.createdAt && (
-            <span>Listed: {formatDate(property.createdAt)}</span>
-          )}
-        </div>
-
         {/* Action Buttons */}
-        {(onEdit || onDelete || onStatusChange) && (
-          <div className="mt-4 flex items-center space-x-2">
+        {(onEdit || onDelete || onView) && (
+          <div className="mt-4 flex space-x-2">
+            {onView && (
+              <button
+                onClick={onView}
+                className="flex-1 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                View
+              </button>
+            )}
             {onEdit && (
               <button
-                onClick={() => onEdit(property)}
-                className="flex-1 px-3 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                onClick={onEdit}
+                className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
               >
                 Edit
               </button>
             )}
-            {onStatusChange && (
-              <select
-                value={property.status}
-                onChange={(e) => onStatusChange(property, e.target.value as PropertyStatus)}
-                className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                {Object.values(PropertyStatus).map((status) => (
-                  <option key={status} value={status}>
-                    {status.replace('_', ' ').toUpperCase()}
-                  </option>
-                ))}
-              </select>
-            )}
             {onDelete && (
               <button
-                onClick={() => onDelete(property)}
-                className="flex-1 px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                onClick={onDelete}
+                className="px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
               >
                 Delete
               </button>
@@ -174,4 +138,4 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
       </div>
     </div>
   );
-};
+}
