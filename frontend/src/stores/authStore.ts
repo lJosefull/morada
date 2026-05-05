@@ -17,14 +17,12 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
 
-  // Actions
-  setUser: (user: User) => void;
-  setAccessToken: (token: string) => void;
-  setRefreshToken: (token: string) => void;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name?: string) => Promise<void>;
+  register: (data: { email: string; password: string; name: string }) => Promise<void>;
   logout: () => void;
+  setAccessToken: (token: string) => void;
   clearError: () => void;
+  loadUser: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -37,76 +35,46 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       error: null,
 
-      setUser: (user) => set({ user }),
-
-      setAccessToken: (token) => set({ accessToken: token }),
-
-      setRefreshToken: (token) => set({ refreshToken: token }),
-
-      login: async (email, password) => {
+      login: async (email: string, password: string) => {
+        set({ isLoading: true, error: null });
         try {
-          set({ isLoading: true, error: null });
-          
-          // FIX: Use the api client instead of raw fetch to ensure interceptors work
-          const response = await api.post<{ user: User; accessToken: string; refreshToken: string }>(
-            '/auth/login',
-            { email, password }
-          );
-
-          const data = response.data;
-          
+          const response = await api.login(email, password);
+          const { user, tokens } = response.data;
           set({
-            user: data.user,
-            accessToken: data.accessToken,
-            refreshToken: data.refreshToken,
+            user,
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
             isAuthenticated: true,
             isLoading: false,
             error: null,
           });
-        } catch (error) {
-          // FIX: Properly extract error message from API error
-          const errorMessage = error instanceof Error 
-            ? (error as any).message || 'Login failed'
-            : 'Login failed';
-          
+        } catch (error: any) {
           set({
             isLoading: false,
-            error: errorMessage,
+            error: error.message || 'Login failed',
             isAuthenticated: false,
           });
           throw error;
         }
       },
 
-      register: async (email, password, name) => {
+      register: async (data: { email: string; password: string; name: string }) => {
+        set({ isLoading: true, error: null });
         try {
-          set({ isLoading: true, error: null });
-          
-          // FIX: Use the api client instead of raw fetch to ensure interceptors work
-          const response = await api.post<{ user: User; accessToken: string; refreshToken: string }>(
-            '/auth/register',
-            { email, password, name }
-          );
-
-          const data = response.data;
-          
+          const response = await api.register(data);
+          const { user, tokens } = response.data;
           set({
-            user: data.user,
-            accessToken: data.accessToken,
-            refreshToken: data.refreshToken,
+            user,
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
             isAuthenticated: true,
             isLoading: false,
             error: null,
           });
-        } catch (error) {
-          // FIX: Properly extract error message from API error
-          const errorMessage = error instanceof Error 
-            ? (error as any).message || 'Registration failed'
-            : 'Registration failed';
-          
+        } catch (error: any) {
           set({
             isLoading: false,
-            error: errorMessage,
+            error: error.message || 'Registration failed',
             isAuthenticated: false,
           });
           throw error;
@@ -124,15 +92,46 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
-      clearError: () => set({ error: null }),
+      setAccessToken: (token: string) => {
+        set({ accessToken: token });
+      },
+
+      clearError: () => {
+        set({ error: null });
+      },
+
+      loadUser: async () => {
+        const { accessToken } = get();
+        if (!accessToken) {
+          set({ isAuthenticated: false, user: null });
+          return;
+        }
+
+        set({ isLoading: true });
+        try {
+          const response = await api.getProfile();
+          set({
+            user: response.data,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } catch (error) {
+          set({
+            user: null,
+            accessToken: null,
+            refreshToken: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+        }
+      },
     }),
     {
       name: 'auth-storage',
       partialize: (state) => ({
-        user: state.user,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
-        isAuthenticated: state.isAuthenticated,
+        user: state.user,
       }),
     }
   )
