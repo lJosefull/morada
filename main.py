@@ -752,7 +752,7 @@ if __name__ == "__main__":
 </head>
 <body>
     <div class="container">
-        <h1>🤖 InmobiliarIA <small>Agent Control Center</small></h1>
+        <h1>🤖 InmobiliarIA <small>Agentes Fixer - Arreglando el código 24/7</small></h1>
         <p class="subtitle" id="lastUpdate">Conectando...</p>
 
         <div class="grid" id="stats">
@@ -767,20 +767,20 @@ if __name__ == "__main__":
             <div class="agent-card"><div class="header"><div><div class="name">🏢 CEO</div><div class="role">Real Estate Strategy</div></div><span class="badge idle">esperando</span></div><div>Esperando petición de mejora de propiedad</div></div>
             <div class="agent-card"><div class="header"><div><div class="name">✍️ Copywriter</div><div class="role">Real Estate Copy</div></div><span class="badge idle">esperando</span></div><div>Esperando petición de mejora de propiedad</div></div>
             <div class="agent-card"><div class="header"><div><div class="name">✅ QA Contenido</div><div class="role">Content Quality</div></div><span class="badge idle">esperando</span></div><div>Esperando petición de mejora de propiedad</div></div>
-            <div class="agent-card" id="card-dev-backend"><div class="header"><div><div class="name">🖥️ Backend Dev</div><div class="role">NestJS Expert</div></div><span class="badge idle">esperando</span></div><div>Auditando backend...</div></div>
-            <div class="agent-card" id="card-dev-frontend"><div class="header"><div><div class="name">🎨 Frontend Dev</div><div class="role">React Expert</div></div><span class="badge idle">esperando</span></div><div>Auditando frontend...</div></div>
-            <div class="agent-card" id="card-qa-engineer"><div class="header"><div><div class="name">🔍 QA Engineer</div><div class="role">Full Stack QA</div></div><span class="badge idle">esperando</span></div><div>Revisando integración...</div></div>
+            <div class="agent-card" id="card-dev-backend"><div class="header"><div><div class="name">🖥️ Backend FIXER</div><div class="role">NestJS Expert</div></div><span class="badge idle">esperando</span></div><div>Arreglando bugs del backend...</div></div>
+            <div class="agent-card" id="card-dev-frontend"><div class="header"><div><div class="name">🎨 Frontend FIXER</div><div class="role">React Expert</div></div><span class="badge idle">esperando</span></div><div>Arreglando bugs del frontend...</div></div>
+            <div class="agent-card" id="card-qa-engineer"><div class="header"><div><div class="name">🔍 QA FIXER</div><div class="role">Full Stack QA</div></div><span class="badge idle">esperando</span></div><div>Arreglando integración...</div></div>
         </div>
 
         <div class="log" id="log"><div class="line">Esperando actividad de los agentes...</div></div>
-        <div class="footer">Actualizado cada 3 segundos · <a href="/health" style="color:#3b82f6;">/health API</a></div>
+        <div class="footer">Actualizado cada 3 segundos · <a href="/health" style="color:#22c55e;">/health API</a></div>
     </div>
 
     <script>
         const agentMap = {
-            'dev-backend': { card: 'card-dev-backend', name: '🖥️ Backend Dev', badge: 'working' },
-            'dev-frontend': { card: 'card-dev-frontend', name: '🎨 Frontend Dev', badge: 'working' },
-            'qa-engineer': { card: 'card-qa-engineer', name: '🔍 QA Engineer', badge: 'working' },
+            'fix-backend': { card: 'card-dev-backend', name: '🖥️ Backend FIXER', badge: 'working' },
+            'fix-frontend': { card: 'card-dev-frontend', name: '🎨 Frontend FIXER', badge: 'working' },
+            'fix-qa': { card: 'card-qa-engineer', name: '🔍 QA FIXER', badge: 'working' },
             'ceo+copywriter+qa': { card: null, name: '🏢 CEO + ✍️ Copywriter + ✅ QA', badge: 'working' },
             'idle': { card: null, name: '💤 En espera', badge: 'idle' },
         };
@@ -818,22 +818,22 @@ if __name__ == "__main__":
                 const agentCards = document.querySelectorAll('.agent-card');
                 agentCards.forEach(c => c.classList.remove('active'));
 
-                if (data.agent_working === 'dev-backend') {
+                if (data.agent_working === 'fix-backend') {
                     document.getElementById('card-dev-backend').classList.add('active');
                     document.getElementById('card-dev-backend').querySelector('.badge').className = 'badge working';
-                    document.getElementById('card-dev-backend').querySelector('.badge').textContent = '🔥 trabajando';
-                } else if (data.agent_working === 'dev-frontend') {
+                    document.getElementById('card-dev-backend').querySelector('.badge').textContent = '🔥 arreglando backend';
+                } else if (data.agent_working === 'fix-frontend') {
                     document.getElementById('card-dev-frontend').classList.add('active');
                     document.getElementById('card-dev-frontend').querySelector('.badge').className = 'badge working';
-                    document.getElementById('card-dev-frontend').querySelector('.badge').textContent = '🔥 trabajando';
-                } else if (data.agent_working === 'qa-engineer') {
+                    document.getElementById('card-dev-frontend').querySelector('.badge').textContent = '🔥 arreglando frontend';
+                } else if (data.agent_working === 'fix-qa') {
                     document.getElementById('card-qa-engineer').classList.add('active');
                     document.getElementById('card-qa-engineer').querySelector('.badge').className = 'badge working';
-                    document.getElementById('card-qa-engineer').querySelector('.badge').textContent = '🔥 trabajando';
+                    document.getElementById('card-qa-engineer').querySelector('.badge').textContent = '🔥 arreglando integración';
                 }
 
                 if (data.status === 'auditing') {
-                    addLog(`🔍 Ronda #${data.current_round}: ${data.agent_working}`);
+                    addLog(`� Ronda #${data.current_round}: ${data.agent_working}`);
                 } else if (data.status === 'waiting') {
                     addLog(`⏳ Próxima ronda en ${data.next_audit_in}`);
                 }
@@ -863,9 +863,9 @@ if __name__ == "__main__":
             async def trigger_audit():
                 app_state["status"] = "auditing"
                 try:
-                    run_audit()
+                    run_fix_cycle()
                     app_state["status"] = "idle"
-                    return {"status": "ok", "message": "Audit completed"}
+                    return {"status": "ok", "message": "Fix cycle completed"}
                 except Exception as e:
                     app_state["status"] = "idle"
                     raise HTTPException(status_code=500, detail=str(e))
@@ -884,28 +884,28 @@ if __name__ == "__main__":
                     print(f"  ✅ [{time.strftime('%H:%M:%S')}] {app_state['status']}")
                 time.sleep(30)
 
-        # Hilo 3: Auditoría continua (Dev Backend, Dev Frontend, QA Engineer)
+        # Hilo 3: Rondas de mejora continua (Backend Fixer, Frontend Fixer, QA Fixer)
         def continuous_audit():
             rounds = 0
             while True:
                 rounds += 1
                 app_state["current_round"] = rounds
                 app_state["status"] = "auditing"
-                app_state["agent_working"] = "dev-backend"
+                app_state["agent_working"] = "fix-backend"
 
                 print(f"\n{'='*60}")
-                print(f"  🔄 RONDA DE AUDITORÍA #{rounds}")
+                print(f"  � RONDA DE MEJORA #{rounds}")
                 print(f"{'='*60}")
                 print(f"  Agentes trabajando:")
-                print(f"    1. Senior Backend Developer (NestJS)")
-                print(f"    2. Senior Frontend Developer (React)")
-                print(f"    3. Senior QA Engineer (Full Stack)")
+                print(f"    1. Backend FIXER - Arreglando bugs del backend")
+                print(f"    2. Frontend FIXER - Arreglando bugs del frontend")
+                print(f"    3. QA FIXER - Arreglando integración")
                 print()
 
                 try:
-                    run_audit()
+                    run_fix_cycle()
                     app_state["last_audit"] = time.strftime("%Y-%m-%d %H:%M:%S")
-                    print(f"\n✅ Ronda #{rounds} completada.")
+                    print(f"\n✅ Ronda de mejora #{rounds} completada.")
                 except Exception as e:
                     print(f"\n❌ Error en ronda #{rounds}: {e}")
                     app_state["status"] = "error"
