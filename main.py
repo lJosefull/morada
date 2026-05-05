@@ -40,6 +40,62 @@ def read_project_file(file_path: str) -> str:
         return f"ERROR reading {file_path}: {e}"
 
 
+def write_project_file(file_path: str, content: str) -> str:
+    """Escribe o sobrescribe cualquier archivo del proyecto con el contenido indicado.
+    Úsalo para corregir bugs, mejorar código, o crear nuevos archivos.
+    
+    Args:
+        file_path: Ruta relativa desde la raíz del proyecto.
+                   Ejemplo: 'backend/src/main.ts'
+        content: Contenido completo a escribir en el archivo
+    Returns:
+        Mensaje de confirmación o error
+    """
+    full_path = BASE_DIR / file_path
+    try:
+        full_path.parent.mkdir(parents=True, exist_ok=True)
+        full_path.write_text(content, encoding="utf-8")
+        lines = content.count("\n") + 1
+        return f"OK: Archivo '{file_path}' escrito exitosamente ({lines} líneas)"
+    except Exception as e:
+        return f"ERROR escribiendo {file_path}: {e}"
+
+
+def git_commit(message: str) -> str:
+    """Hace un commit de todos los cambios realizados en el proyecto.
+    Ejecuta 'git add -A && git commit'.
+    
+    Args:
+        message: Mensaje descriptivo del commit
+    Returns:
+        Salida del comando git
+    """
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["git", "add", "-A"],
+            capture_output=True, text=True, cwd=BASE_DIR
+        )
+        if result.returncode != 0:
+            return f"ERROR en git add: {result.stderr}"
+        
+        result = subprocess.run(
+            ["git", "commit", "-m", message],
+            capture_output=True, text=True, cwd=BASE_DIR
+        )
+        if result.returncode == 0:
+            return f"OK: Commit realizado:\n{result.stdout}"
+        elif "nothing to commit" in result.stderr or "nothing to commit" in result.stdout:
+            return "OK: No hay cambios nuevos para commitear"
+        else:
+            return f"ERROR en git commit: {result.stderr}"
+    except Exception as e:
+        return f"ERROR en git: {e}"
+
+
+ALL_FIXER_TOOLS = [read_project_file, write_project_file, git_commit]
+
+
 # ──────────────────────────────────────────────
 #  GUIA DE CONTEXTO
 # ──────────────────────────────────────────────
@@ -191,6 +247,169 @@ def create_dev_agents():
         llm=llm, verbose=True, allow_delegation=False,
     )
     return {"dev_backend": dev_backend, "dev_frontend": dev_frontend, "qa_dev": qa_dev}
+
+
+# ──────────────────────────────────────────────
+#  AGENTES FIXER (arreglan el código, no solo audit)
+# ──────────────────────────────────────────────
+
+def create_fixer_agents():
+    llm = get_llm()
+    fix_backend = Agent(
+        role="Senior Backend Developer (NestJS) - FIXER",
+        goal="Find and fix bugs in the NestJS backend. Write improved code, commit changes, and increase quality scores.",
+        backstory="You are a senior backend architect who not only finds problems but FIXES them. You write production-quality NestJS code with proper hexagonal architecture, security, and error handling. You use read_project_file to inspect code, write_project_file to fix it, and git_commit to save your work.",
+        llm=llm, verbose=True, allow_delegation=False,
+        tools=ALL_FIXER_TOOLS,
+    )
+    fix_frontend = Agent(
+        role="Senior Frontend Developer (React) - FIXER",
+        goal="Find and fix bugs in the React frontend. Write improved code, commit changes, and increase quality scores.",
+        backstory="You are a senior frontend architect who not only finds problems but FIXES them. You write production-quality React code with proper TypeScript, TailwindCSS, Zustand patterns, and error handling. You use read_project_file to inspect code, write_project_file to fix it, and git_commit to save your work.",
+        llm=llm, verbose=True, allow_delegation=False,
+        tools=ALL_FIXER_TOOLS,
+    )
+    fix_qa = Agent(
+        role="Senior QA Engineer (Full Stack) - FIXER",
+        goal="Verify and fix integration issues across the full stack. Ensure backend and frontend work together.",
+        backstory="You are a senior QA engineer who not only finds issues but FIXES them. You ensure API contracts match, auth flows work end-to-end, and the system is production-ready. You use read_project_file to inspect code, write_project_file to fix it, and git_commit to save your work.",
+        llm=llm, verbose=True, allow_delegation=False,
+        tools=ALL_FIXER_TOOLS,
+    )
+    return {"fix_backend": fix_backend, "fix_frontend": fix_frontend, "fix_qa": fix_qa}
+
+
+def create_fix_tasks(agents, project_files):
+    total = len(project_files)
+    tree = "\n".join(f"├── {k}  ({len(v.splitlines())} lines)" for k, v in sorted(project_files.items()))
+
+    return {
+        "fix_backend": Task(
+            description=f"""You are the BACKEND FIXER. Your job is NOT just to report issues - you MUST fix them.
+
+## Current project files ({total} total):
+```
+{tree[:2000]}
+```
+
+## INSTRUCTIONS (MANDATORY):
+1. Use **read_project_file** to inspect backend source code in backend/src/
+2. Identify the MOST CRITICAL bugs and issues (security, architecture, errors)
+3. Use **write_project_file** to FIX each issue with improved code
+4. After fixing, use **git_commit** with a descriptive message like "fix(backend): [description of what you fixed]"
+
+## PRIORITY ORDER (fix in this order):
+1. SECURITY: JWT secrets hardcoded, missing input validation, XSS vulnerabilities
+2. ARCHITECTURE: Hexagonal pattern violations, missing dependency injection
+3. BUGS: Logic errors, missing error handling, race conditions
+4. QUALITY: TypeScript strictness, code smells, naming conventions
+
+## RULES:
+- ALWAYS read the file first before modifying it
+- Write COMPLETE file content (not partial diffs)
+- Fix at least 2-3 issues per round
+- Make a git commit after each fix or batch of fixes""",
+            agent=agents["fix_backend"],
+            expected_output="Fixed backend code with committed improvements",
+        ),
+        "fix_frontend": Task(
+            description=f"""You are the FRONTEND FIXER. Your job is NOT just to report issues - you MUST fix them.
+
+## Current project files ({total} total):
+```
+{tree[:2000]}
+```
+
+## INSTRUCTIONS (MANDATORY):
+1. Use **read_project_file** to inspect frontend source code in frontend/src/
+2. Identify the MOST CRITICAL bugs and UX issues
+3. Use **write_project_file** to FIX each issue with improved code
+4. After fixing, use **git_commit** with a descriptive message like "fix(frontend): [description of what you fixed]"
+
+## PRIORITY ORDER (fix in this order):
+1. BUGS: Broken functionality, missing states (loading/error/empty), wrong API calls
+2. UX/UI: Missing responsive design, accessibility issues, missing spinners
+3. SECURITY: Token storage, XSS, exposed env vars
+4. PERFORMANCE: Missing lazy loading, unnecessary re-renders
+5. QUALITY: TypeScript types, component reusability
+
+## RULES:
+- ALWAYS read the file first before modifying it
+- Write COMPLETE file content (not partial diffs)
+- Fix at least 2-3 issues per round
+- Make a git commit after each fix or batch of fixes""",
+            agent=agents["fix_frontend"],
+            expected_output="Fixed frontend code with committed improvements",
+        ),
+        "fix_qa": Task(
+            description=f"""You are the QA FIXER. Your job is to verify backend and frontend work together and fix integration issues.
+
+## Current project files ({total} total):
+```
+{tree[:3000]}
+```
+
+## INSTRUCTIONS (MANDATORY):
+1. Use **read_project_file** to inspect BOTH backend and frontend files
+2. Verify: Do API endpoints match between backend controllers and frontend API calls?
+3. Verify: Do request/response types match between DTOs and frontend types?
+4. Verify: Is the auth flow consistent (login → token → protected routes)?
+5. Use **write_project_file** to FIX any mismatches
+6. After fixing, use **git_commit** with a descriptive message
+
+## CHECKLIST:
+- Backend routes vs frontend API calls alignment
+- Auth token flow consistency
+- Error handling across the stack
+- Docker and deployment config
+- Environment variable consistency""",
+            agent=agents["fix_qa"],
+            expected_output="Fixed integration issues with committed improvements",
+        ),
+    }
+
+
+def run_fix_cycle():
+    """Una ronda completa donde los agentes arreglan código en vez de solo reportar."""
+    print("\n" + "=" * 60)
+    print("  🔧 RONDA DE MEJORA - AGENTES FIXER")
+    print("=" * 60)
+
+    project_files = read_project_files()
+    print(f"  {len(project_files)} archivos cargados")
+
+    agents = create_fixer_agents()
+    tasks = create_fix_tasks(agents, project_files)
+
+    crew = Crew(
+        agents=[agents["fix_backend"], agents["fix_frontend"], agents["fix_qa"]],
+        tasks=[tasks["fix_backend"], tasks["fix_frontend"], tasks["fix_qa"]],
+        verbose=True,
+    )
+
+    print("Agentes fixer trabajando:")
+    print("  1. Backend FIXER - Encontrando y arreglando bugs del backend")
+    print("  2. Frontend FIXER - Encontrando y arreglando bugs del frontend")
+    print("  3. QA FIXER - Verificando integración y arreglando mismatches")
+    print()
+
+    start = time.time()
+    result = crew.kickoff()
+    elapsed = time.time() - start
+    raw = str(result)
+
+    out = BASE_DIR / "audit"
+    out.mkdir(exist_ok=True)
+
+    for key, task in tasks.items():
+        name = {"fix_backend": "fix-backend", "fix_frontend": "fix-frontend", "fix_qa": "fix-qa"}.get(key, key)
+        (out / f"{name}.md").write_text(str(task.output) if hasattr(task, "output") else "No output", encoding="utf-8")
+
+    (out / "fix-report.md").write_text(raw, encoding="utf-8")
+
+    print(f"\n✅ Ronda de mejora completada en {elapsed:.1f}s")
+    print(f"📁 Reportes guardados en: {out}")
+    print(json.dumps({"status": "ok", "files": len(project_files), "elapsed": f"{elapsed:.1f}s"}))
 
 
 def read_project_files():
