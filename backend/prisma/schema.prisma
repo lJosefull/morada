@@ -8,74 +8,51 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  USER
-  ADMIN
-  AGENT
-}
-
-enum PropertyType {
-  HOUSE
-  APARTMENT
-  CONDO
-  LAND
-  COMMERCIAL
-}
-
-enum PropertyStatus {
-  AVAILABLE
-  PENDING
-  SOLD
-  RENTED
-}
-
 model User {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
   email     String   @unique
   password  String
   name      String
-  role      UserRole @default(USER)
+  role      String   @default("user")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  properties Property[]
-  images     Image[]
+  properties    Property[]
+  refreshTokens RefreshToken[]
 }
 
 model Property {
-  id            String         @id @default(uuid())
-  title         String
-  description   String
-  price         Float
-  type          PropertyType
-  status        PropertyStatus @default(AVAILABLE)
-  address       String
-  city          String
-  state         String
-  zipCode       String
-  squareFootage Float
-  bedrooms      Int
-  bathrooms     Int
-  amenities     String[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  price       Float
+  address     String
+  city        String
+  state       String
+  zipCode     String
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  ownerId String
-  owner   User   @relation(fields: [ownerId], references: [id])
-
-  images Image[]
+  user   User            @relation(fields: [userId], references: [id])
+  images PropertyImage[]
 }
 
-model Image {
-  id        String   @id @default(uuid())
-  url       String
-  publicId  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model PropertyImage {
+  id         String @id @default(cuid())
+  url        String
+  propertyId String
 
-  propertyId String?
-  property   Property? @relation(fields: [propertyId], references: [id])
-  userId     String?
-  user       User?     @relation(fields: [userId], references: [id])
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }
 ```
