@@ -1,3 +1,16 @@
+export interface IImage {
+  id: string;
+  url: string;
+  filename: string;
+  mimetype: string;
+  size: number;
+  isPrimary: boolean;
+  propertyId: string;
+  createdAt: Date;
+}
+
+export type PropertyStatus = 'available' | 'reserved' | 'sold' | 'rented' | 'hidden';
+
 export interface IProperty {
   id: string;
   title: string;
@@ -13,11 +26,12 @@ export interface IProperty {
   location: string;
   latitude: number | null;
   longitude: number | null;
-  isActive: boolean;
+  status: PropertyStatus;
   aiTitle: string | null;
   aiDescription: string | null;
   aiStatus: AiStatus;
   userId: string;
+  images: IImage[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,11 +53,12 @@ export type CreatePropertyInput = {
   location: string;
   latitude?: number;
   longitude?: number;
+  status?: PropertyStatus;
 };
 
 export type UpdatePropertyInput = Partial<Omit<CreatePropertyInput, 'userId'>> & {
   aiTitle?: string;
   aiDescription?: string;
   aiStatus?: AiStatus;
-  isActive?: boolean;
+  status?: PropertyStatus;
 };

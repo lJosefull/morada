@@ -1,4 +1,3 @@
-```typescript
 import { Controller, Post, Body, Get, UseGuards, Req } from '@nestjs/common';
 import { AuthService } from '../../application/auth/auth.service';
 import { LoginDto, RegisterDto, RefreshTokenDto } from './auth.dto';
@@ -48,4 +47,3 @@ export class AuthController {
     return this.authService.getProfile(req.user.id);
   }
 }
-```

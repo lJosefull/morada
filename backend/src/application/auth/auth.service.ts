@@ -1,15 +1,17 @@
-```typescript
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { UserRepository } from '../../domain/users/user.repository';
+import { IUserRepository, USER_REPOSITORY } from '../../domain/users/user.repository';
 import { RegisterDto, LoginDto } from '../../interfaces/auth/auth.dto';
+import { PrismaService } from '../../infrastructure/database/prisma.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly userRepository: UserRepository,
+    @Inject(USER_REPOSITORY)
+    private readonly userRepository: IUserRepository,
     private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -20,8 +22,10 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
     const user = await this.userRepository.create({
-      ...registerDto,
-      password: hashedPassword,
+      email: registerDto.email,
+      name: registerDto.name,
+      password: registerDto.password,
+      passwordHash: hashedPassword,
     });
 
     const tokens = await this.generateTokens(user);
@@ -42,7 +46,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
+    const isPasswordValid = await bcrypt.compare(loginDto.password, user.passwordHash);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -61,21 +65,39 @@ export class AuthService {
 
   async refreshToken(refreshToken: string) {
     try {
-      const payload = this.jwtService.verify(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret',
+      const payload = this.jwtService.verify<{ sub: string; email: string; role: string }>(
+        refreshToken,
+        { secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret' },
+      );
+
+      const storedToken = await this.prisma.refreshToken.findFirst({
+        where: { token: refreshToken, userId: payload.sub },
       });
-      const user = await this.userRepository.findById(payload.sub);
-      if (!user) {
+      if (!storedToken) {
         throw new UnauthorizedException('Invalid refresh token');
       }
+
+      if (new Date() > storedToken.expiresAt) {
+        await this.prisma.refreshToken.delete({ where: { id: storedToken.id } });
+        throw new UnauthorizedException('Refresh token expired');
+      }
+
+      const user = await this.userRepository.findById(payload.sub);
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      // Rotate: delete old, create new
+      await this.prisma.refreshToken.delete({ where: { id: storedToken.id } });
       return this.generateTokens(user);
     } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
 
   async logout(userId: string) {
-    // In a real app, you'd invalidate the refresh token in a database
+    await this.prisma.refreshToken.deleteMany({ where: { userId } });
     return { message: 'Logged out successfully' };
   }
 
@@ -93,20 +115,24 @@ export class AuthService {
     };
   }
 
-  private async generateTokens(user: any) {
+  private async generateTokens(user: { id: string; email: string; role: string }) {
     const payload = { sub: user.id, email: user.email, role: user.role };
 
-    const accessToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_SECRET || 'access-secret',
-      expiresIn: '15m',
-    });
-
+    const accessToken = this.jwtService.sign(payload);
     const refreshToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret',
       expiresIn: '7d',
     });
 
+    // Store refresh token in DB for validation/rotation
+    await this.prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    });
+
     return { accessToken, refreshToken };
   }
 }
-```

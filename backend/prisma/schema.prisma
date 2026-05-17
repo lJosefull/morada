@@ -1,4 +1,3 @@
-```prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,6 +12,7 @@ model User {
   email     String   @unique
   password  String
   name      String
+  phone     String?
   role      String   @default("user")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -22,26 +22,41 @@ model User {
 }
 
 model Property {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  price       Float
-  address     String
-  city        String
-  state       String
-  zipCode     String
-  userId      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  title        String
+  description  String
+  price        Float
+  currency     String   @default("CLP")
+  propertyType String
+  listingType  String
+  bedrooms     Int?
+  bathrooms    Int?
+  surface      Float?
+  surfaceUnit  String   @default("m²")
+  location     String
+  latitude     Float?
+  longitude    Float?
+  status       String   @default("available")
+  aiTitle      String?
+  aiDescription String?
+  aiStatus     String   @default("pending")
+  userId       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  user   User            @relation(fields: [userId], references: [id])
-  images PropertyImage[]
+  user   User    @relation(fields: [userId], references: [id])
+  images Image[]
 }
 
-model PropertyImage {
-  id         String @id @default(cuid())
+model Image {
+  id         String   @id @default(cuid())
   url        String
+  filename   String
+  mimetype   String
+  size       Int
+  isPrimary  Boolean  @default(false)
   propertyId String
+  createdAt  DateTime @default(now())
 
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 }
@@ -55,4 +70,3 @@ model RefreshToken {
 
   user User @relation(fields: [userId], references: [id])
 }
-```

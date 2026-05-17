@@ -1,26 +1,50 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { usePropertyStore, Property } from '../stores/propertyStore';
-import toast from 'react-hot-toast';
+import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { api } from '../lib/api'
+import { formatCurrency } from '../lib/utils'
+import type { Property, Image } from '../types'
 
 interface PropertyFormProps {
-  property?: Property;
-  isEditing?: boolean;
+  property?: Property
+  isEditing?: boolean
 }
 
+const typeLabels: Record<string, string> = {
+  house: 'Casa',
+  apartment: 'Departamento',
+  land: 'Terreno',
+  commercial: 'Comercial',
+}
+
+const typeIcons: Record<string, string> = {
+  house: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
+  apartment: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
+  land: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+  commercial: 'M21 13.255A23.93 23.93 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+}
+
+const DESCRIPTION_MAX = 2000
+
 export default function PropertyForm({ property, isEditing = false }: PropertyFormProps) {
-  const navigate = useNavigate();
-  const { createProperty, updateProperty, isSubmitting } = usePropertyStore();
+  const navigate = useNavigate()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [uploading, setUploading] = useState(false)
+  const [images, setImages] = useState<Image[]>(property?.images || [])
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     price: '',
-    address: '',
+    propertyType: 'house',
+    listingType: 'sale',
+    bedrooms: '',
+    bathrooms: '',
+    surface: '',
+    location: '',
     status: 'available',
-  });
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  })
 
   useEffect(() => {
     if (property && isEditing) {
@@ -28,193 +52,371 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
         title: property.title || '',
         description: property.description || '',
         price: property.price?.toString() || '',
-        address: property.address || '',
+        propertyType: property.propertyType || 'house',
+        listingType: property.listingType || 'sale',
+        bedrooms: property.bedrooms?.toString() || '',
+        bathrooms: property.bathrooms?.toString() || '',
+        surface: property.surface?.toString() || '',
+        location: property.location || '',
         status: property.status || 'available',
-      });
+      })
     }
-  }, [property, isEditing]);
+  }, [property, isEditing])
+
+  useEffect(() => {
+    if (property) setImages(property.images || [])
+  }, [property])
+
+  const descLength = formData.description.length
 
   const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
-    }
-    if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
-    }
+    const newErrors: Record<string, string> = {}
+    if (!formData.title.trim()) newErrors.title = 'Title is required'
+    if (!formData.description.trim()) newErrors.description = 'Description is required'
     if (!formData.price || isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
-      newErrors.price = 'Valid price is required';
+      newErrors.price = 'Valid price is required'
     }
-    if (!formData.address.trim()) {
-      newErrors.address = 'Address is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    if (!formData.location.trim()) newErrors.location = 'Location is required'
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
+    if (!validate()) return
 
-    if (!validate()) {
-      return;
-    }
-
+    setSubmitting(true)
     try {
       const data = {
         title: formData.title.trim(),
         description: formData.description.trim(),
         price: Number(formData.price),
-        address: formData.address.trim(),
+        propertyType: formData.propertyType,
+        listingType: formData.listingType,
+        bedrooms: formData.bedrooms ? Number(formData.bedrooms) : undefined,
+        bathrooms: formData.bathrooms ? Number(formData.bathrooms) : undefined,
+        surface: formData.surface ? Number(formData.surface) : undefined,
+        location: formData.location.trim(),
         status: formData.status,
-      };
+      }
 
       if (isEditing && property) {
-        await updateProperty(property.id, data);
-        toast.success('Property updated successfully');
-        navigate(`/properties/${property.id}`);
+        await api.patch(`/properties/${property.id}`, data)
+        navigate(`/properties/${property.id}`)
       } else {
-        const newProperty = await createProperty(data);
-        toast.success('Property created successfully');
-        navigate(`/properties/${newProperty.id}`);
+        const { data: newProperty } = await api.post<Property>('/properties', data)
+        navigate(`/properties/${newProperty.id}/edit`)
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to save property';
-      toast.error(message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save property'
+      alert(message)
+    } finally {
+      setSubmitting(false)
     }
-  };
+  }
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
+    const { name, value } = e.target
+    if (name === 'description' && value.length > DESCRIPTION_MAX) return
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }))
+  }
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !property) return
+
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('image', file)
+      const { data: uploaded } = await api.post<Image>(`/properties/${property.id}/images`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      setImages((prev) => [...prev, uploaded])
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to upload image')
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
-  };
+  }
+
+  const handleDeleteImage = async (imageId: string) => {
+    if (!property) return
+    try {
+      await api.delete(`/properties/${property.id}/images/${imageId}`)
+      setImages((prev) => prev.filter((img) => img.id !== imageId))
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete image')
+    }
+  }
+
+  const handleSetPrimary = async (imageId: string) => {
+    if (!property) return
+    try {
+      await api.post(`/properties/${property.id}/images/${imageId}/primary`)
+      setImages((prev) =>
+        prev.map((img) => ({ ...img, isPrimary: img.id === imageId })),
+      )
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to set primary image')
+    }
+  }
+
+  const fieldClass = (name: string, extra = '') =>
+    `mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 ${
+      errors[name] ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'
+    } ${extra}`
+
+  const previewImage = images.find((img) => img.isPrimary) || images[0]
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-      <div>
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-          Title
-        </label>
-        <input
-          type="text"
-          id="title"
-          name="title"
-          value={formData.title}
-          onChange={handleChange}
-          className={`input-field mt-1 ${errors.title ? 'border-red-500' : ''}`}
-          placeholder="Enter property title"
-        />
-        {errors.title && (
-          <p className="mt-1 text-sm text-red-600">{errors.title}</p>
-        )}
-      </div>
+    <div className="lg:grid lg:grid-cols-3 lg:gap-8">
+      <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8 space-y-6">
+          <h2 className="text-lg font-semibold text-gray-900 border-b border-gray-100 pb-4">
+            {isEditing ? 'Edit Property' : 'New Property'}
+          </h2>
 
-      <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-          Description
-        </label>
-        <textarea
-          id="description"
-          name="description"
-          rows={4}
-          value={formData.description}
-          onChange={handleChange}
-          className={`input-field mt-1 ${errors.description ? 'border-red-500' : ''}`}
-          placeholder="Enter property description"
-        />
-        {errors.description && (
-          <p className="mt-1 text-sm text-red-600">{errors.description}</p>
-        )}
-      </div>
+          <div>
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+              Title <span className="text-red-500">*</span>
+            </label>
+            <input type="text" id="title" name="title" value={formData.title} onChange={handleChange}
+              className={fieldClass('title')} placeholder="e.g. Beautiful House in the Suburbs"
+            />
+            {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
+          </div>
 
-      <div>
-        <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-          Price ($)
-        </label>
-        <input
-          type="number"
-          id="price"
-          name="price"
-          value={formData.price}
-          onChange={handleChange}
-          className={`input-field mt-1 ${errors.price ? 'border-red-500' : ''}`}
-          placeholder="Enter price"
-          min="0"
-          step="0.01"
-        />
-        {errors.price && (
-          <p className="mt-1 text-sm text-red-600">{errors.price}</p>
-        )}
-      </div>
+          <div>
+            <div className="flex justify-between items-center">
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                Description <span className="text-red-500">*</span>
+              </label>
+              <span className={`text-xs tabular-nums ${descLength > DESCRIPTION_MAX * 0.9 ? 'text-red-500 font-medium' : 'text-gray-400'}`}>
+                {descLength}/{DESCRIPTION_MAX}
+              </span>
+            </div>
+            <textarea id="description" name="description" rows={5} value={formData.description} onChange={handleChange}
+              className={fieldClass('description', 'resize-y min-h-[120px]')}
+              placeholder="Describe the property in detail..."
+            />
+            {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
+          </div>
 
-      <div>
-        <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-          Address
-        </label>
-        <input
-          type="text"
-          id="address"
-          name="address"
-          value={formData.address}
-          onChange={handleChange}
-          className={`input-field mt-1 ${errors.address ? 'border-red-500' : ''}`}
-          placeholder="Enter property address"
-        />
-        {errors.address && (
-          <p className="mt-1 text-sm text-red-600">{errors.address}</p>
-        )}
-      </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+                Price <span className="text-red-500">*</span>
+              </label>
+              <input type="number" id="price" name="price" value={formData.price} onChange={handleChange}
+                className={fieldClass('price')} min="0" placeholder="250000"
+              />
+              {errors.price && <p className="mt-1 text-sm text-red-600">{errors.price}</p>}
+            </div>
+            <div>
+              <label htmlFor="propertyType" className="block text-sm font-medium text-gray-700">Type</label>
+              <select id="propertyType" name="propertyType" value={formData.propertyType} onChange={handleChange}
+                className={fieldClass('')}
+              >
+                <option value="house">House</option>
+                <option value="apartment">Apartment</option>
+                <option value="land">Land</option>
+                <option value="commercial">Commercial</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="listingType" className="block text-sm font-medium text-gray-700">Listing Type</label>
+              <select id="listingType" name="listingType" value={formData.listingType} onChange={handleChange}
+                className={fieldClass('')}
+              >
+                <option value="sale">Sale</option>
+                <option value="rent">Rent</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="location" className="block text-sm font-medium text-gray-700">
+                Location <span className="text-red-500">*</span>
+              </label>
+              <input type="text" id="location" name="location" value={formData.location} onChange={handleChange}
+                className={fieldClass('location')} placeholder="Santiago, Chile"
+              />
+              {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location}</p>}
+            </div>
+            <div>
+              <label htmlFor="bedrooms" className="block text-sm font-medium text-gray-700">Bedrooms</label>
+              <input type="number" id="bedrooms" name="bedrooms" value={formData.bedrooms} onChange={handleChange}
+                className={fieldClass('')} min="0"
+              />
+            </div>
+            <div>
+              <label htmlFor="bathrooms" className="block text-sm font-medium text-gray-700">Bathrooms</label>
+              <input type="number" id="bathrooms" name="bathrooms" value={formData.bathrooms} onChange={handleChange}
+                className={fieldClass('')} min="0"
+              />
+            </div>
+            <div>
+              <label htmlFor="surface" className="block text-sm font-medium text-gray-700">Surface (m²)</label>
+              <input type="number" id="surface" name="surface" value={formData.surface} onChange={handleChange}
+                className={fieldClass('')} min="0"
+              />
+            </div>
+            <div>
+              <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
+              <select id="status" name="status" value={formData.status} onChange={handleChange}
+                className={fieldClass('')}
+              >
+                <option value="available">Available</option>
+                <option value="reserved">Reserved</option>
+                <option value="sold">Sold</option>
+                <option value="rented">Rented</option>
+                <option value="hidden">Hidden</option>
+              </select>
+              <p className="mt-1 text-xs text-gray-400">Hidden: only visible to you on the dashboard</p>
+            </div>
+          </div>
 
-      <div>
-        <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-          Status
-        </label>
-        <select
-          id="status"
-          name="status"
-          value={formData.status}
-          onChange={handleChange}
-          className="input-field mt-1"
-        >
-          <option value="available">Available</option>
-          <option value="pending">Pending</option>
-          <option value="sold">Sold</option>
-        </select>
-      </div>
+          <div className="border-t border-gray-100 pt-6">
+            <label className="block text-sm font-medium text-gray-700 mb-3">Photos</label>
+            {isEditing && property ? (
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-3">
+                  {images.map((img) => (
+                    <div key={img.id} className="relative group w-24 h-24 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
+                      <img src={img.url} alt="" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+                        {!img.isPrimary && (
+                          <button type="button" onClick={() => handleSetPrimary(img.id)}
+                            className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
+                            title="Set as primary"
+                          >
+                            <svg className="w-3.5 h-3.5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                            </svg>
+                          </button>
+                        )}
+                        <button type="button" onClick={() => handleDeleteImage(img.id)}
+                          className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
+                          title="Delete image"
+                        >
+                          <svg className="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                      {img.isPrimary && (
+                        <span className="absolute top-1 left-1 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                          MAIN
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                  <label className={`w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 cursor-pointer flex flex-col items-center justify-center gap-1 transition-colors flex-shrink-0 ${uploading ? 'pointer-events-none opacity-50' : ''}`}>
+                    <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleUpload} className="hidden" />
+                    {uploading ? (
+                      <svg className="w-5 h-5 text-gray-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span className="text-[10px] text-gray-400 font-medium">Add photo</span>
+                      </>
+                    )}
+                  </label>
+                </div>
+                <p className="text-xs text-gray-400">JPEG, PNG, WebP or GIF. Max 5MB each.</p>
+              </div>
+            ) : (
+              <div className="bg-gray-50 rounded-xl p-6 text-center">
+                <svg className="w-10 h-10 mx-auto text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p className="text-sm text-gray-500">You'll be able to add photos after creating the property.</p>
+              </div>
+            )}
+          </div>
+        </div>
 
-      <div className="flex items-center space-x-4">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="btn-primary"
-        >
-          {isSubmitting ? (
-            <span className="flex items-center">
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              Saving...
-            </span>
-          ) : (
-            isEditing ? 'Update Property' : 'Create Property'
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="btn-secondary"
-        >
-          Cancel
-        </button>
+        <div className="flex items-center space-x-4">
+          <button type="submit" disabled={submitting}
+            className="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-colors font-medium text-sm"
+          >
+            {submitting ? 'Saving...' : isEditing ? 'Update Property' : 'Create Property'}
+          </button>
+          <button type="button" onClick={() => navigate(-1)}
+            className="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+
+      <div className="lg:col-span-1 mt-6 lg:mt-0 space-y-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sticky top-6">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-1.5">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            Preview
+          </h3>
+          <div className="rounded-xl overflow-hidden border border-gray-200">
+            <div className="aspect-[16/10] bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 relative">
+              {previewImage ? (
+                <img src={previewImage.url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <svg className="w-12 h-12 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d={typeIcons[formData.propertyType] || typeIcons.house} />
+                  </svg>
+                </div>
+              )}
+              <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${
+                formData.listingType === 'sale' ? 'bg-emerald-500 text-white' : 'bg-blue-500 text-white'
+              }`}>
+                {formData.listingType === 'sale' ? 'For Sale' : 'For Rent'}
+              </span>
+            </div>
+            <div className="p-3 space-y-1.5">
+              <p className="text-sm font-semibold text-gray-900 truncate leading-tight">
+                {formData.title || 'Property Title'}
+              </p>
+              <p className="text-lg font-bold text-blue-600 leading-tight">
+                {formData.price ? formatCurrency(Number(formData.price)) : '—'}
+              </p>
+              <p className="text-xs text-gray-500 truncate">
+                {formData.location || 'Location'}
+              </p>
+              {formData.status && formData.status !== 'available' && (
+                <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${
+                  formData.status === 'sold' ? 'bg-red-100 text-red-700' :
+                  formData.status === 'rented' ? 'bg-purple-100 text-purple-700' :
+                  formData.status === 'reserved' ? 'bg-amber-100 text-amber-700' :
+                  formData.status === 'hidden' ? 'bg-gray-100 text-gray-700' : ''
+                }`}>
+                  {formData.status === 'sold' ? 'Sold' :
+                   formData.status === 'rented' ? 'Rented' :
+                   formData.status === 'reserved' ? 'Reserved' :
+                   formData.status === 'hidden' ? 'Hidden' : formData.status}
+                </span>
+              )}
+              <div className="flex items-center gap-3 text-[11px] text-gray-400 pt-1 border-t border-gray-100">
+                {formData.bedrooms && <span>{formData.bedrooms} dorm</span>}
+                {formData.bathrooms && <span>{formData.bathrooms} baños</span>}
+                {formData.surface && <span>{formData.surface} m²</span>}
+                <span className="capitalize">{typeLabels[formData.propertyType] || formData.propertyType}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </form>
-  );
+    </div>
+  )
 }

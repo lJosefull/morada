@@ -10,7 +10,7 @@ export type PropertyFilters = {
   bedrooms?: number;
   bathrooms?: number;
   location?: string;
-  isActive?: boolean;
+  status?: string;
   userId?: string;
 };
 

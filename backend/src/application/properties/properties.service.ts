@@ -1,22 +1,27 @@
-```typescript
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { PropertyRepository } from '../../domain/properties/property.repository';
+import { Inject, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  IPropertyRepository,
+  PROPERTY_REPOSITORY,
+  PropertyFilters,
+} from '../../domain/properties/property.repository';
 import { CreatePropertyDto, UpdatePropertyDto, PropertyQueryDto } from '../../interfaces/properties/properties.dto';
 
 @Injectable()
 export class PropertiesService {
-  constructor(private readonly propertyRepository: PropertyRepository) {}
+  constructor(
+    @Inject(PROPERTY_REPOSITORY)
+    private readonly propertyRepository: IPropertyRepository,
+  ) {}
 
   async findAll(query: PropertyQueryDto) {
-    const { page = 1, limit = 20, ...filters } = query;
+    const { page = 1, limit = 20, search, ...rest } = query;
     const skip = (page - 1) * limit;
-    
-    return this.propertyRepository.findAll({
-      skip,
-      take: limit,
-      where: this.buildWhereClause(filters),
-      orderBy: { createdAt: 'desc' },
-    });
+    const filters: PropertyFilters = {
+      ...rest,
+      location: search,
+    };
+    const [data, total] = await this.propertyRepository.findMany(filters, skip, limit);
+    return { data, total, page, limit };
   }
 
   async findOne(id: string) {
@@ -27,19 +32,11 @@ export class PropertiesService {
     return property;
   }
 
-  async create(createPropertyDto: CreatePropertyDto, userId: string, files?: Express.Multer.File[]) {
-    const property = await this.propertyRepository.create({
+  async create(createPropertyDto: CreatePropertyDto, userId: string) {
+    return this.propertyRepository.create({
       ...createPropertyDto,
-      ownerId: userId,
+      userId,
     });
-
-    // If files are provided, upload them
-    if (files && files.length > 0) {
-      // Handle file uploads here
-      // This would typically involve uploading to a cloud storage service
-    }
-
-    return property;
   }
 
   async update(id: string, updatePropertyDto: UpdatePropertyDto, userId: string) {
@@ -47,11 +44,9 @@ export class PropertiesService {
     if (!property) {
       throw new NotFoundException('Property not found');
     }
-
-    if (property.ownerId !== userId) {
+    if (property.userId !== userId) {
       throw new ForbiddenException('You can only update your own properties');
     }
-
     return this.propertyRepository.update(id, updatePropertyDto);
   }
 
@@ -60,53 +55,9 @@ export class PropertiesService {
     if (!property) {
       throw new NotFoundException('Property not found');
     }
-
-    if (property.ownerId !== userId) {
+    if (property.userId !== userId) {
       throw new ForbiddenException('You can only delete your own properties');
     }
-
     return this.propertyRepository.delete(id);
   }
-
-  private buildWhereClause(filters: Partial<PropertyQueryDto>) {
-    const where: any = {};
-
-    if (filters.search) {
-      where.OR = [
-        { title: { contains: filters.search, mode: 'insensitive' } },
-        { description: { contains: filters.search, mode: 'insensitive' } },
-        { address: { contains: filters.search, mode: 'insensitive' } },
-        { city: { contains: filters.search, mode: 'insensitive' } },
-      ];
-    }
-
-    if (filters.status) {
-      where.status = filters.status;
-    }
-
-    if (filters.type) {
-      where.type = filters.type;
-    }
-
-    if (filters.city) {
-      where.city = { contains: filters.city, mode: 'insensitive' };
-    }
-
-    if (filters.minPrice || filters.maxPrice) {
-      where.price = {};
-      if (filters.minPrice) where.price.gte = filters.minPrice;
-      if (filters.maxPrice) where.price.lte = filters.maxPrice;
-    }
-
-    if (filters.minBedrooms) {
-      where.bedrooms = { gte: filters.minBedrooms };
-    }
-
-    if (filters.minBathrooms) {
-      where.bathrooms = { gte: filters.minBathrooms };
-    }
-
-    return where;
-  }
 }
-```

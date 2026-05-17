@@ -8,17 +8,21 @@ import {
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { ImagesService } from '../../application/images/images.service';
 import { UploadFile } from '../../infrastructure/upload/file-upload.decorator';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('images')
 @Controller('properties/:propertyId/images')
 export class ImagesController {
   constructor(private readonly imagesService: ImagesService) {}
 
   @Post()
   @UploadFile('image')
+  @ApiBearerAuth()
   async upload(
     @Param('propertyId', ParseUUIDPipe) propertyId: string,
     @Req() req: Request,
@@ -30,12 +34,14 @@ export class ImagesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth()
   async delete(@Param('id') id: string) {
     await this.imagesService.delete(id);
   }
 
   @Post(':id/primary')
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
   async setPrimary(
     @Param('id') id: string,
     @Param('propertyId') propertyId: string,

@@ -1,10 +1,7 @@
-```typescript
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
-import { UserRepository } from '../../domain/users/user.repository';
-import { PrismaUserRepository } from '../database/prisma-user.repository';
 import { PrismaModule } from '../database/prisma.module';
 
 @Module({
@@ -16,14 +13,7 @@ import { PrismaModule } from '../database/prisma.module';
     }),
     PrismaModule,
   ],
-  providers: [
-    JwtStrategy,
-    {
-      provide: UserRepository,
-      useClass: PrismaUserRepository,
-    },
-  ],
+  providers: [JwtStrategy],
   exports: [JwtModule, PassportModule],
 })
-export class AuthModule {}
-```
+export class AuthInfrastructureModule {}

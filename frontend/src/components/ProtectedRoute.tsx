@@ -1,18 +1,14 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
-import LoadingSpinner from './LoadingSpinner';
+import { useAuthStore } from '../store/auth';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: string;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
-  children,
-  requiredRole,
-}) => {
-  const { isAuthenticated, user, isLoading } = useAuthStore();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const { accessToken, isLoading } = useAuthStore();
   const location = useLocation();
 
   if (isLoading) {
@@ -23,12 +19,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  if (!isAuthenticated) {
+  if (!accessToken) {
     return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  if (requiredRole && user?.role !== requiredRole && user?.role !== 'admin') {
-    return <Navigate to="/unauthorized" replace />;
   }
 
   return <>{children}</>;

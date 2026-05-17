@@ -12,7 +12,7 @@ export class PrismaImageRepository implements IImageRepository {
       where: { propertyId },
       orderBy: { createdAt: 'desc' },
     });
-    return images.map(this.toDomain);
+    return images.map((img) => this.toDomain(img));
   }
 
   async create(input: CreateImageInput): Promise<IImage> {
@@ -35,7 +35,16 @@ export class PrismaImageRepository implements IImageRepository {
     });
   }
 
-  private toDomain(raw: any): IImage {
+  private toDomain(raw: {
+    id: string;
+    url: string;
+    filename: string;
+    mimetype: string;
+    size: number;
+    isPrimary: boolean;
+    propertyId: string;
+    createdAt: Date;
+  }): IImage {
     return {
       id: raw.id,
       url: raw.url,

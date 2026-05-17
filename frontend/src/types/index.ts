@@ -21,7 +21,7 @@ export interface Property {
   location: string
   latitude: number | null
   longitude: number | null
-  isActive: boolean
+  status: string
   aiTitle: string | null
   aiDescription: string | null
   aiStatus: 'pending' | 'processing' | 'completed' | 'failed'

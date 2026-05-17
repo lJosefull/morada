@@ -1,7 +1,6 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { useAuthStore } from '../stores/authStore';
+import { useAuthStore } from '../store/auth';
 
-// Extend AxiosRequestConfig to include _retry property
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
@@ -16,7 +15,7 @@ class ApiClient {
 
   constructor() {
     this.client = axios.create({
-      baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+      baseURL: '/api',
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
@@ -27,7 +26,6 @@ class ApiClient {
   }
 
   private setupInterceptors(): void {
-    // Request interceptor
     this.client.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
         const token = useAuthStore.getState().accessToken;
@@ -36,21 +34,16 @@ class ApiClient {
         }
         return config;
       },
-      (error: AxiosError) => {
-        return Promise.reject(error);
-      }
+      (error: AxiosError) => Promise.reject(error),
     );
 
-    // Response interceptor
     this.client.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
         const originalRequest = error.config as CustomAxiosRequestConfig;
 
-        // If error is 401 and we haven't retried yet
         if (error.response?.status === 401 && !originalRequest._retry) {
           if (this.isRefreshing) {
-            // If already refreshing, queue the request
             return new Promise((resolve, reject) => {
               this.failedQueue.push({ resolve, reject });
             }).then((token) => {
@@ -66,59 +59,35 @@ class ApiClient {
 
           try {
             const refreshToken = useAuthStore.getState().refreshToken;
-            if (!refreshToken) {
-              throw new Error('No refresh token available');
-            }
+            if (!refreshToken) throw new Error('No refresh token available');
 
-            // FIX: Changed endpoint from /api/v1/auth/refresh to /api/v1/auth/refresh-token to match backend controller route
-            const response = await axios.post(
-              `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/v1/auth/refresh-token`,
-              { refreshToken }, // FIX: Send refreshToken in body instead of Authorization header
-              {
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-              }
-            );
+            const { data } = await axios.post('/api/auth/refresh', { refreshToken });
+            const { accessToken, refreshToken: newRefreshToken } = data;
 
-            // FIX: Handle different response structures - backend returns { accessToken, refreshToken } directly or nested
-            const data = response.data;
-            const accessToken = data.accessToken || data.tokens?.accessToken;
-            const newRefreshToken = data.refreshToken || data.tokens?.refreshToken;
-            
             if (!accessToken || !newRefreshToken) {
-              throw new Error('Invalid token response structure');
+              throw new Error('Invalid token response');
             }
-            
-            // Update auth store with new tokens
-            useAuthStore.getState().setTokens(accessToken, newRefreshToken);
 
-            // Process queued requests
+            useAuthStore.getState().setTokens(accessToken, newRefreshToken);
             this.processQueue(null, accessToken);
 
-            // Retry original request
             if (originalRequest.headers) {
               originalRequest.headers.Authorization = `Bearer ${accessToken}`;
             }
             return this.client(originalRequest);
           } catch (refreshError) {
-            // Process queue with error
             this.processQueue(refreshError, null);
-            
-            // Clear auth state and redirect to login
             useAuthStore.getState().logout();
             window.location.href = '/login';
-            
             return Promise.reject(refreshError);
           } finally {
             this.isRefreshing = false;
           }
         }
 
-        // Handle other errors
         const errorMessage = this.getErrorMessage(error);
         return Promise.reject(new Error(errorMessage));
-      }
+      },
     );
   }
 

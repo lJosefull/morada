@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../stores/authStore';
+import { useAuthStore } from '../store/auth';
 
 export default function Navbar() {
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { accessToken, user, logout } = useAuthStore();
+  const isAuthenticated = !!accessToken;
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -16,43 +17,44 @@ export default function Navbar() {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const navLinks = [
-    { path: '/dashboard', label: 'Dashboard' },
-    { path: '/properties', label: 'Properties' },
-  ];
+  const isLoggedIn = isAuthenticated;
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <span className="text-2xl font-bold text-blue-600">RealEstate</span>
             <span className="text-2xl font-bold text-gray-900">Pro</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          {isAuthenticated && (
-            <div className="hidden md:flex items-center space-x-8">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`text-sm font-medium transition-colors ${
-                    isActive(link.path)
-                      ? 'text-blue-600 border-b-2 border-blue-600'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          )}
+          <div className="hidden md:flex items-center space-x-8">
+            <Link
+              to="/properties"
+              className={`text-sm font-medium transition-colors ${
+                isActive('/properties')
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Properties
+            </Link>
+            {isLoggedIn && (
+              <Link
+                to="/dashboard"
+                className={`text-sm font-medium transition-colors ${
+                  isActive('/dashboard')
+                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Dashboard
+              </Link>
+            )}
+          </div>
 
-          {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            {isAuthenticated ? (
+            {isLoggedIn ? (
               <div className="relative">
                 <button
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
@@ -111,7 +113,6 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none"
@@ -128,30 +129,36 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-gray-200 py-4">
-            {isAuthenticated && (
-              <div className="space-y-2 mb-4">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    className={`block px-4 py-2 rounded-lg text-sm font-medium ${
-                      isActive(link.path)
-                        ? 'bg-blue-50 text-blue-600'
-                        : 'text-gray-600 hover:bg-gray-50'
-                    }`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-            )}
-            
+            <div className="space-y-2 mb-4">
+              <Link
+                to="/properties"
+                className={`block px-4 py-2 rounded-lg text-sm font-medium ${
+                  isActive('/properties')
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Properties
+              </Link>
+              {isLoggedIn && (
+                <Link
+                  to="/dashboard"
+                  className={`block px-4 py-2 rounded-lg text-sm font-medium ${
+                    isActive('/dashboard')
+                      ? 'bg-blue-50 text-blue-600'
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              )}
+            </div>
             <div className="space-y-2 px-4">
-              {isAuthenticated ? (
+              {isLoggedIn ? (
                 <>
                   <Link
                     to="/profile"

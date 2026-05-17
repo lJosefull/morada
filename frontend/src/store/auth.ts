@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import api from '../lib/api'
+import { api } from '../lib/api'
 import type { User } from '../types'
 
 interface AuthState {
@@ -8,11 +8,13 @@ interface AuthState {
   accessToken: string | null
   refreshToken: string | null
   isLoading: boolean
+  error: string | null
   login: (email: string, password: string) => Promise<void>
-  register: (data: { email: string; password: string; name: string; phone?: string }) => Promise<void>
+  register: (data: { email: string; password: string; name: string }) => Promise<void>
   logout: () => void
-  setTokens: (tokens: { accessToken: string; refreshToken: string }) => void
+  setTokens: (accessToken: string, refreshToken: string) => void
   fetchUser: () => Promise<void>
+  clearError: () => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -22,42 +24,57 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       refreshToken: null,
       isLoading: false,
+      error: null,
 
       login: async (email, password) => {
-        const { data } = await api.post('/auth/login', { email, password })
-        set({
-          accessToken: data.tokens.accessToken,
-          refreshToken: data.tokens.refreshToken,
-        })
-        await get().fetchUser()
+        set({ isLoading: true, error: null })
+        try {
+          const { data } = await api.post<{ accessToken: string; refreshToken: string; user: User }>(
+            '/auth/login', { email, password },
+          )
+          set({ accessToken: data.accessToken, refreshToken: data.refreshToken })
+          await get().fetchUser()
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Login failed'
+          set({ error: message, isLoading: false })
+          throw err
+        }
       },
 
       register: async (input) => {
-        const { data } = await api.post('/auth/register', input)
-        set({
-          accessToken: data.tokens.accessToken,
-          refreshToken: data.tokens.refreshToken,
-        })
-        await get().fetchUser()
+        set({ isLoading: true, error: null })
+        try {
+          const { data } = await api.post<{ accessToken: string; refreshToken: string; user: User }>(
+            '/auth/register', input,
+          )
+          set({ accessToken: data.accessToken, refreshToken: data.refreshToken })
+          await get().fetchUser()
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Registration failed'
+          set({ error: message, isLoading: false })
+          throw err
+        }
       },
 
       logout: () => {
-        set({ user: null, accessToken: null, refreshToken: null })
+        set({ user: null, accessToken: null, refreshToken: null, error: null })
       },
 
-      setTokens: (tokens) => {
-        set({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken })
+      setTokens: (accessToken, refreshToken) => {
+        set({ accessToken, refreshToken })
       },
 
       fetchUser: async () => {
         set({ isLoading: true })
         try {
-          const { data } = await api.get('/users/me')
-          set({ user: data, isLoading: false })
+          const { data } = await api.get<User>('/auth/profile')
+          set({ user: data, isLoading: false, error: null })
         } catch {
           set({ isLoading: false })
         }
       },
+
+      clearError: () => set({ error: null }),
     }),
     {
       name: 'auth-storage',

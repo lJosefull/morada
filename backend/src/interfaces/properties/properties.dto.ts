@@ -1,119 +1,115 @@
-```typescript
 import {
   IsString,
   IsNumber,
   IsEnum,
   IsOptional,
-  IsArray,
   Min,
   Max,
-  IsUUID,
+  MinLength,
+  MaxLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 
 export enum PropertyType {
-  HOUSE = 'HOUSE',
-  APARTMENT = 'APARTMENT',
-  CONDO = 'CONDO',
-  LAND = 'LAND',
-  COMMERCIAL = 'COMMERCIAL',
+  HOUSE = 'house',
+  APARTMENT = 'apartment',
+  LAND = 'land',
+  COMMERCIAL = 'commercial',
 }
 
-export enum PropertyStatus {
-  AVAILABLE = 'AVAILABLE',
-  PENDING = 'PENDING',
-  SOLD = 'SOLD',
-  RENTED = 'RENTED',
+export enum ListingType {
+  SALE = 'sale',
+  RENT = 'rent',
 }
 
 export class CreatePropertyDto {
   @ApiProperty({ example: 'Beautiful House in the Suburbs' })
   @IsString()
-  @Min(2)
-  @Max(200)
-  title: string;
+  @MinLength(2)
+  @MaxLength(200)
+  title!: string;
 
   @ApiProperty({ example: 'A beautiful house with 3 bedrooms and 2 bathrooms...' })
   @IsString()
-  @Min(10)
-  @Max(2000)
-  description: string;
+  @MinLength(10)
+  @MaxLength(2000)
+  description!: string;
 
   @ApiProperty({ example: 250000 })
   @IsNumber()
   @Min(0)
   @Type(() => Number)
-  price: number;
+  price!: number;
 
   @ApiProperty({ enum: PropertyType, example: PropertyType.HOUSE })
   @IsEnum(PropertyType)
-  type: PropertyType;
+  propertyType!: PropertyType;
 
-  @ApiProperty({ example: '123 Main St' })
-  @IsString()
-  @Min(5)
-  @Max(200)
-  address: string;
-
-  @ApiProperty({ example: 'New York' })
-  @IsString()
-  @Min(2)
-  @Max(100)
-  city: string;
-
-  @ApiProperty({ example: 'NY' })
-  @IsString()
-  @Min(2)
-  @Max(50)
-  state: string;
-
-  @ApiProperty({ example: '10001' })
-  @IsString()
-  @Min(5)
-  @Max(20)
-  zipCode: string;
-
-  @ApiProperty({ example: 1500 })
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  squareFootage: number;
+  @ApiProperty({ enum: ListingType, example: ListingType.SALE })
+  @IsEnum(ListingType)
+  listingType!: ListingType;
 
   @ApiProperty({ example: 3 })
+  @IsOptional()
   @IsNumber()
   @Min(0)
   @Max(50)
   @Type(() => Number)
-  bedrooms: number;
+  bedrooms?: number;
 
   @ApiProperty({ example: 2 })
+  @IsOptional()
   @IsNumber()
   @Min(0)
   @Max(50)
   @Type(() => Number)
-  bathrooms: number;
+  bathrooms?: number;
 
-  @ApiPropertyOptional({ example: ['Pool', 'Garage', 'Garden'] })
+  @ApiProperty({ example: 1500 })
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  amenities?: string[];
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  surface?: number;
+
+  @ApiProperty({ example: 'Santiago, Chile' })
+  @IsString()
+  @MinLength(5)
+  @MaxLength(200)
+  location!: string;
+
+  @ApiPropertyOptional({ example: -33.456 })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  latitude?: number;
+
+  @ApiPropertyOptional({ example: -70.648 })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  longitude?: number;
+
+  @ApiPropertyOptional({ enum: ['available', 'reserved', 'sold', 'rented', 'hidden'] })
+  @IsOptional()
+  @IsString()
+  status?: string;
 }
 
 export class UpdatePropertyDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @Min(2)
-  @Max(200)
+  @MinLength(2)
+  @MaxLength(200)
   title?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @Min(10)
-  @Max(2000)
+  @MinLength(10)
+  @MaxLength(2000)
   description?: string;
 
   @ApiPropertyOptional()
@@ -126,42 +122,12 @@ export class UpdatePropertyDto {
   @ApiPropertyOptional({ enum: PropertyType })
   @IsOptional()
   @IsEnum(PropertyType)
-  type?: PropertyType;
+  propertyType?: PropertyType;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ enum: ListingType })
   @IsOptional()
-  @IsString()
-  @Min(5)
-  @Max(200)
-  address?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @Min(2)
-  @Max(100)
-  city?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @Min(2)
-  @Max(50)
-  state?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @Min(5)
-  @Max(20)
-  zipCode?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  squareFootage?: number;
+  @IsEnum(ListingType)
+  listingType?: ListingType;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -181,36 +147,58 @@ export class UpdatePropertyDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  amenities?: string[];
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  surface?: number;
 
-  @ApiPropertyOptional({ enum: PropertyStatus })
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsEnum(PropertyStatus)
-  status?: PropertyStatus;
+  @IsString()
+  @MinLength(5)
+  @MaxLength(200)
+  location?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  latitude?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  longitude?: number;
+
+  @ApiPropertyOptional({ enum: ['available', 'reserved', 'sold', 'rented', 'hidden'] })
+  @IsOptional()
+  @IsString()
+  status?: string;
+}
+
+function ToUndefinedIfEmpty(): PropertyDecorator {
+  return Transform(({ value }) => (value === '' ? undefined : value));
 }
 
 export class PropertyQueryDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
+  @ToUndefinedIfEmpty()
   search?: string;
-
-  @ApiPropertyOptional({ enum: PropertyStatus })
-  @IsOptional()
-  @IsEnum(PropertyStatus)
-  status?: PropertyStatus;
 
   @ApiPropertyOptional({ enum: PropertyType })
   @IsOptional()
   @IsEnum(PropertyType)
-  type?: PropertyType;
+  @ToUndefinedIfEmpty()
+  propertyType?: PropertyType;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ enum: ListingType })
   @IsOptional()
-  @IsString()
-  city?: string;
+  @IsEnum(ListingType)
+  @ToUndefinedIfEmpty()
+  listingType?: ListingType;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -230,15 +218,22 @@ export class PropertyQueryDto {
   @IsOptional()
   @IsNumber()
   @Min(0)
+  @Max(50)
   @Type(() => Number)
-  minBedrooms?: number;
+  bedrooms?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsNumber()
   @Min(0)
+  @Max(50)
   @Type(() => Number)
-  minBathrooms?: number;
+  bathrooms?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  location?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -254,5 +249,5 @@ export class PropertyQueryDto {
   @Max(100)
   @Type(() => Number)
   limit?: number;
+
 }
-```

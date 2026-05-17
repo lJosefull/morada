@@ -1,4 +1,3 @@
-```typescript
 import {
   Controller,
   Get,
@@ -10,16 +9,12 @@ import {
   Query,
   UseGuards,
   Req,
-  UseInterceptors,
-  UploadedFiles,
-  BadRequestException,
 } from '@nestjs/common';
 import { PropertiesService } from '../../application/properties/properties.service';
 import { CreatePropertyDto, UpdatePropertyDto, PropertyQueryDto } from './properties.dto';
 import { JwtAuthGuard } from '../../infrastructure/auth/jwt-auth.guard';
 import { Public } from '../../infrastructure/auth/public.decorator';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('properties')
 @Controller('properties')
@@ -33,6 +28,14 @@ export class PropertiesController {
     return this.propertiesService.findAll(query);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('mine')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get my properties' })
+  async findMine(@Req() req: any) {
+    return this.propertiesService.findAll({ userId: req.user.id } as PropertyQueryDto);
+  }
+
   @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Get property by ID' })
@@ -44,14 +47,11 @@ export class PropertiesController {
   @Post()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new property' })
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FilesInterceptor('images', 10))
   async create(
     @Body() createPropertyDto: CreatePropertyDto,
-    @UploadedFiles() files: Express.Multer.File[],
     @Req() req: any,
   ) {
-    return this.propertiesService.create(createPropertyDto, req.user.id, files);
+    return this.propertiesService.create(createPropertyDto, req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -74,4 +74,3 @@ export class PropertiesController {
     return this.propertiesService.remove(id, req.user.id);
   }
 }
-```

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MapPin, Bed, Bath, Maximize2, Loader2 } from 'lucide-react'
-import api from '../lib/api'
-import type { Property, PaginatedResponse } from '../types'
+import { api } from '../lib/api'
+import type { Property } from '../types'
+import { LoadingSpinner } from '../components/LoadingSpinner'
+import AnimatedLink from '../components/AnimatedLink'
 
 export default function PropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([])
@@ -14,10 +15,12 @@ export default function PropertiesPage() {
 
   useEffect(() => {
     setLoading(true)
-    api.get('/properties', { params: { ...filters, page, limit } })
-      .then((res) => {
-        setProperties(res.data.data || [])
-        setTotal(res.data.total || 0)
+    api.get<{ data: Property[]; total: number }>('/properties', {
+      params: { ...filters, page, limit },
+    } as any)
+      .then(({ data }) => {
+        setProperties(data.data || [])
+        setTotal(data.total || 0)
       })
       .finally(() => setLoading(false))
   }, [page, filters])
@@ -27,85 +30,95 @@ export default function PropertiesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Propiedades</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Properties</h1>
         <Link
-          to="/propiedades/nueva"
+          to="/properties/new"
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
-          + Nueva Propiedad
+          + New Property
         </Link>
       </div>
 
       <div className="flex gap-4 flex-wrap">
         <select
           value={filters.listingType}
-          onChange={(e) => { setFilters({ ...filters, listingType: e.target.value }); setPage(1) }}
+          onChange={(e) => { setFilters((f) => ({ ...f, listingType: e.target.value })); setPage(1) }}
           className="px-4 py-2 border rounded-lg bg-white"
         >
-          <option value="">Todos los tipos</option>
-          <option value="sale">Venta</option>
-          <option value="rent">Arriendo</option>
+          <option value="">All listings</option>
+          <option value="sale">Sale</option>
+          <option value="rent">Rent</option>
         </select>
         <select
           value={filters.propertyType}
-          onChange={(e) => { setFilters({ ...filters, propertyType: e.target.value }); setPage(1) }}
+          onChange={(e) => { setFilters((f) => ({ ...f, propertyType: e.target.value })); setPage(1) }}
           className="px-4 py-2 border rounded-lg bg-white"
         >
-          <option value="">Todas las categorías</option>
-          <option value="house">Casa</option>
-          <option value="apartment">Departamento</option>
-          <option value="land">Terreno</option>
-          <option value="commercial">Local Comercial</option>
+          <option value="">All types</option>
+          <option value="house">House</option>
+          <option value="apartment">Apartment</option>
+          <option value="land">Land</option>
+          <option value="commercial">Commercial</option>
         </select>
         <input
           type="text"
-          placeholder="Buscar por ubicación..."
+          placeholder="Search by location..."
           value={filters.search}
-          onChange={(e) => { setFilters({ ...filters, search: e.target.value }); setPage(1) }}
+          onChange={(e) => { setFilters((f) => ({ ...f, search: e.target.value })); setPage(1) }}
           className="px-4 py-2 border rounded-lg flex-1 min-w-[200px]"
         />
       </div>
 
       {loading ? (
         <div className="flex justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <LoadingSpinner size="lg" />
         </div>
       ) : properties.length === 0 ? (
-        <div className="text-center py-20 text-gray-500">
-          No se encontraron propiedades
-        </div>
+        <div className="text-center py-20 text-gray-500">No properties found</div>
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {properties.map((p) => (
-              <Link
+              <AnimatedLink
                 key={p.id}
-                to={`/propiedades/${p.id}`}
-                className="bg-white rounded-xl shadow-sm border hover:shadow-md transition-shadow overflow-hidden"
+                to={`/properties/${p.id}`}
+                state={p}
+                className="bg-white rounded-xl shadow-sm border hover:shadow-md transition-shadow overflow-hidden block"
               >
-                <div className="h-48 bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                <div
+                  className="h-48 bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center"
+                  style={{ viewTransitionName: `property-thumb-${p.id}` }}
+                >
                   {p.images?.[0] ? (
                     <img src={p.images[0].url} alt={p.title} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-gray-400">Sin imagen</span>
+                    <span className="text-gray-400">No image</span>
                   )}
                 </div>
                 <div className="p-4">
                   <p className="text-xs text-blue-600 font-medium uppercase mb-1">
-                    {p.listingType === 'sale' ? 'Venta' : 'Arriendo'}
+                    {p.listingType === 'sale' ? 'Sale' : 'Rent'}
                   </p>
-                  <h3 className="font-semibold text-gray-900 mb-1">{p.aiTitle || p.title}</h3>
-                  <p className="text-lg font-bold text-blue-600 mb-2">
+                  <h3
+                    className="font-semibold text-gray-900 mb-1"
+                    style={{ viewTransitionName: `property-title-${p.id}` }}
+                  >
+                    {p.aiTitle || p.title}
+                  </h3>
+                  <p
+                    className="text-lg font-bold text-blue-600 mb-2"
+                    style={{ viewTransitionName: `property-price-${p.id}` }}
+                  >
                     ${p.price.toLocaleString('es-CL')}
                   </p>
                   <div className="flex items-center gap-3 text-sm text-gray-500">
-                    <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{p.location}</span>
-                    {p.bedrooms && <span className="flex items-center gap-1"><Bed className="w-3 h-3" />{p.bedrooms}</span>}
-                    {p.bathrooms && <span className="flex items-center gap-1"><Bath className="w-3 h-3" />{p.bathrooms}</span>}
-                    {p.surface && <span className="flex items-center gap-1"><Maximize2 className="w-3 h-3" />{p.surface}m²</span>}
+                    <span>{p.location}</span>
+                    {p.bedrooms && <span>{p.bedrooms} beds</span>}
+                    {p.bathrooms && <span>{p.bathrooms} baths</span>}
+                    {p.surface && <span>{p.surface} m²</span>}
                   </div>
                 </div>
-              </Link>
+              </AnimatedLink>
             ))}
           </div>
 

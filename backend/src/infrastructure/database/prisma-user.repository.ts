@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { IUserRepository } from '../../domain/users/user.repository';
-import { IUser } from '../../domain/users/user.entity';
+import { IUser, CreateUserInput } from '../../domain/users/user.entity';
 import { PrismaService } from './prisma.service';
 
 @Injectable()
@@ -19,30 +19,45 @@ export class PrismaUserRepository implements IUserRepository {
     return this.toDomain(user);
   }
 
-  async create(input: any): Promise<IUser> {
-    const user = await this.prisma.user.create({ data: input });
+  async create(input: CreateUserInput & { passwordHash: string }): Promise<IUser> {
+    const user = await this.prisma.user.create({
+      data: {
+        email: input.email,
+        password: input.passwordHash,
+        name: input.name,
+        phone: input.phone || null,
+      },
+    });
     return this.toDomain(user);
   }
 
   async update(id: string, input: Partial<IUser>): Promise<IUser> {
-    const data: any = {};
+    const data: Record<string, unknown> = {};
     if (input.name) data.name = input.name;
-    if (input.phone) data.phone = input.phone;
-    if (input.refreshToken !== undefined) data.refreshToken = input.refreshToken;
+    if (input.phone !== undefined) data.phone = input.phone;
 
     const user = await this.prisma.user.update({ where: { id }, data });
     return this.toDomain(user);
   }
 
-  private toDomain(raw: any): IUser {
+  private toDomain(raw: {
+    id: string;
+    email: string;
+    password: string;
+    name: string;
+    phone: string | null;
+    role: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }): IUser {
     return {
       id: raw.id,
       email: raw.email,
-      passwordHash: raw.passwordHash,
+      passwordHash: raw.password,
       name: raw.name,
       phone: raw.phone,
-      role: raw.role,
-      refreshToken: raw.refreshToken,
+      role: raw.role as 'user' | 'admin',
+      refreshToken: null,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     };
