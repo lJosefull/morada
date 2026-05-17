@@ -11,6 +11,13 @@ export interface IImage {
 
 export type PropertyStatus = 'available' | 'reserved' | 'sold' | 'rented' | 'hidden';
 
+export interface IPropertyUser {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+}
+
 export interface IProperty {
   id: string;
   title: string;
@@ -31,6 +38,7 @@ export interface IProperty {
   aiDescription: string | null;
   aiStatus: AiStatus;
   userId: string;
+  user?: IPropertyUser;
   images: IImage[];
   createdAt: Date;
   updatedAt: Date;

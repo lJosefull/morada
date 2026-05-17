@@ -33,6 +33,7 @@ export class PrismaUserRepository implements IUserRepository {
 
   async update(id: string, input: Partial<IUser>): Promise<IUser> {
     const data: Record<string, unknown> = {};
+    if (input.email) data.email = input.email;
     if (input.name) data.name = input.name;
     if (input.phone !== undefined) data.phone = input.phone;
 

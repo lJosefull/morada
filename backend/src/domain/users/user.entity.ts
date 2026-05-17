@@ -15,4 +15,4 @@ export type CreateUserInput = {
   phone?: string;
 };
 
-export type UpdateUserInput = Partial<Pick<IUser, 'name' | 'phone'>>;
+export type UpdateUserInput = Partial<Pick<IUser, 'name' | 'phone' | 'email'>>;

@@ -110,11 +110,11 @@ export default function Navbar() {
                 {isProfileMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                     <Link
-                      to="/profile"
+                      to={`/agents/${user?.id}`}
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setIsProfileMenuOpen(false)}
                     >
-                      Profile
+                      My Profile
                     </Link>
                     <Link
                       to="/properties/new"
@@ -141,6 +141,13 @@ export default function Navbar() {
                       onClick={() => setIsProfileMenuOpen(false)}
                     >
                       Favorites
+                    </Link>
+                    <Link
+                      to="/settings"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      Settings
                     </Link>
                     <hr className="my-1 border-gray-200" />
                     <button
@@ -243,6 +250,17 @@ export default function Navbar() {
                   >
                     Favorites
                   </Link>
+                  <Link
+                    to="/properties/new"
+                    className={`block px-4 py-2 rounded-lg text-sm font-medium ${
+                      isActive('/properties/new')
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Add Property
+                  </Link>
                 </>
               )}
             </div>
@@ -250,11 +268,18 @@ export default function Navbar() {
               {isLoggedIn ? (
                 <>
                   <Link
-                    to="/profile"
+                    to={`/agents/${user?.id}`}
                     className="block text-sm font-medium text-gray-600 hover:text-gray-900"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    Profile
+                    My Profile
+                  </Link>
+                  <Link
+                    to="/settings"
+                    className="block text-sm font-medium text-gray-600 hover:text-gray-900"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Settings
                   </Link>
                   <button
                     onClick={() => {

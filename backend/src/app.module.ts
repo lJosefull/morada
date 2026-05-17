@@ -18,6 +18,8 @@ import { ViewsController } from './interfaces/views/views.controller';
 import { ViewService } from './application/views/view.service';
 import { FavoritesController } from './interfaces/favorites/favorites.controller';
 import { FavoritesService } from './application/favorites/favorites.service';
+import { ReviewsController } from './interfaces/reviews/reviews.controller';
+import { ReviewsService } from './application/reviews/reviews.service';
 import { ServeStaticModule } from './infrastructure/upload/serve-static.module';
 import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
 
@@ -56,6 +58,7 @@ import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
     InquiryController,
     ViewsController,
     FavoritesController,
+    ReviewsController,
   ],
   providers: [
     AuthService,
@@ -65,6 +68,7 @@ import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
     InquiryService,
     ViewService,
     FavoritesService,
+    ReviewsService,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

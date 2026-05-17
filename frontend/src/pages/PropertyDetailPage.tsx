@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useParams, useLocation, Link, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useAuthStore } from '../store/auth'
@@ -6,6 +6,7 @@ import type { Property, PropertyStats } from '../types'
 import { formatCurrency } from '../lib/utils'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 import ContactForm from '../components/ContactForm'
+import ReviewSection from '../components/ReviewSection'
 
 const typeIcons: Record<string, string> = {
   house: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
@@ -30,10 +31,14 @@ export default function PropertyDetailPage() {
   const [property, setProperty] = useState<Property | null>(passed)
   const [loading, setLoading] = useState(!passed)
   const [currentImage, setCurrentImage] = useState(0)
+  interface DailyView { date: string; views: number }
   const [propertyStats, setPropertyStats] = useState<PropertyStats | null>(null)
+  const [dailyStats, setDailyStats] = useState<DailyView[]>([])
   const [isFavorite, setIsFavorite] = useState(false)
 
   const isOwner = property && user && property.userId === user.id
+
+  const maxDailyViews = useMemo(() => Math.max(...dailyStats.map((d) => d.views), 1), [dailyStats])
 
   useEffect(() => {
     if (!id) return
@@ -47,6 +52,10 @@ export default function PropertyDetailPage() {
     
     api.get<PropertyStats>(`/properties/${id}/stats`)
       .then(({ data }) => setPropertyStats(data))
+      .catch(() => {})
+
+    api.get<DailyView[]>(`/properties/${id}/stats/daily`)
+      .then(({ data }) => setDailyStats(data.slice(-14)))
       .catch(() => {})
 
     api.get<Record<string, boolean>>(`/favorites/check?propertyIds=${id}`)
@@ -293,16 +302,25 @@ export default function PropertyDetailPage() {
           </div>
         </div>
 
-        <div className="space-y-6 mt-6 lg:mt-0">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-6">
+        <div className="space-y-6 mt-6 lg:mt-0 lg:self-start">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
                 {property.user?.name?.charAt(0).toUpperCase() || 'A'}
               </div>
               <div className="min-w-0">
-                <p className="font-semibold text-gray-900 text-sm truncate">
-                  {property.user?.name || 'Property Owner'}
-                </p>
+                {property.user ? (
+                  <Link
+                    to={`/agents/${property.user.id}`}
+                    className="font-semibold text-gray-900 text-sm truncate hover:text-blue-600 transition-colors"
+                  >
+                    {property.user.name || 'Property Owner'}
+                  </Link>
+                ) : (
+                  <p className="font-semibold text-gray-900 text-sm truncate">
+                    Property Owner
+                  </p>
+                )}
                 <p className="text-xs text-gray-500">Property Agent</p>
               </div>
             </div>
@@ -369,8 +387,60 @@ export default function PropertyDetailPage() {
               </>
             )}
 
-            {isOwner && (
+            {isOwner && propertyStats && (
               <div className="mt-4 pt-4 border-t border-gray-100">
+                <p className="text-sm font-semibold text-gray-900 mb-3">Property Analytics</p>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-blue-50 rounded-lg p-3">
+                    <p className="text-[10px] text-blue-700 font-semibold uppercase tracking-wider">Total Views</p>
+                    <p className="text-xl font-bold text-blue-900 mt-0.5">{propertyStats.totalViews}</p>
+                  </div>
+                  <div className="bg-amber-50 rounded-lg p-3">
+                    <p className="text-[10px] text-amber-700 font-semibold uppercase tracking-wider">This Week</p>
+                    <p className="text-xl font-bold text-amber-900 mt-0.5">{propertyStats.weeklyViews}</p>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-3">
+                    <p className="text-[10px] text-green-700 font-semibold uppercase tracking-wider">Inquiries</p>
+                    <p className="text-xl font-bold text-green-900 mt-0.5">{propertyStats.inquiryCount}</p>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-3">
+                    <p className="text-[10px] text-purple-700 font-semibold uppercase tracking-wider">Daily Avg</p>
+                    <p className="text-xl font-bold text-purple-900 mt-0.5">
+                      {dailyStats.length > 0
+                        ? Math.round(dailyStats.reduce((a, d) => a + d.views, 0) / dailyStats.length)
+                        : 0}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Weekly Mini Chart */}
+                {dailyStats.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider mb-2">Views (Last 14 days)</p>
+                    <div className="flex items-end gap-[3px] h-16">
+                      {dailyStats.map((d, i) => {
+                        const pct = Math.round((d.views / maxDailyViews) * 100)
+                        return (
+                          <div
+                            key={d.date}
+                            className="flex-1 bg-blue-200 hover:bg-blue-400 rounded-t transition-colors relative group cursor-pointer"
+                            style={{ height: `${Math.max(pct, 4)}%` }}
+                          >
+                            <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity">
+                              {d.views} views
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    {dailyStats.length >= 2 && (
+                      <p className="text-[10px] text-gray-400 mt-1.5">
+                        {dailyStats[dailyStats.length - 1].views > dailyStats[0].views ? '↑ Trending up' : '↓ Trending down'}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <button
                   onClick={() => navigate(`/properties/${property.id}/edit`)}
                   className="flex items-center justify-center gap-2 w-full bg-gray-900 text-white py-2.5 px-4 rounded-xl hover:bg-gray-800 transition-colors font-medium text-sm"
@@ -401,6 +471,14 @@ export default function PropertyDetailPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Reviews & Ratings Section */}
+      <div className="mt-8">
+        <ReviewSection
+          propertyId={property.id}
+          propertyUserId={property.userId}
+        />
       </div>
     </div>
   )

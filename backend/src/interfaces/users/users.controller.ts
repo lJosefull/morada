@@ -1,6 +1,8 @@
-import { Controller, Get, Req } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Body, Req } from '@nestjs/common';
 import { Request } from 'express';
 import { UsersService } from '../../application/users/users.service';
+import { UpdateProfileDto, ChangePasswordDto } from './users.dto';
+import { Public } from '../../infrastructure/auth/public.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('users')
@@ -21,5 +23,25 @@ export class UsersController {
       role: user.role,
       createdAt: user.createdAt,
     };
+  }
+
+  @Patch('me')
+  @ApiBearerAuth()
+  async updateProfile(@Req() req: Request, @Body() dto: UpdateProfileDto) {
+    const userId = (req as any).user.id;
+    return this.usersService.updateProfile(userId, dto);
+  }
+
+  @Patch('me/password')
+  @ApiBearerAuth()
+  async changePassword(@Req() req: Request, @Body() dto: ChangePasswordDto) {
+    const userId = (req as any).user.id;
+    return this.usersService.changePassword(userId, dto);
+  }
+
+  @Public()
+  @Get(':id/profile')
+  async getPublicProfile(@Param('id') id: string) {
+    return this.usersService.getPublicProfile(id);
   }
 }

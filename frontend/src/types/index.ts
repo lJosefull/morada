@@ -95,3 +95,22 @@ export interface PropertyStats {
   weeklyViews: number
   inquiryCount: number
 }
+
+export interface Review {
+  id: string
+  propertyId: string
+  userId: string
+  user?: { id: string; name: string }
+  rating: number
+  comment: string
+  reply: string | null
+  replyDate: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ReviewStats {
+  average: number
+  total: number
+  distribution: Record<string, number>
+}

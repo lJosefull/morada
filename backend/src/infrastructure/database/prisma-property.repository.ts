@@ -10,7 +10,7 @@ export class PrismaPropertyRepository implements IPropertyRepository {
   async findById(id: string): Promise<IProperty | null> {
     const property = await this.prisma.property.findUnique({
       where: { id },
-      include: { images: true },
+      include: { images: true, user: { select: { id: true, name: true, email: true, phone: true } } },
     });
     if (!property) return null;
     return this.toDomain(property);
@@ -28,7 +28,7 @@ export class PrismaPropertyRepository implements IPropertyRepository {
         skip,
         take,
         orderBy: { createdAt: 'desc' },
-        include: { images: true },
+        include: { images: true, user: { select: { id: true, name: true, email: true, phone: true } } },
       }),
       this.prisma.property.count({ where }),
     ]);
@@ -52,7 +52,7 @@ export class PrismaPropertyRepository implements IPropertyRepository {
         longitude: input.longitude ?? null,
         user: { connect: { id: input.userId } },
       },
-      include: { images: true },
+      include: { images: true, user: { select: { id: true, name: true, email: true, phone: true } } },
     });
     return this.toDomain(property);
   }
@@ -133,6 +133,12 @@ export class PrismaPropertyRepository implements IPropertyRepository {
       userId: raw.userId,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
+      user: raw.user ? {
+        id: raw.user.id,
+        name: raw.user.name,
+        email: raw.user.email,
+        phone: raw.user.phone,
+      } : undefined,
       images: (raw.images || []).map((img: IProperty['images'][number]) => ({
         id: img.id,
         url: img.url,

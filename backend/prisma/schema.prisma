@@ -22,6 +22,7 @@ model User {
   inquiries     Inquiry[]
   propertyViews PropertyView[]
   favorites     Favorite[]
+  reviews       Review[]
 }
 
 model Property {
@@ -53,6 +54,7 @@ model Property {
   propertyViews  PropertyView[]
   dailyStats     DailyPropertyStats[]
   favorites      Favorite[]
+  reviews        Review[]
 }
 
 model Image {
@@ -152,4 +154,22 @@ model Favorite {
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@unique([userId, propertyId])
+}
+
+model Review {
+  id         String     @id @default(cuid())
+  propertyId String
+  userId     String
+  rating     Int
+  comment    String
+  reply      String?    // Owner's reply to this review
+  replyDate  DateTime?  // When the owner replied
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, propertyId])
+  @@index([propertyId])
 }

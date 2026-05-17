@@ -16,6 +16,8 @@ const EditPropertyPage = lazy(() => import('./pages/EditPropertyPage'))
 const InquiriesPage = lazy(() => import('./pages/InquiriesPage'))
 const MyInquiriesPage = lazy(() => import('./pages/MyInquiriesPage'))
 const FavoritesPage = lazy(() => import('./pages/FavoritesPage'))
+const PublicProfilePage = lazy(() => import('./pages/PublicProfilePage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 
 const PageLoader: React.FC = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -93,6 +95,19 @@ const App: React.FC = () => {
               }
             >
               <Route index element={<EditPropertyPage />} />
+            </Route>
+            <Route path="/agents/:userId" element={<Layout />}>
+              <Route index element={<PublicProfilePage />} />
+            </Route>
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<SettingsPage />} />
             </Route>
             <Route path="/" element={<Navigate to="/properties" replace />} />
             <Route path="*" element={<Navigate to="/properties" replace />} />
