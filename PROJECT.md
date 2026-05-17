@@ -246,34 +246,72 @@ npm run dev
 
 ---
 
-## ✅ Cambios Aplicados (17-May-2026)
+## Features Implementados
 
-| ID    | Cambio                                                          | Estado |
-| ----- | --------------------------------------------------------------- | ------ |
-| S-01  | JWT secrets: removidos fallbacks hardcodeados                    | ✅     |
-| S-02  | Secrets removidos de docker-compose.yml; ahora usan .env         | ✅     |
-| S-03  | Dockerfile multi-stage para backend (build + production)         | ✅     |
-| S-04  | Rate limiting con @nestjs/throttler (3 req/s, 20/10s, 100/60s)  | ✅     |
-| S-05  | CORS ahora usa FRONTEND_URL desde variable de entorno            | ✅     |
-| M-01  | Jest + @nestjs/testing configurado en backend                   | ✅     |
-| M-02  | SearchFilters corregido (removidos condo, townhouse)            | ✅     |
-| M-04  | Refresh token usa `this.client.post` en vez de axios directo    | ✅     |
-| M-06  | Helmet agregado para security headers                          | ✅     |
-| M-08  | `refreshToken` removido de IUser (inconsistente con BD)         | ✅     |
-| M-09  | Register ya no pasa `password` plaintext innecesario            | ✅     |
-| L-01  | Dockerfile frontend con nginx y multi-stage                     | ✅     |
-| L-02  | nginx.conf con proxy a backend y SPA fallback                   | ✅     |
-| L-03  | .env.example actualizado con placeholders seguros               | ✅     |
-| L-04  | Graceful shutdown agregado (SIGTERM/SIGINT)                     | ✅     |
+### CRM Interno (Inquiries)
+- Modelo `Inquiry` con estados: new → contacted → interested → not_interested → converted
+- Modelo `InquiryStatusChange` para tracking de cambios de estado
+- Formulario de contacto público en cada propiedad (rate-limited)
+- Kanban pipeline con 5 columnas + drag & drop
+- Notas internas por lead (solo visible para el dueño)
+- Historial del comprador (`/inquiries/history`)
+- Dashboard analytics: total leads, leads por estado, tasa de conversión
+- Badge de inquiries no leídos en navbar
+
+### Tracking & Analytics
+- Modelo `PropertyView`: registra cada vista con IP + userId opcional
+- Modelo `DailyPropertyStats`: stats diarias por propiedad
+- Endpoint público `POST /api/properties/:id/view` (rate-limited)
+- Stats por propiedad: total views, weekly views, inquiries count, daily avg
+- Gráfico de barras de últimos 14 días en PropertyDetailPage
+- Dashboard con cards de overview y trends
+
+### Favoritos / Wishlist
+- Modelo `Favorite` con toggle
+- ♥ en PropertyCard y PropertyDetail
+- Página `/favorites` protegida
+- Endpoints: toggle, list, check masivo
+
+### Reviews & Ratings
+- Modelo `Review` con rating 1-5 + comentario
+- Componente `StarRating` interactivo y display (3 tamaños)
+- Sección `ReviewSection` en PropertyDetail
+- Distribución por estrellas con barras de porcentaje
+- Owner replies anidadas bajo reseñas
+- 1 reseña por usuario por propiedad
+- Dueño no puede reseñar su propia propiedad
+
+### Perfiles
+- Página pública del agente (`/agents/:userId`) con todas sus propiedades
+- Configuración de perfil (`/settings`) con tabs Profile + Security
+- Profile: editar nombre, email, teléfono (`PATCH /api/users/me`)
+- Security: cambiar contraseña (`PATCH /api/users/me/password`)
+- Diseño profesional tipo SaaS con sidebar y 2 columnas
+
+### 🔒 Seguridad y Producción
+- JWT secrets sin fallbacks hardcodeados (validación estricta)
+- Helmet middleware para security headers HTTP
+- Rate limiting: 3 req/s, 20 req/10s, 100 req/60s
+- CORS dinámico desde FRONTEND_URL env
+- Backend Dockerfile multi-stage (build + producción)
+- Frontend Dockerfile con nginx + proxy /api al backend
+- Graceful shutdown (SIGTERM/SIGINT)
+
+### 🎨 UX/UI
+- Dashboard profesional con: saludo por hora, avatar gradiente, stat cards, trends, quick actions, empty states
+- PropertyDetailPage con galería de imágenes, sticky sidebar mejorada, analytics para dueño
+- Settings con diseño tipo SaaS: avatar grande, sidebar, tabs animados, inputs modernos
+- ProtectedRoute con timeout (3s) para evitar pantallas de carga infinitas
+- Sesión expirada redirige a login automáticamente
 
 ## Checklist de Prioridades para Próximo Sprint
 
-- [ ] M-03: Implementar sistema de toasts (reemplazar alert())
-- [ ] M-07: Agregar soporte S3/cloud storage para imágenes
-- [ ] L-01: Consolidar layouts de Login/Register (DRY)
-- [ ] L-07: Implementar React Query / SWR para caché de datos
-- [ ] Agregar tests unitarios (al menos auth y properties)
-- [ ] Agregar CI/CD básico (GitHub Actions)
+- [ ] Sistema de toasts (reemplazar alert())
+- [ ] Soporte S3/cloud storage para imágenes
+- [ ] Tests unitarios (al menos auth, properties, inquiries)
+- [ ] Implementar React Query / SWR para caché de datos
+- [ ] CI/CD básico (GitHub Actions)
+- [ ] Notificaciones reales (endpoints + base de datos)
 
 ---
 
