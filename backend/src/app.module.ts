@@ -12,6 +12,12 @@ import { ImagesController } from './interfaces/images/images.controller';
 import { ImagesService } from './application/images/images.service';
 import { UsersController } from './interfaces/users/users.controller';
 import { UsersService } from './application/users/users.service';
+import { InquiryController } from './interfaces/inquiry/inquiry.controller';
+import { InquiryService } from './application/inquiry/inquiry.service';
+import { ViewsController } from './interfaces/views/views.controller';
+import { ViewService } from './application/views/view.service';
+import { FavoritesController } from './interfaces/favorites/favorites.controller';
+import { FavoritesService } from './application/favorites/favorites.service';
 import { ServeStaticModule } from './infrastructure/upload/serve-static.module';
 import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
 
@@ -47,12 +53,18 @@ import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
     PropertiesController,
     ImagesController,
     UsersController,
+    InquiryController,
+    ViewsController,
+    FavoritesController,
   ],
   providers: [
     AuthService,
     PropertiesService,
     ImagesService,
     UsersService,
+    InquiryService,
+    ViewService,
+    FavoritesService,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

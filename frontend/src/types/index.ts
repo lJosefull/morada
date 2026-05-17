@@ -49,3 +49,49 @@ export interface PaginatedResponse<T> {
   page: number
   limit: number
 }
+
+export interface Inquiry {
+  id: string
+  propertyId: string
+  name: string
+  email: string
+  phone?: string
+  message: string
+  status: 'new' | 'contacted' | 'interested' | 'not_interested' | 'converted'
+  notes?: string
+  createdAt: string
+  updatedAt: string
+  property?: Property
+  statusHistory?: InquiryStatusChange[]
+}
+
+export interface InquiryStatusChange {
+  id: string
+  fromStatus: string
+  toStatus: string
+  changedAt: string
+}
+
+export interface InquiryStats {
+  total: number
+  new: number
+  contacted: number
+  interested: number
+  not_interested: number
+  converted: number
+  conversionRate: number
+}
+
+export interface Favorite {
+  id: string
+  propertyId: string
+  userId: string
+  createdAt: string
+  property: Property
+}
+
+export interface PropertyStats {
+  totalViews: number
+  weeklyViews: number
+  inquiryCount: number
+}

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/auth';
+import { api } from '../lib/api';
 
 export default function Navbar() {
   const { accessToken, user, logout } = useAuthStore();
@@ -9,6 +10,19 @@ export default function Navbar() {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setUnreadCount(0);
+      return;
+    }
+    api.get<{ new: number }>('/inquiries/stats')
+      .then(({ data }) => {
+        setUnreadCount(data.new || 0);
+      })
+      .catch(() => {});
+  }, [isAuthenticated]);
 
   const handleLogout = () => {
     logout();
@@ -40,16 +54,43 @@ export default function Navbar() {
               Properties
             </Link>
             {isLoggedIn && (
-              <Link
-                to="/dashboard"
-                className={`text-sm font-medium transition-colors ${
-                  isActive('/dashboard')
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Dashboard
-              </Link>
+              <>
+                <Link
+                  to="/dashboard"
+                  className={`text-sm font-medium transition-colors ${
+                    isActive('/dashboard')
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/inquiries"
+                  className={`text-sm font-medium transition-colors relative ${
+                    isActive('/inquiries') || isActive('/inquiries/history')
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  My Leads
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-2 -right-4 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </Link>
+                <Link
+                  to="/favorites"
+                  className={`text-sm font-medium transition-colors ${
+                    isActive('/favorites')
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Favorites
+                </Link>
+              </>
             )}
           </div>
 
@@ -81,6 +122,25 @@ export default function Navbar() {
                       onClick={() => setIsProfileMenuOpen(false)}
                     >
                       Add Property
+                    </Link>
+                    <Link
+                      to="/inquiries"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      My Leads
+                      {unreadCount > 0 && (
+                        <span className="ml-2 bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </Link>
+                    <Link
+                      to="/favorites"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      Favorites
                     </Link>
                     <hr className="my-1 border-gray-200" />
                     <button
@@ -144,17 +204,46 @@ export default function Navbar() {
                 Properties
               </Link>
               {isLoggedIn && (
-                <Link
-                  to="/dashboard"
-                  className={`block px-4 py-2 rounded-lg text-sm font-medium ${
-                    isActive('/dashboard')
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Dashboard
-                </Link>
+                <>
+                  <Link
+                    to="/dashboard"
+                    className={`block px-4 py-2 rounded-lg text-sm font-medium ${
+                      isActive('/dashboard')
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/inquiries"
+                    className={`block px-4 py-2 rounded-lg text-sm font-medium flex items-center ${
+                      isActive('/inquiries')
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    My Leads
+                    {unreadCount > 0 && (
+                      <span className="ml-2 bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </Link>
+                  <Link
+                    to="/favorites"
+                    className={`block px-4 py-2 rounded-lg text-sm font-medium ${
+                      isActive('/favorites')
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Favorites
+                  </Link>
+                </>
               )}
             </div>
             <div className="space-y-2 px-4">

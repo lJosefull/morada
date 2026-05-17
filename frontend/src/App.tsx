@@ -13,6 +13,9 @@ const PropertiesPage = lazy(() => import('./pages/PropertiesPage'))
 const PropertyDetailPage = lazy(() => import('./pages/PropertyDetailPage'))
 const CreatePropertyPage = lazy(() => import('./pages/CreatePropertyPage'))
 const EditPropertyPage = lazy(() => import('./pages/EditPropertyPage'))
+const InquiriesPage = lazy(() => import('./pages/InquiriesPage'))
+const MyInquiriesPage = lazy(() => import('./pages/MyInquiriesPage'))
+const FavoritesPage = lazy(() => import('./pages/FavoritesPage'))
 
 const PageLoader: React.FC = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -45,6 +48,27 @@ const App: React.FC = () => {
               }
             >
               <Route index element={<DashboardPage />} />
+            </Route>
+            <Route
+              path="/inquiries"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<InquiriesPage />} />
+              <Route path="history" element={<MyInquiriesPage />} />
+            </Route>
+            <Route
+              path="/favorites"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<FavoritesPage />} />
             </Route>
             <Route path="/properties" element={<Layout />}>
               <Route index element={<PropertiesPage />} />

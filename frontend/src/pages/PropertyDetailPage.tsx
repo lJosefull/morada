@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { useParams, useLocation, Link, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useAuthStore } from '../store/auth'
-import type { Property } from '../types'
+import type { Property, PropertyStats } from '../types'
 import { formatCurrency } from '../lib/utils'
 import { LoadingSpinner } from '../components/LoadingSpinner'
+import ContactForm from '../components/ContactForm'
 
 const typeIcons: Record<string, string> = {
   house: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
@@ -29,6 +30,8 @@ export default function PropertyDetailPage() {
   const [property, setProperty] = useState<Property | null>(passed)
   const [loading, setLoading] = useState(!passed)
   const [currentImage, setCurrentImage] = useState(0)
+  const [propertyStats, setPropertyStats] = useState<PropertyStats | null>(null)
+  const [isFavorite, setIsFavorite] = useState(false)
 
   const isOwner = property && user && property.userId === user.id
 
@@ -41,6 +44,14 @@ export default function PropertyDetailPage() {
         if (!passed) setProperty(null)
       })
       .finally(() => setLoading(false))
+    
+    api.get<PropertyStats>(`/properties/${id}/stats`)
+      .then(({ data }) => setPropertyStats(data))
+      .catch(() => {})
+
+    api.get<Record<string, boolean>>(`/favorites/check?propertyIds=${id}`)
+      .then(({ data }) => setIsFavorite(data[id] ?? false))
+      .catch(() => {})
   }, [id])
 
   if (loading) {
@@ -320,6 +331,44 @@ export default function PropertyDetailPage() {
               )}
             </div>
 
+            {propertyStats && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Views this week</span>
+                  <span className="text-gray-700 font-semibold">{propertyStats.weeklyViews}</span>
+                </div>
+              </div>
+            )}
+
+            {!isOwner && (
+              <>
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <button
+                    onClick={() => {
+                      const token = useAuthStore.getState().accessToken
+                      if (!token) {
+                        navigate('/login')
+                        return
+                      }
+                      api.post('/favorites/toggle', { propertyId: property.id })
+                        .then(() => setIsFavorite(!isFavorite))
+                        .catch(() => {})
+                    }}
+                    className={`flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl transition-colors font-medium text-sm ${
+                      isFavorite
+                        ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
+                        : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    {isFavorite ? 'Saved to Favorites' : 'Save to Favorites'}
+                  </button>
+                </div>
+              </>
+            )}
+
             {isOwner && (
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <button
@@ -344,6 +393,13 @@ export default function PropertyDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* Contact Form */}
+          {!isOwner && (
+            <div className="mt-6">
+              <ContactForm propertyId={property.id} propertyTitle={property.title} />
+            </div>
+          )}
         </div>
       </div>
     </div>

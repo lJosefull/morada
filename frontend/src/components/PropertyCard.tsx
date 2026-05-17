@@ -7,9 +7,11 @@ interface PropertyCardProps {
   onEdit?: () => void
   onDelete?: () => void
   onView?: () => void
+  isFavorite?: boolean
+  onToggleFavorite?: () => void
 }
 
-export function PropertyCard({ property, onEdit, onDelete, onView }: PropertyCardProps) {
+export function PropertyCard({ property, onEdit, onDelete, onView, isFavorite, onToggleFavorite }: PropertyCardProps) {
   const [isImageLoaded, setIsImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
 
@@ -44,6 +46,21 @@ export function PropertyCard({ property, onEdit, onDelete, onView }: PropertyCar
             onError={() => { setImageError(true); setIsImageLoaded(true) }}
             loading="lazy"
           />
+        )}
+
+        {onToggleFavorite && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleFavorite() }}
+            className={`absolute top-2 left-2 p-1.5 rounded-full transition-all ${
+              isFavorite
+                ? 'bg-red-500 text-white shadow-md'
+                : 'bg-white/80 text-gray-600 hover:bg-white hover:text-red-500'
+            }`}
+          >
+            <svg className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </button>
         )}
 
         <div className="absolute top-2 right-2 flex gap-1">
