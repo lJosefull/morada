@@ -24,7 +24,6 @@ export class AuthService {
     const user = await this.userRepository.create({
       email: registerDto.email,
       name: registerDto.name,
-      password: registerDto.password,
       passwordHash: hashedPassword,
     });
 
@@ -65,9 +64,13 @@ export class AuthService {
 
   async refreshToken(refreshToken: string) {
     try {
+      const refreshSecret = process.env.JWT_REFRESH_SECRET;
+      if (!refreshSecret) {
+        throw new UnauthorizedException('Refresh token secret not configured');
+      }
       const payload = this.jwtService.verify<{ sub: string; email: string; role: string }>(
         refreshToken,
-        { secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret' },
+        { secret: refreshSecret },
       );
 
       const storedToken = await this.prisma.refreshToken.findFirst({
@@ -119,8 +122,12 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email, role: user.role };
 
     const accessToken = this.jwtService.sign(payload);
+    const refreshSecret = process.env.JWT_REFRESH_SECRET;
+    if (!refreshSecret) {
+      throw new UnauthorizedException('Refresh token secret not configured');
+    }
     const refreshToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret',
+      secret: refreshSecret,
       expiresIn: '7d',
     });
 

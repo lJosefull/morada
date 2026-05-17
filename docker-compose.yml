@@ -26,13 +26,11 @@ services:
     container_name: realestate-backend
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/realestate?schema=public
-      - JWT_SECRET=super-secret-jwt-key-change-in-production-123456
-      - JWT_REFRESH_SECRET=super-secret-refresh-key-change-in-production-789012
-      - PORT=3000
-      - NODE_ENV=development
-      - FRONTEND_URL=http://localhost:5173
+      - NODE_ENV=production
     depends_on:
       postgres:
         condition: service_healthy
@@ -43,16 +41,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: realestate-frontend
-    volumes:
-      - ./frontend/src:/app/src
-      - ./frontend/index.html:/app/index.html
-      - ./frontend/vite.config.ts:/app/vite.config.ts
-      - ./frontend/tsconfig.json:/app/tsconfig.json
-      - ./frontend/tsconfig.node.json:/app/tsconfig.node.json
     ports:
-      - "5173:5173"
-    environment:
-      - VITE_API_URL=http://backend:3000
+      - "5173:80"
     depends_on:
       - backend
     restart: unless-stopped

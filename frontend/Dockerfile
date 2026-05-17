@@ -1,12 +1,23 @@
-FROM node:24-alpine
+# Build stage
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm ci
 
 COPY . .
+RUN npm run build
 
-EXPOSE 5173
+# Production stage with nginx
+FROM nginx:alpine
 
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+# Copy nginx config that proxies /api to backend
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy built frontend
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

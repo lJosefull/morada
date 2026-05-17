@@ -23,6 +23,14 @@ export enum ListingType {
   RENT = 'rent',
 }
 
+export enum PropertyStatus {
+  AVAILABLE = 'available',
+  RESERVED = 'reserved',
+  SOLD = 'sold',
+  RENTED = 'rented',
+  HIDDEN = 'hidden',
+}
+
 export class CreatePropertyDto {
   @ApiProperty({ example: 'Beautiful House in the Suburbs' })
   @IsString()
@@ -91,10 +99,10 @@ export class CreatePropertyDto {
   @Type(() => Number)
   longitude?: number;
 
-  @ApiPropertyOptional({ enum: ['available', 'reserved', 'sold', 'rented', 'hidden'] })
+  @ApiPropertyOptional({ enum: PropertyStatus })
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsEnum(PropertyStatus)
+  status?: PropertyStatus;
 }
 
 export class UpdatePropertyDto {
@@ -171,10 +179,10 @@ export class UpdatePropertyDto {
   @Type(() => Number)
   longitude?: number;
 
-  @ApiPropertyOptional({ enum: ['available', 'reserved', 'sold', 'rented', 'hidden'] })
+  @ApiPropertyOptional({ enum: PropertyStatus })
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsEnum(PropertyStatus)
+  status?: PropertyStatus;
 }
 
 function ToUndefinedIfEmpty(): PropertyDecorator {

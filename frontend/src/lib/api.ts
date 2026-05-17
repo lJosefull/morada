@@ -61,7 +61,7 @@ class ApiClient {
             const refreshToken = useAuthStore.getState().refreshToken;
             if (!refreshToken) throw new Error('No refresh token available');
 
-            const { data } = await axios.post('/api/auth/refresh', { refreshToken });
+            const { data } = await this.client.post('/auth/refresh', { refreshToken });
             const { accessToken, refreshToken: newRefreshToken } = data;
 
             if (!accessToken || !newRefreshToken) {

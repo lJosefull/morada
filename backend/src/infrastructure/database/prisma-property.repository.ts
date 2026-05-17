@@ -109,39 +109,8 @@ export class PrismaPropertyRepository implements IPropertyRepository {
     return where;
   }
 
-  private toDomain(raw: {
-    id: string;
-    title: string;
-    description: string;
-    price: number;
-    currency: string;
-    propertyType: string;
-    listingType: string;
-    bedrooms: number | null;
-    bathrooms: number | null;
-    surface: number | null;
-    surfaceUnit: string;
-    location: string;
-    latitude: number | null;
-    longitude: number | null;
-    status: string;
-    aiTitle: string | null;
-    aiDescription: string | null;
-    aiStatus: string;
-    userId: string;
-    createdAt: Date;
-    updatedAt: Date;
-    images?: Array<{
-      id: string;
-      url: string;
-      filename: string;
-      mimetype: string;
-      size: number;
-      isPrimary: boolean;
-      propertyId: string;
-      createdAt: Date;
-    }>;
-  }): IProperty {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private toDomain(raw: any): IProperty {
     return {
       id: raw.id,
       title: raw.title,
@@ -164,7 +133,7 @@ export class PrismaPropertyRepository implements IPropertyRepository {
       userId: raw.userId,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
-      images: (raw.images || []).map((img) => ({
+      images: (raw.images || []).map((img: IProperty['images'][number]) => ({
         id: img.id,
         url: img.url,
         filename: img.filename,

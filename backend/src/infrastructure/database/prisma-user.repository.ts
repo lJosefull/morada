@@ -57,7 +57,6 @@ export class PrismaUserRepository implements IUserRepository {
       name: raw.name,
       phone: raw.phone,
       role: raw.role as 'user' | 'admin',
-      refreshToken: null,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     };

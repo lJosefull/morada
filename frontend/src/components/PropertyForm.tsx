@@ -132,9 +132,10 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
     try {
       const fd = new FormData()
       fd.append('image', file)
-      const { data: uploaded } = await api.post<Image>(`/properties/${property.id}/images`, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
+      const { data: uploaded } = await api.post<Image>(
+        `/properties/${property.id}/images`,
+        fd,
+      )
       setImages((prev) => [...prev, uploaded])
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to upload image')

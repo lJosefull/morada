@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { PrismaModule } from './infrastructure/database/prisma.module';
 import { AuthInfrastructureModule } from './infrastructure/auth/auth.module';
 import { AuthController } from './interfaces/auth/auth.controller';
@@ -20,6 +21,23 @@ import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000,
+        limit: 3,
+      },
+      {
+        name: 'medium',
+        ttl: 10000,
+        limit: 20,
+      },
+      {
+        name: 'long',
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     PrismaModule,
     AuthInfrastructureModule,
     ServeStaticModule,
@@ -38,6 +56,10 @@ import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })
