@@ -61,28 +61,32 @@ export default function PropertyDetailPage() {
       })
       .finally(() => setLoading(false))
     
-    api.get<PropertyStats>(`/properties/${id}/stats`)
-      .then(({ data }) => setPropertyStats(data))
-      .catch(() => {})
-
-    api.get<DailyView[]>(`/properties/${id}/stats/daily`)
-      .then(({ data }) => setDailyStats(data.slice(-14)))
-      .catch(() => {})
-
-    api.get<Record<string, boolean>>(`/favorites/check?propertyIds=${id}`)
-      .then(({ data }) => setIsFavorite(data[id] ?? false))
-      .catch(() => {})
-
     api.get<Property[]>(`/properties/${id}/also-viewed`)
       .then(({ data }) => setAlsoViewed(data))
       .catch(() => {})
+  }, [id])
 
-    if (user && property?.userId) {
+  useEffect(() => {
+    if (!id || !isOwner) return
+    api.get<PropertyStats>(`/properties/${id}/stats`)
+      .then(({ data }) => setPropertyStats(data))
+      .catch(() => {})
+    api.get<DailyView[]>(`/properties/${id}/stats/daily`)
+      .then(({ data }) => setDailyStats(data.slice(-14)))
+      .catch(() => {})
+  }, [id, isOwner])
+
+  useEffect(() => {
+    if (!id || !user) return
+    api.get<Record<string, boolean>>(`/favorites/check?propertyIds=${id}`)
+      .then(({ data }) => setIsFavorite(data[id] ?? false))
+      .catch(() => {})
+    if (property?.userId) {
       api.get<{ following: boolean }>(`/follow/check/${property.userId}`)
         .then(({ data }) => setIsFollowing(data.following))
         .catch(() => {})
     }
-  }, [id, property?.userId])
+  }, [id, user, property?.userId])
 
   if (loading) {
     return (
