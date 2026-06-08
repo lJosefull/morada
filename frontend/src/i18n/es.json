@@ -39,7 +39,8 @@
     "loginError": "Error al iniciar sesión",
     "registerError": "Error al registrarse",
     "loginSuccess": "Sesión iniciada correctamente",
-    "registerSuccess": "Cuenta creada correctamente"
+    "registerSuccess": "Cuenta creada correctamente",
+    "continueWithGoogle": "Continuar con Google"
   },
   "property": {
     "title": "Propiedades",

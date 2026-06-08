@@ -4,6 +4,8 @@ export interface IUser {
   passwordHash: string;
   name: string;
   phone: string | null;
+  avatar: string | null;
+  googleId: string | null;
   role: 'user' | 'admin';
   createdAt: Date;
   updatedAt: Date;
@@ -12,7 +14,10 @@ export interface IUser {
 export type CreateUserInput = {
   email: string;
   name: string;
-  phone?: string;
+  phone?: string | null;
+  avatar?: string | null;
+  googleId?: string | null;
+  passwordHash?: string;
 };
 
 export type UpdateUserInput = Partial<Pick<IUser, 'name' | 'phone' | 'email'>>;

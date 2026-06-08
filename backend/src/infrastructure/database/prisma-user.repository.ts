@@ -19,13 +19,21 @@ export class PrismaUserRepository implements IUserRepository {
     return this.toDomain(user);
   }
 
-  async create(input: CreateUserInput & { passwordHash: string }): Promise<IUser> {
+  async findByGoogleId(googleId: string): Promise<IUser | null> {
+    const user = await this.prisma.user.findUnique({ where: { googleId } });
+    if (!user) return null;
+    return this.toDomain(user);
+  }
+
+  async create(input: CreateUserInput): Promise<IUser> {
     const user = await this.prisma.user.create({
       data: {
         email: input.email,
-        password: input.passwordHash,
+        password: input.passwordHash || '',
         name: input.name,
-        phone: input.phone || null,
+        phone: input.phone ?? null,
+        avatar: input.avatar ?? null,
+        googleId: input.googleId ?? null,
       },
     });
     return this.toDomain(user);
@@ -36,6 +44,7 @@ export class PrismaUserRepository implements IUserRepository {
     if (input.email) data.email = input.email;
     if (input.name) data.name = input.name;
     if (input.phone !== undefined) data.phone = input.phone;
+    if (input.avatar !== undefined) data.avatar = input.avatar;
 
     const user = await this.prisma.user.update({ where: { id }, data });
     return this.toDomain(user);
@@ -47,6 +56,8 @@ export class PrismaUserRepository implements IUserRepository {
     password: string;
     name: string;
     phone: string | null;
+    avatar: string | null;
+    googleId: string | null;
     role: string;
     createdAt: Date;
     updatedAt: Date;
@@ -57,6 +68,8 @@ export class PrismaUserRepository implements IUserRepository {
       passwordHash: raw.password,
       name: raw.name,
       phone: raw.phone,
+      avatar: raw.avatar,
+      googleId: raw.googleId,
       role: raw.role as 'user' | 'admin',
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,

@@ -2,6 +2,7 @@ import { Inject, Injectable, UnauthorizedException, ConflictException } from '@n
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { IUserRepository, USER_REPOSITORY } from '../../domain/users/user.repository';
+import { IUser } from '../../domain/users/user.entity';
 import { RegisterDto, LoginDto } from '../../interfaces/auth/auth.dto';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 
@@ -58,6 +59,37 @@ export class AuthService {
         email: user.email,
         name: user.name,
         role: user.role,
+      },
+    };
+  }
+
+  async googleLogin(profile: { email: string; name: string; googleId: string; avatar?: string }) {
+    let user = await this.userRepository.findByEmail(profile.email);
+    if (user) {
+      if (!user.googleId) {
+        const updateData: Record<string, unknown> = { googleId: profile.googleId };
+        if (profile.avatar) updateData.avatar = profile.avatar;
+        user = await this.userRepository.update(user.id, updateData as unknown as Partial<IUser>);
+      }
+    } else {
+      user = await this.userRepository.create({
+        email: profile.email,
+        name: profile.name,
+        googleId: profile.googleId,
+        avatar: profile.avatar,
+        passwordHash: '',
+      });
+    }
+
+    const tokens = await this.generateTokens(user);
+    return {
+      ...tokens,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        avatar: user.avatar,
       },
     };
   }
