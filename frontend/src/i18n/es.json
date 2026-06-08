@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "InmobiliarIA",
+    "name": "Morada",
     "tagline": "Tu plataforma inteligente de propiedades"
   },
   "nav": {
@@ -22,7 +22,7 @@
   },
   "auth": {
     "loginTitle": "Iniciar sesión",
-    "loginSubtitle": "Ingresa a tu cuenta de InmobiliarIA",
+    "loginSubtitle": "Ingresa a tu cuenta de Morada",
     "registerTitle": "Crear cuenta",
     "registerSubtitle": "Regístrate para comenzar",
     "email": "Correo electrónico",

@@ -6,9 +6,9 @@ interface SEOHeadProps {
   image?: string
   url?: string
 }
+const SITE_NAME = 'Morada'
 
-const SITE_NAME = 'InmobiliarIA'
-const DEFAULT_DESCRIPTION = 'Marketplace inmobiliario inteligente — encuentra la propiedad ideal con InmobiliarIA'
+const DEFAULT_DESCRIPTION = 'Marketplace inmobiliario inteligente — encuentra la propiedad ideal con Morada'
 
 export function SEOHead({ title, description, image, url }: SEOHeadProps) {
   const fullTitle = title ? `${title} | ${SITE_NAME}` : SITE_NAME
