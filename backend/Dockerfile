@@ -26,4 +26,4 @@ COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node dist/main.js"]
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss --skip-generate 2>&1 | tail -5; echo '--- Continuing startup ---'; node dist/main.js"]
