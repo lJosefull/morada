@@ -7,6 +7,7 @@ import { formatCurrency } from '../lib/utils'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 import { SEOHead } from '../components/SEOHead'
 import { PropertyMap } from '../components/PropertyMap'
+import { ShareButton } from '../components/ShareButton'
 import ContactForm from '../components/ContactForm'
 import ReviewSection from '../components/ReviewSection'
 
@@ -400,6 +401,13 @@ export default function PropertyDetailPage() {
                     </svg>
                     {isFavorite ? 'Saved to Favorites' : 'Save to Favorites'}
                   </button>
+                </div>
+                <div className="mt-3">
+                  <ShareButton
+                    title={property.aiTitle || property.title}
+                    url={`/properties/${property.id}`}
+                    description={property.description.slice(0, 200)}
+                  />
                 </div>
               </>
             )}
