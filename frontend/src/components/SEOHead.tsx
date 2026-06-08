@@ -18,7 +18,7 @@ export function SEOHead({ title, description, image, url }: SEOHeadProps) {
 
   const ogImage = image
     ? (image.startsWith('http') ? image : `${SITE_URL}${image}`)
-    : `${SITE_URL}/api/og/property/default`
+    : undefined
 
   return (
     <Helmet>
@@ -26,14 +26,14 @@ export function SEOHead({ title, description, image, url }: SEOHeadProps) {
       <meta name="description" content={desc} />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={desc} />
-      <meta property="og:image" content={ogImage} />
+      {ogImage && <meta property="og:image" content={ogImage} />}
       <meta property="og:url" content={ogUrl} />
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content={SITE_NAME} />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={desc} />
-      <meta name="twitter:image" content={ogImage} />
+      {ogImage && <meta name="twitter:image" content={ogImage} />}
     </Helmet>
   )
 }
