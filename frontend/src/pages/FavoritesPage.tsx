@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import type { Property } from '../types'
 import { PropertyCard } from '../components/PropertyCard'
@@ -8,6 +9,7 @@ import { ErrorAlert } from '../components/ErrorAlert'
 
 export default function FavoritesPage() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [favorites, setFavorites] = useState<{ id: string; property: Property }[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -50,12 +52,12 @@ export default function FavoritesPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Favorites</h1>
-          <p className="text-gray-600 mt-1">Properties you've saved</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('favorites.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('favorites.title')}</p>
         </div>
         {favorites.length > 0 && (
           <p className="text-sm text-gray-500">
-            {favorites.length} saved
+            {favorites.length} {t('favorites.title')}
           </p>
         )}
       </div>
@@ -67,15 +69,15 @@ export default function FavoritesPage() {
           <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No favorites yet</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">{t('favorites.empty')}</h3>
           <p className="text-gray-500 mb-4">
-            Save properties you like to find them later
+            {t('favorites.empty')}
           </p>
           <button
             onClick={() => navigate('/properties')}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
           >
-            Browse Properties
+            {t('property.title')}
           </button>
         </div>
       ) : (

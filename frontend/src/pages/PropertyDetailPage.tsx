@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams, useLocation, Link, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useAuthStore } from '../store/auth'
@@ -19,19 +20,21 @@ const typeIcons: Record<string, string> = {
   commercial: 'M21 13.255A23.93 23.93 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
 }
 
-const typeLabels: Record<string, string> = {
-  house: 'Casa',
-  apartment: 'Departamento',
-  land: 'Terreno',
-  commercial: 'Comercial',
-}
-
 export default function PropertyDetailPage() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const location = useLocation()
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const passed = location.state as Property | null
+  const typeLabels: Record<string, string> = {
+    apartment: t('property.propertyType.apartment'),
+    house: t('property.propertyType.house'),
+    office: t('property.propertyType.office'),
+    commercial: t('property.propertyType.commercial'),
+    land: t('property.propertyType.land'),
+    warehouse: t('property.propertyType.warehouse'),
+  }
   const [property, setProperty] = useState<Property | null>(passed)
   const [loading, setLoading] = useState(!passed)
   const [currentImage, setCurrentImage] = useState(0)
@@ -92,8 +95,8 @@ export default function PropertyDetailPage() {
   if (!property) {
     return (
       <div className="text-center py-20">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Property not found</h2>
-        <Link to="/properties" className="text-blue-600 hover:underline">Back to properties</Link>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('property.notFound')}</h2>
+        <Link to="/properties" className="text-blue-600 hover:underline">{t('property.backToProperties')}</Link>
       </div>
     )
   }
@@ -110,7 +113,7 @@ export default function PropertyDetailPage() {
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
-        Back to properties
+        {t('property.backToProperties')}
       </Link>
 
       <div className="lg:grid lg:grid-cols-3 lg:gap-8">
@@ -168,7 +171,7 @@ export default function PropertyDetailPage() {
                     <svg className="w-20 h-20 mx-auto text-white/40 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d={typeIcons[property.propertyType] || typeIcons.house} />
                     </svg>
-                    <p className="text-white/60 text-sm font-medium">No images</p>
+                    <p className="text-white/60 text-sm font-medium">{t('property.noImage')}</p>
                   </div>
                 </div>
               )}
@@ -178,7 +181,7 @@ export default function PropertyDetailPage() {
                     ? 'bg-emerald-500 text-white'
                     : 'bg-blue-500 text-white'
                 }`}>
-                  {property.listingType === 'sale' ? 'For Sale' : 'For Rent'}
+                  {property.listingType === 'sale' ? t('property.forSale') : t('property.forRent')}
                 </span>
                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/90 text-gray-800 capitalize">
                   {typeLabels[property.propertyType] || property.propertyType}
@@ -191,10 +194,10 @@ export default function PropertyDetailPage() {
                     property.status === 'hidden' ? 'bg-gray-500 text-white' :
                     'bg-white/90 text-gray-800'
                   }`}>
-                    {property.status === 'sold' ? 'Sold' :
-                     property.status === 'rented' ? 'Rented' :
+                    {property.status === 'sold' ? t('property.sold') :
+                     property.status === 'rented' ? t('property.rented') :
                      property.status === 'reserved' ? 'Reserved' :
-                     property.status === 'hidden' ? 'Hidden' :
+                     property.status === 'hidden' ? t('property.hidden') :
                      property.status}
                   </span>
                 )}
@@ -245,7 +248,7 @@ export default function PropertyDetailPage() {
                   {formatCurrency(property.price, property.currency)}
                 </p>
                 {property.listingType === 'rent' && (
-                  <p className="text-sm text-gray-500">per month</p>
+                  <p className="text-sm text-gray-500">{t('property.perMonth')}</p>
                 )}
               </div>
             </div>
@@ -258,7 +261,7 @@ export default function PropertyDetailPage() {
                   </svg>
                   <span className="text-lg font-bold">{property.bedrooms ?? '-'}</span>
                 </div>
-                <p className="text-xs text-gray-500">Bedrooms</p>
+                <p className="text-xs text-gray-500">{t('property.bedrooms')}</p>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center gap-1.5 text-gray-700 mb-1">
@@ -267,7 +270,7 @@ export default function PropertyDetailPage() {
                   </svg>
                   <span className="text-lg font-bold">{property.bathrooms ?? '-'}</span>
                 </div>
-                <p className="text-xs text-gray-500">Bathrooms</p>
+                <p className="text-xs text-gray-500">{t('property.bathrooms')}</p>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center gap-1.5 text-gray-700 mb-1">
@@ -276,7 +279,7 @@ export default function PropertyDetailPage() {
                   </svg>
                   <span className="text-lg font-bold">{property.surface ? `${property.surface}` : '-'}</span>
                 </div>
-                <p className="text-xs text-gray-500">m² Surface</p>
+                <p className="text-xs text-gray-500">{t('property.surface')}</p>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center gap-1.5 text-gray-700 mb-1">
@@ -285,12 +288,12 @@ export default function PropertyDetailPage() {
                   </svg>
                   <span className="text-lg font-bold capitalize">{typeLabels[property.propertyType] || property.propertyType}</span>
                 </div>
-                <p className="text-xs text-gray-500">Type</p>
+                <p className="text-xs text-gray-500">{t('property.type')}</p>
               </div>
             </div>
 
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-3">Description</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">{t('property.description')}</h2>
               <p className="text-gray-600 leading-relaxed whitespace-pre-line">{property.description}</p>
             </div>
 
@@ -300,7 +303,7 @@ export default function PropertyDetailPage() {
                   <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
-                  <p className="text-sm font-semibold text-blue-900">AI Enhanced Description</p>
+                  <p className="text-sm font-semibold text-blue-900">{t('property.aiDescription')}</p>
                 </div>
                 <p className="text-blue-800 leading-relaxed text-sm">{property.aiDescription}</p>
               </div>
@@ -308,7 +311,7 @@ export default function PropertyDetailPage() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Location</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('property.location')}</h2>
             {property.latitude && property.longitude ? (
               <PropertyMap
                 latitude={property.latitude}
@@ -354,7 +357,7 @@ export default function PropertyDetailPage() {
                       Property Owner
                     </p>
                   )}
-                  <p className="text-xs text-gray-500">Property Agent</p>
+                  <p className="text-xs text-gray-500">{t('property.contactAgent')}</p>
                 </div>
                 {!isOwner && user && (
                   <button
@@ -380,7 +383,7 @@ export default function PropertyDetailPage() {
               </div>
 
             <div className="space-y-3">
-              <p className="text-sm text-gray-600 font-medium">Interested in this property?</p>
+              <p className="text-sm text-gray-600 font-medium">{t('property.interested')}</p>
               <a
                 href={`mailto:${property.user?.email || 'contact@realestate.com'}?subject=Inquiry about ${property.title}`}
                 className="flex items-center justify-center gap-2 w-full bg-blue-600 text-white py-2.5 px-4 rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm"
@@ -388,7 +391,7 @@ export default function PropertyDetailPage() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                Send Email
+                {t('property.sendInquiry')}
               </a>
               {property.user?.phone && (
                 <a
@@ -406,7 +409,7 @@ export default function PropertyDetailPage() {
             {propertyStats && (
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Views this week</span>
+                  <span className="text-gray-500">{t('property.viewsThisWeek')}</span>
                   <span className="text-gray-700 font-semibold">{propertyStats.weeklyViews}</span>
                 </div>
               </div>
@@ -435,7 +438,7 @@ export default function PropertyDetailPage() {
                     <svg className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
-                    {isFavorite ? 'Saved to Favorites' : 'Save to Favorites'}
+                    {isFavorite ? t('property.savedToFavorites') : t('property.saveToFavorites')}
                   </button>
                 </div>
                 <div className="mt-3">
@@ -450,7 +453,7 @@ export default function PropertyDetailPage() {
 
             {isOwner && propertyStats && (
               <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-sm font-semibold text-gray-900 mb-3">Property Analytics</p>
+                <p className="text-sm font-semibold text-gray-900 mb-3">{t('property.propertyDetails')}</p>
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div className="bg-blue-50 rounded-lg p-3">
                     <p className="text-[10px] text-blue-700 font-semibold uppercase tracking-wider">Total Views</p>
@@ -461,7 +464,7 @@ export default function PropertyDetailPage() {
                     <p className="text-xl font-bold text-amber-900 mt-0.5">{propertyStats.weeklyViews}</p>
                   </div>
                   <div className="bg-green-50 rounded-lg p-3">
-                    <p className="text-[10px] text-green-700 font-semibold uppercase tracking-wider">Inquiries</p>
+                    <p className="text-[10px] text-green-700 font-semibold uppercase tracking-wider">{t('property.inquiries')}</p>
                     <p className="text-xl font-bold text-green-900 mt-0.5">{propertyStats.inquiryCount}</p>
                   </div>
                   <div className="bg-purple-50 rounded-lg p-3">
@@ -509,7 +512,7 @@ export default function PropertyDetailPage() {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
-                  Edit Property
+                  {t('common.edit')}
                 </button>
               </div>
             )}
@@ -537,7 +540,7 @@ export default function PropertyDetailPage() {
       {/* People also viewed */}
       {alsoViewed.length > 0 && (
         <div className="mt-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">People also viewed</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('peopleAlsoViewed.title')}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {alsoViewed.slice(0, 3).map((ap) => (
               <Link

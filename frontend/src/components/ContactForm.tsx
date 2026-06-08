@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { useAuthStore } from '../store/auth'
 
@@ -10,6 +11,7 @@ interface ContactFormProps {
 type FormStatus = 'idle' | 'sending' | 'success' | 'error'
 
 export default function ContactForm({ propertyId, propertyTitle }: ContactFormProps) {
+  const { t } = useTranslation()
   const { user } = useAuthStore()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -56,13 +58,13 @@ export default function ContactForm({ propertyId, propertyTitle }: ContactFormPr
         <svg className="w-12 h-12 mx-auto text-green-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <h3 className="text-lg font-semibold text-green-800 mb-1">Message Sent!</h3>
-        <p className="text-sm text-green-600 mb-4">The owner will get back to you soon.</p>
+        <h3 className="text-lg font-semibold text-green-800 mb-1">{t('common.submit')}</h3>
+        <p className="text-sm text-green-600 mb-4">{t('inquiries.inquirySent')}</p>
         <button
           onClick={() => setStatus('idle')}
           className="text-sm font-medium text-green-700 hover:text-green-600 underline"
         >
-          Send another message
+          {t('inquiries.sendMessage')}
         </button>
       </div>
     )
@@ -70,14 +72,14 @@ export default function ContactForm({ propertyId, propertyTitle }: ContactFormPr
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact the Owner</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('property.contactAgent')}</h3>
       <p className="text-sm text-gray-500 mb-4">
-        Interested in <span className="font-medium text-gray-700">{propertyTitle}</span>? Send a message.
+        {t('property.interested')} <span className="font-medium text-gray-700">{propertyTitle}</span>?
       </p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="contact-name" className="block text-sm font-medium text-gray-700 mb-1">
-            Name *
+            {t('inquiries.yourName')} *
           </label>
           <input
             id="contact-name"
@@ -86,12 +88,12 @@ export default function ContactForm({ propertyId, propertyTitle }: ContactFormPr
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-            placeholder="Your full name"
+            placeholder={t('inquiries.yourName')}
           />
         </div>
         <div>
           <label htmlFor="contact-email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email *
+            {t('inquiries.yourEmail')} *
           </label>
           <input
             id="contact-email"
@@ -100,12 +102,12 @@ export default function ContactForm({ propertyId, propertyTitle }: ContactFormPr
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-            placeholder="your@email.com"
+            placeholder={t('inquiries.yourEmail')}
           />
         </div>
         <div>
           <label htmlFor="contact-phone" className="block text-sm font-medium text-gray-700 mb-1">
-            Phone <span className="text-gray-400">(optional)</span>
+            {t('inquiries.yourPhone')} <span className="text-gray-400">{t('common.optional')}</span>
           </label>
           <input
             id="contact-phone"
@@ -113,12 +115,12 @@ export default function ContactForm({ propertyId, propertyTitle }: ContactFormPr
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-            placeholder="+56 9 1234 5678"
+            placeholder={t('inquiries.yourPhone')}
           />
         </div>
         <div>
           <label htmlFor="contact-message" className="block text-sm font-medium text-gray-700 mb-1">
-            Message *
+            {t('inquiries.title')} *
           </label>
           <textarea
             id="contact-message"
@@ -127,7 +129,7 @@ export default function ContactForm({ propertyId, propertyTitle }: ContactFormPr
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
-            placeholder="Hello! I'm interested in this property..."
+            placeholder={t('inquiries.messagePlaceholder')}
           />
         </div>
 
@@ -146,14 +148,14 @@ export default function ContactForm({ propertyId, propertyTitle }: ContactFormPr
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              Sending...
+              {t('common.loading')}
             </>
           ) : (
             <>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
-              Send Message
+              {t('inquiries.sendMessage')}
             </>
           )}
         </button>

@@ -1,4 +1,5 @@
 import { memo, useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Filters {
   city: string;
@@ -13,21 +14,21 @@ interface SearchFiltersProps {
   className?: string;
 }
 
-const PROPERTY_TYPES = [
-  { value: '', label: 'All Types' },
-  { value: 'house', label: 'House' },
-  { value: 'apartment', label: 'Apartment' },
-  { value: 'land', label: 'Land' },
-  { value: 'commercial', label: 'Commercial' },
-];
-
 export const SearchFilters = memo(function SearchFilters({
   filters,
   onFilterChange,
   className = '',
 }: SearchFiltersProps) {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [localFilters, setLocalFilters] = useState(filters);
+  const PROPERTY_TYPES = [
+    { value: '', label: t('search.allTypes') },
+    { value: 'house', label: t('property.propertyType.house') },
+    { value: 'apartment', label: t('property.propertyType.apartment') },
+    { value: 'land', label: t('property.propertyType.land') },
+    { value: 'commercial', label: t('property.propertyType.commercial') },
+  ];
 
   const handleFilterChange = useCallback(
     (key: keyof Filters, value: string | number) => {
@@ -56,21 +57,21 @@ export const SearchFilters = memo(function SearchFilters({
   return (
     <div className={`bg-white rounded-xl shadow-sm p-4 ${className}`}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+        <h3 className="text-lg font-semibold text-gray-900">{t('search.filter')}</h3>
         <div className="flex items-center space-x-2">
           {hasActiveFilters && (
             <button
               onClick={handleReset}
               className="text-sm text-red-600 hover:text-red-700 font-medium"
             >
-              Clear all
+              {t('search.clearFilters')}
             </button>
           )}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="text-sm text-blue-600 hover:text-blue-700 font-medium lg:hidden"
           >
-            {isExpanded ? 'Collapse' : 'Expand'}
+            {isExpanded ? t('common.showLess') : t('common.showMore')}
           </button>
         </div>
       </div>
@@ -79,14 +80,14 @@ export const SearchFilters = memo(function SearchFilters({
         {/* Search by City */}
         <div>
           <label htmlFor="city-filter" className="block text-sm font-medium text-gray-700 mb-1">
-            City
+            {t('property.location')}
           </label>
           <input
             id="city-filter"
             type="text"
             value={localFilters.city}
             onChange={(e) => handleFilterChange('city', e.target.value)}
-            placeholder="Search by city..."
+            placeholder={t('common.search')}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
           />
         </div>
@@ -95,7 +96,7 @@ export const SearchFilters = memo(function SearchFilters({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="min-price" className="block text-sm font-medium text-gray-700 mb-1">
-              Min Price
+              {t('search.minPrice')}
             </label>
             <input
               id="min-price"
@@ -109,7 +110,7 @@ export const SearchFilters = memo(function SearchFilters({
           </div>
           <div>
             <label htmlFor="max-price" className="block text-sm font-medium text-gray-700 mb-1">
-              Max Price
+              {t('search.maxPrice')}
             </label>
             <input
               id="max-price"
@@ -126,7 +127,7 @@ export const SearchFilters = memo(function SearchFilters({
         {/* Property Type */}
         <div>
           <label htmlFor="property-type" className="block text-sm font-medium text-gray-700 mb-1">
-            Property Type
+            {t('property.type')}
           </label>
           <select
             id="property-type"

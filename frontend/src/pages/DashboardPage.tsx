@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { useAuthStore } from '../store/auth'
 import type { Property, InquiryStats } from '../types'
@@ -90,6 +91,7 @@ function MetricCard({ label, value, total, color, bgColor, textColor }: {
 
 export default function DashboardPage() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { user, accessToken } = useAuthStore()
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
@@ -136,7 +138,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
           <LoadingSpinner size="lg" />
-          <p className="text-sm text-gray-400">Loading your dashboard...</p>
+          <p className="text-sm text-gray-400">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -155,7 +157,7 @@ export default function DashboardPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{greeting}, {user?.name?.split(' ')[0] || 'User'}</h1>
-            <p className="text-sm text-gray-500">Here&apos;s what&apos;s happening with your properties.</p>
+            <p className="text-sm text-gray-500">{t('dashboard.recentActivity')}</p>
           </div>
         </div>
         <button
@@ -165,7 +167,7 @@ export default function DashboardPage() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Add Property
+          {t('nav.newProperty')}
         </button>
       </div>
 
@@ -175,7 +177,7 @@ export default function DashboardPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <span className="flex-1">{error}</span>
-          <button onClick={() => setError(null)} className="font-medium hover:underline text-sm">Dismiss</button>
+          <button onClick={() => setError(null)} className="font-medium hover:underline text-sm">{t('common.close')}</button>
         </div>
       )}
 
@@ -186,21 +188,21 @@ export default function DashboardPage() {
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
-            <h2 className="text-lg font-semibold text-gray-900">Overview</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.recentActivity')}</h2>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
-              label="Total Leads"
+              label={t('dashboard.totalInquiries')}
               value={inquiryStats.total}
               icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               }
-              trend={hasLeads ? { direction: 'up', text: `${inquiryStats.new} new this period` } : { direction: 'neutral', text: 'No activity yet' }}
+              trend={hasLeads ? { direction: 'up', text: `${inquiryStats.new} ${t('inquiries.new')}` } : { direction: 'neutral', text: t('dashboard.noActivity') }}
             />
             <StatCard
-              label="New Leads"
+              label={t('dashboard.newInquiries')}
               value={inquiryStats.new}
               highlight={inquiryStats.new > 0}
               icon={
@@ -210,7 +212,7 @@ export default function DashboardPage() {
               }
             />
             <StatCard
-              label="Properties"
+              label={t('profile.properties')}
               value={properties.length}
               icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -219,14 +221,14 @@ export default function DashboardPage() {
               }
             />
             <StatCard
-              label="Conversion Rate"
+              label={t('inquiries.title')}
               value={hasLeads ? `${inquiryStats.conversionRate}%` : '—'}
               icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               }
-              trend={hasLeads ? { direction: inquiryStats.conversionRate >= 50 ? 'up' : 'down', text: `${inquiryStats.converted} converted` } : undefined}
+              trend={hasLeads ? { direction: inquiryStats.conversionRate >= 50 ? 'up' : 'down', text: `${inquiryStats.converted} ${t('inquiries.closed')}` } : undefined}
             />
           </div>
         </section>
@@ -239,7 +241,7 @@ export default function DashboardPage() {
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            <h2 className="text-lg font-semibold text-gray-900">Leads by Status</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('inquiries.title')}</h2>
           </div>
 
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -259,7 +261,7 @@ export default function DashboardPage() {
                   ))}
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
-                  <span>{totalLeads} total lead{totalLeads !== 1 ? 's' : ''}</span>
+                  <span>{totalLeads} {t('inquiries.title')}</span>
                   <span>100%</span>
                 </div>
               </div>
@@ -270,9 +272,9 @@ export default function DashboardPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                   </svg>
                 </div>
-                <p className="text-gray-500 font-medium">No leads yet</p>
+                <p className="text-gray-500 font-medium">{t('inquiries.noInquiries')}</p>
                 <p className="text-gray-400 text-sm mt-1.5 max-w-sm mx-auto">
-                  When buyers submit inquiries about your properties, they&apos;ll appear here grouped by status.
+                  {t('inquiries.noInquiries')}
                 </p>
               </div>
             )}
@@ -287,7 +289,7 @@ export default function DashboardPage() {
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
-            <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.quickActions')}</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <button
@@ -299,8 +301,8 @@ export default function DashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
-              <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">View Leads</p>
-              <p className="text-xs text-gray-500 mt-1">Manage your inquiries and pipeline</p>
+              <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{t('dashboard.viewProperties')}</p>
+              <p className="text-xs text-gray-500 mt-1">{t('inquiries.title')}</p>
             </button>
             <button
               onClick={() => navigate('/properties/new')}
@@ -311,8 +313,8 @@ export default function DashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
               </div>
-              <p className="text-sm font-semibold text-gray-900 group-hover:text-green-600 transition-colors">New Property</p>
-              <p className="text-xs text-gray-500 mt-1">List a new property for sale or rent</p>
+              <p className="text-sm font-semibold text-gray-900 group-hover:text-green-600 transition-colors">{t('nav.newProperty')}</p>
+              <p className="text-xs text-gray-500 mt-1">{t('property.title')}</p>
             </button>
             <button
               onClick={() => navigate('/properties')}
@@ -323,8 +325,8 @@ export default function DashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                 </svg>
               </div>
-              <p className="text-sm font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">All Properties</p>
-              <p className="text-xs text-gray-500 mt-1">Browse and manage your listings</p>
+              <p className="text-sm font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">{t('property.title')}</p>
+              <p className="text-xs text-gray-500 mt-1">{t('property.title')}</p>
             </button>
           </div>
         </section>
@@ -337,7 +339,7 @@ export default function DashboardPage() {
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
-            <h2 className="text-lg font-semibold text-gray-900">Your Properties</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('profile.properties')}</h2>
             {properties.length > 0 && (
               <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full font-medium">{properties.length}</span>
             )}
@@ -347,7 +349,7 @@ export default function DashboardPage() {
               onClick={() => navigate('/properties')}
               className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline"
             >
-              View all
+              {t('common.viewAll')}
             </button>
           )}
         </div>
@@ -359,9 +361,9 @@ export default function DashboardPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No properties listed yet</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('property.noProperties')}</h3>
             <p className="text-gray-500 text-sm mb-6 max-w-sm mx-auto">
-              Start showcasing your properties. Add your first listing and buyers will find you.
+              {t('property.noProperties')}
             </p>
             <button
               onClick={() => navigate('/properties/new')}
@@ -370,7 +372,7 @@ export default function DashboardPage() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Add Your First Property
+              {t('nav.newProperty')}
             </button>
           </div>
         ) : (

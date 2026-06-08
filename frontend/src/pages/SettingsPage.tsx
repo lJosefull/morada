@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { useAuthStore } from '../store/auth'
 
@@ -19,6 +20,7 @@ const tabs: { id: TabId; label: string; icon: string }[] = [
 ]
 
 export default function SettingsPage() {
+  const { t } = useTranslation()
   const user = useAuthStore((s) => s.user)
   const fetchUser = useAuthStore((s) => s.fetchUser)
 
@@ -100,7 +102,7 @@ export default function SettingsPage() {
       <div className="flex items-center justify-center min-h-[70vh]">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-gray-400">Loading your settings...</p>
+          <p className="text-sm text-gray-400">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -112,10 +114,10 @@ export default function SettingsPage() {
         {/* ── Page Header ── */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-            Settings
+            {t('settings.title')}
           </h1>
           <p className="text-gray-500 mt-1">
-            Manage your account, security, and preferences
+            {t('settings.title')}
           </p>
         </div>
 
@@ -133,7 +135,7 @@ export default function SettingsPage() {
                 </h2>
                 <p className="text-sm text-gray-500">{user.email}</p>
                 <span className="inline-block mt-2 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full">
-                  Property Agent
+                  {t('profile.contactInfo')}
                 </span>
               </div>
 
@@ -170,7 +172,7 @@ export default function SettingsPage() {
                         d={tab.icon}
                       />
                     </svg>
-                    {tab.label}
+                    {tab.id === 'profile' ? t('settings.profile') : tab.label}
                   </button>
                 ))}
               </nav>
@@ -178,7 +180,7 @@ export default function SettingsPage() {
               {/* Member Since */}
               <div className="px-6 pb-5">
                 <p className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">
-                  Member since
+                  {t('profile.memberSince')}
                 </p>
                 <p className="text-sm text-gray-600 mt-0.5">
                   {new Date(user.createdAt).toLocaleDateString('en-US', {
@@ -197,11 +199,10 @@ export default function SettingsPage() {
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
                 <div className="px-8 py-6 border-b border-gray-100">
                   <h2 className="text-xl font-bold text-gray-900">
-                    Profile Information
+                    {t('settings.profile')}
                   </h2>
                   <p className="text-sm text-gray-500 mt-1">
-                    Update your personal details and how others see you on the
-                    platform
+                    {t('settings.profile')}
                   </p>
                 </div>
 
@@ -212,42 +213,42 @@ export default function SettingsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Full name
+                        {t('auth.name')}
                       </label>
                       <input
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-400"
-                        placeholder="Your full name"
+                        placeholder={t('inquiries.yourName')}
                         required
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Email address
+                        {t('auth.email')}
                       </label>
                       <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-400"
-                        placeholder="you@example.com"
+                        placeholder={t('inquiries.yourEmail')}
                         required
                       />
                     </div>
                   </div>
 
                   <div className="max-w-md">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone number
-                    </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {t('auth.phone')}
+                      </label>
                     <input
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-400"
-                      placeholder="+56 9 1234 5678"
+                        placeholder={t('inquiries.yourPhone')}
                     />
                   </div>
 
@@ -268,13 +269,13 @@ export default function SettingsPage() {
                         />
                       </svg>
                       <span className="flex-1">{profileError}</span>
-                      <button
-                        type="button"
-                        onClick={() => setProfileError(null)}
-                        className="font-semibold hover:underline text-sm"
-                      >
-                        Dismiss
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => setProfileError(null)}
+                          className="font-semibold hover:underline text-sm"
+                        >
+                          {t('common.close')}
+                        </button>
                     </div>
                   )}
 
@@ -295,13 +296,13 @@ export default function SettingsPage() {
                         />
                       </svg>
                       <span className="flex-1">{profileSuccess}</span>
-                      <button
-                        type="button"
-                        onClick={() => setProfileSuccess(null)}
-                        className="font-semibold hover:underline text-sm"
-                      >
-                        Dismiss
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => setProfileSuccess(null)}
+                          className="font-semibold hover:underline text-sm"
+                        >
+                          {t('common.close')}
+                        </button>
                     </div>
                   )}
 
@@ -325,7 +326,7 @@ export default function SettingsPage() {
                           d="M5 13l4 4L19 7"
                         />
                       </svg>
-                      Save changes
+                      {t('settings.saveChanges')}
                     </button>
                     <button
                       type="button"
@@ -336,7 +337,7 @@ export default function SettingsPage() {
                       }}
                       className="px-6 py-3 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all"
                     >
-                      Cancel
+                      {t('common.cancel')}
                     </button>
                   </div>
                 </form>
@@ -347,9 +348,9 @@ export default function SettingsPage() {
             {activeTab === 'security' && (
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
                 <div className="px-8 py-6 border-b border-gray-100">
-                  <h2 className="text-xl font-bold text-gray-900">Security</h2>
+                  <h2 className="text-xl font-bold text-gray-900">{t('settings.account')}</h2>
                   <p className="text-sm text-gray-500 mt-1">
-                    Update your password and keep your account secure
+                    {t('settings.account')}
                   </p>
                 </div>
 
@@ -358,15 +359,15 @@ export default function SettingsPage() {
                   className="px-8 py-6 space-y-6"
                 >
                   <div className="max-w-md">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Current password
-                    </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {t('auth.password')}
+                      </label>
                     <input
                       type="password"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                      placeholder="Enter current password"
+                      placeholder={t('auth.password')}
                       required
                     />
                   </div>
@@ -374,28 +375,28 @@ export default function SettingsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        New password
+                        {t('auth.password')}
                       </label>
                       <input
                         type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                        placeholder="Min. 6 characters"
+                        placeholder={t('auth.password')}
                         minLength={6}
                         required
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Confirm new password
+                        {t('auth.password')}
                       </label>
                       <input
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                        placeholder="Re-enter new password"
+                        placeholder={t('auth.password')}
                         minLength={6}
                         required
                       />
@@ -418,8 +419,7 @@ export default function SettingsPage() {
                       />
                     </svg>
                     <p className="text-sm text-amber-800">
-                      Use a strong, unique password with at least 6 characters.
-                      Avoid reusing passwords from other sites.
+                      {t('auth.password')}
                     </p>
                   </div>
 
@@ -440,13 +440,13 @@ export default function SettingsPage() {
                         />
                       </svg>
                       <span className="flex-1">{passwordError}</span>
-                      <button
-                        type="button"
-                        onClick={() => setPasswordError(null)}
-                        className="font-semibold hover:underline text-sm"
-                      >
-                        Dismiss
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => setPasswordError(null)}
+                          className="font-semibold hover:underline text-sm"
+                        >
+                          {t('common.close')}
+                        </button>
                     </div>
                   )}
 
@@ -467,13 +467,13 @@ export default function SettingsPage() {
                         />
                       </svg>
                       <span className="flex-1">{passwordSuccess}</span>
-                      <button
-                        type="button"
-                        onClick={() => setPasswordSuccess(null)}
-                        className="font-semibold hover:underline text-sm"
-                      >
-                        Dismiss
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => setPasswordSuccess(null)}
+                          className="font-semibold hover:underline text-sm"
+                        >
+                          {t('common.close')}
+                        </button>
                     </div>
                   )}
 
@@ -487,7 +487,7 @@ export default function SettingsPage() {
                       {passwordSaving ? (
                         <>
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Updating...
+                          {t('common.loading')}
                         </>
                       ) : (
                         <>
@@ -504,7 +504,7 @@ export default function SettingsPage() {
                               d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                             />
                           </svg>
-                          Update password
+                          {t('common.save')}
                         </>
                       )}
                     </button>
@@ -517,7 +517,7 @@ export default function SettingsPage() {
                       }}
                       className="px-6 py-3 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all"
                     >
-                      Clear
+                      {t('common.close')}
                     </button>
                   </div>
                 </form>

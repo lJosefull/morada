@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import type { Inquiry } from '../types'
 import { LoadingSpinner } from '../components/LoadingSpinner'
@@ -22,6 +23,7 @@ const statusColors: Record<string, string> = {
 }
 
 export default function MyInquiriesPage() {
+  const { t } = useTranslation()
   const [inquiries, setInquiries] = useState<Inquiry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -37,7 +39,7 @@ export default function MyInquiriesPage() {
       const { data } = await api.get<{ data: Inquiry[] }>('/inquiries/my-history')
       setInquiries(data.data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load inquiry history')
+      setError(err instanceof Error ? err.message : t('common.error'))
     } finally {
       setLoading(false)
     }
@@ -55,8 +57,8 @@ export default function MyInquiriesPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Inquiries</h1>
-          <p className="text-gray-600 mt-1">Track your property inquiries</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('inquiries.myInquiries')}</h1>
+          <p className="text-gray-600 mt-1">{t('inquiries.title')}</p>
         </div>
         <Link
           to="/inquiries"
@@ -65,7 +67,7 @@ export default function MyInquiriesPage() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          Back to Leads
+          {t('common.back')}
         </Link>
       </div>
 
@@ -76,15 +78,15 @@ export default function MyInquiriesPage() {
           <svg className="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
-          <h3 className="text-lg font-medium text-gray-900 mb-1">No inquiries yet</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-1">{t('inquiries.noInquiries')}</h3>
           <p className="text-gray-500 text-sm mb-4">
-            You haven't contacted any property owners yet.
+            {t('inquiries.noInquiries')}
           </p>
           <Link
             to="/properties"
             className="text-blue-600 hover:underline text-sm font-medium"
           >
-            Browse Properties
+            {t('property.title')}
           </Link>
         </div>
       ) : (
@@ -93,16 +95,16 @@ export default function MyInquiriesPage() {
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
                 <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                  Property
+                  {t('property.title')}
                 </th>
                 <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                  Date
+                  {t('common.noData')}
                 </th>
                 <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                  Status
+                  {t('property.status')}
                 </th>
                 <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                  Action
+                  {t('common.view')}
                 </th>
               </tr>
             </thead>
@@ -118,7 +120,7 @@ export default function MyInquiriesPage() {
                         {inquiry.property.title}
                       </Link>
                     ) : (
-                      <span className="text-sm text-gray-500">Unknown property</span>
+                      <span className="text-sm text-gray-500">{t('property.notFound')}</span>
                     )}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
@@ -136,7 +138,7 @@ export default function MyInquiriesPage() {
                       to={`/properties/${inquiry.propertyId}`}
                       className="text-sm text-gray-600 hover:text-gray-900 font-medium"
                     >
-                      View Property →
+                      {t('common.view')}
                     </Link>
                   </td>
                 </tr>

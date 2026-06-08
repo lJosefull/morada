@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import type { Review } from '../types'
 import StarRating from './StarRating'
@@ -13,6 +14,7 @@ interface ReviewFormProps {
 type FormStatus = 'idle' | 'sending' | 'success' | 'error'
 
 export default function ReviewForm({ propertyId, mode, existingReview, onSuccess }: ReviewFormProps) {
+  const { t } = useTranslation()
   const [rating, setRating] = useState(existingReview?.rating ?? 0)
   const [comment, setComment] = useState(existingReview?.comment ?? '')
   const [status, setStatus] = useState<FormStatus>('idle')
@@ -22,11 +24,11 @@ export default function ReviewForm({ propertyId, mode, existingReview, onSuccess
     e.preventDefault()
 
     if (rating === 0) {
-      setErrorMsg('Please select a rating')
+      setErrorMsg(t('reviews.writeReview'))
       return
     }
     if (comment.length < 10) {
-      setErrorMsg('Comment must be at least 10 characters')
+      setErrorMsg(t('reviews.writeReview'))
       return
     }
 
@@ -54,7 +56,7 @@ export default function ReviewForm({ propertyId, mode, existingReview, onSuccess
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <p className="text-sm font-medium text-green-700">
-          {mode === 'create' ? 'Review submitted!' : 'Review updated!'}
+          {t('common.submit')}
         </p>
       </div>
     )
@@ -64,7 +66,7 @@ export default function ReviewForm({ propertyId, mode, existingReview, onSuccess
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">
-          Your Rating
+          {t('reviews.rating')}
         </label>
         <StarRating
           rating={rating}
@@ -73,13 +75,13 @@ export default function ReviewForm({ propertyId, mode, existingReview, onSuccess
           onChange={setRating}
         />
         {rating === 0 && (
-          <p className="text-xs text-gray-400 mt-1">Click a star to rate</p>
+          <p className="text-xs text-gray-400 mt-1">{t('reviews.rating')}</p>
         )}
       </div>
 
       <div>
         <label htmlFor="review-comment" className="block text-sm font-medium text-gray-700 mb-1">
-          Your Comment
+          {t('reviews.yourReview')}
         </label>
         <textarea
           id="review-comment"
@@ -88,7 +90,7 @@ export default function ReviewForm({ propertyId, mode, existingReview, onSuccess
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
-          placeholder="Tell others about your experience..."
+          placeholder={t('reviews.yourReview')}
           minLength={10}
           maxLength={1000}
         />
@@ -112,10 +114,10 @@ export default function ReviewForm({ propertyId, mode, existingReview, onSuccess
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
-            {mode === 'create' ? 'Submitting...' : 'Updating...'}
+            {t('common.loading')}
           </>
         ) : (
-          mode === 'create' ? 'Submit Review' : 'Update Review'
+          mode === 'create' ? t('reviews.submitReview') : t('common.save')
         )}
       </button>
     </form>

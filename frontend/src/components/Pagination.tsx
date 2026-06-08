@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface PaginationProps {
   currentPage: number;
@@ -11,6 +12,7 @@ export const Pagination = memo(function Pagination({
   totalPages,
   onPageChange,
 }: PaginationProps) {
+  const { t } = useTranslation()
   const getPageNumbers = (): (number | string)[] => {
     const pages: (number | string)[] = [];
     const delta = 2;
@@ -52,9 +54,9 @@ export const Pagination = memo(function Pagination({
             ? 'text-gray-400 cursor-not-allowed bg-gray-100'
             : 'text-gray-700 bg-white hover:bg-gray-50 border border-gray-300'
         }`}
-        aria-label="Previous page"
+        aria-label={t('common.previous')}
       >
-        Previous
+        {t('common.previous')}
       </button>
 
       {getPageNumbers().map((page, index) => {
@@ -94,9 +96,9 @@ export const Pagination = memo(function Pagination({
             ? 'text-gray-400 cursor-not-allowed bg-gray-100'
             : 'text-gray-700 bg-white hover:bg-gray-50 border border-gray-300'
         }`}
-        aria-label="Next page"
+        aria-label={t('common.next')}
       >
-        Next
+        {t('common.next')}
       </button>
     </nav>
   );

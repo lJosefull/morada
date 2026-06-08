@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import type { Inquiry } from '../types'
 import { LoadingSpinner } from './LoadingSpinner'
@@ -10,17 +11,18 @@ interface InquiryDetailProps {
   onStatusChange: (id: string, newStatus: string) => void
 }
 
-const statusLabels: Record<string, string> = {
-  new: 'New',
-  contacted: 'Contacted',
-  interested: 'Interested',
-  not_interested: 'Not Interested',
-  converted: 'Converted',
+const statusLabelsI18n: Record<string, string> = {
+  new: 'inquiries.new',
+  contacted: 'inquiries.contacted',
+  interested: 'interested',
+  not_interested: 'not_interested',
+  converted: 'converted',
 }
 
 const statusOptions = ['new', 'contacted', 'interested', 'not_interested', 'converted']
 
 export default function InquiryDetail({ inquiryId, onClose, onStatusChange }: InquiryDetailProps) {
+  const { t } = useTranslation()
   const [inquiry, setInquiry] = useState<Inquiry | null>(null)
   const [loading, setLoading] = useState(true)
   const [notes, setNotes] = useState('')
@@ -85,7 +87,7 @@ export default function InquiryDetail({ inquiryId, onClose, onStatusChange }: In
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-          <h2 className="text-lg font-semibold text-gray-900">Lead Details</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t('inquiries.title')}</h2>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
             <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -96,7 +98,7 @@ export default function InquiryDetail({ inquiryId, onClose, onStatusChange }: In
         <div className="p-6 space-y-6">
           {/* Contact Info */}
           <div>
-            <h3 className="text-sm font-medium text-gray-500 mb-3 uppercase tracking-wide">Contact</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-3 uppercase tracking-wide">{t('profile.contactInfo')}</h3>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,19 +125,19 @@ export default function InquiryDetail({ inquiryId, onClose, onStatusChange }: In
 
           {/* Message */}
           <div>
-            <h3 className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wide">Original Message</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wide">{t('inquiries.sendMessage')}</h3>
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-sm text-gray-700 whitespace-pre-line">{inquiry.message}</p>
             </div>
             <p className="text-xs text-gray-400 mt-2">
-              Received {new Date(inquiry.createdAt).toLocaleString('es-CL')}
+              {new Date(inquiry.createdAt).toLocaleString('es-CL')}
             </p>
           </div>
 
           {/* Property Link */}
           {inquiry.property && (
             <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wide">Property</h3>
+              <h3 className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wide">{t('property.title')}</h3>
               <Link
                 to={`/properties/${inquiry.propertyId}`}
                 className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
@@ -151,7 +153,7 @@ export default function InquiryDetail({ inquiryId, onClose, onStatusChange }: In
 
           {/* Status Change */}
           <div>
-            <h3 className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wide">Status</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wide">{t('property.status')}</h3>
             <div className="flex flex-wrap gap-2">
               {statusOptions.map((s) => {
                 const isActive = inquiry.status === s
@@ -173,7 +175,7 @@ export default function InquiryDetail({ inquiryId, onClose, onStatusChange }: In
                         : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
-                    {statusLabels[s] || s}
+                    {t(statusLabelsI18n[s] || s)}
                   </button>
                 )
               })}
@@ -183,7 +185,7 @@ export default function InquiryDetail({ inquiryId, onClose, onStatusChange }: In
           {/* Status History */}
           {inquiry.statusHistory && inquiry.statusHistory.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wide">History</h3>
+              <h3 className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wide">{t('inquiries.notes')}</h3>
               <div className="space-y-2">
                 {inquiry.statusHistory.map((h) => (
                   <div key={h.id} className="flex items-center gap-2 text-xs text-gray-500">
@@ -204,22 +206,22 @@ export default function InquiryDetail({ inquiryId, onClose, onStatusChange }: In
           {/* Internal Notes */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Internal Notes</h3>
-              {notesSaved && <span className="text-xs text-green-600 font-medium">Saved!</span>}
+              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">{t('inquiries.notes')}</h3>
+              {notesSaved && <span className="text-xs text-green-600 font-medium">{t('settings.saved')}</span>}
             </div>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
-              placeholder="Add internal notes about this lead..."
+              placeholder={t('inquiries.addNote')}
             />
             <button
               onClick={handleSaveNotes}
               disabled={savingNotes}
               className="mt-2 bg-gray-900 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {savingNotes ? 'Saving...' : 'Save Notes'}
+              {savingNotes ? t('common.loading') : t('inquiries.addNote')}
             </button>
           </div>
         </div>

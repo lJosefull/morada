@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Inquiry } from '../types'
 
 interface InquiryCardProps {
@@ -23,6 +24,7 @@ const statusLabels: Record<string, string> = {
 }
 
 export default function InquiryCard({ inquiry, onClick }: InquiryCardProps) {
+  const { t } = useTranslation()
   return (
     <button
       onClick={onClick}
@@ -31,7 +33,7 @@ export default function InquiryCard({ inquiry, onClick }: InquiryCardProps) {
       <div className="flex items-start justify-between gap-2 mb-2">
         <h4 className="font-semibold text-gray-900 text-sm truncate">{inquiry.name}</h4>
         {inquiry.status === 'new' && (
-          <span className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500 mt-1.5" title="Unread" />
+          <span className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500 mt-1.5" title={t('inquiries.new')} />
         )}
       </div>
       <p className="text-xs text-gray-500 mb-1">{inquiry.email}</p>

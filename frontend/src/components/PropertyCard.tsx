@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Property } from '../types'
 import { formatCurrency } from '../lib/utils'
 
@@ -12,6 +13,7 @@ interface PropertyCardProps {
 }
 
 export function PropertyCard({ property, onEdit, onDelete, onView, isFavorite, onToggleFavorite }: PropertyCardProps) {
+  const { t } = useTranslation()
   const [isImageLoaded, setIsImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
 
@@ -72,15 +74,15 @@ export function PropertyCard({ property, onEdit, onDelete, onView, isFavorite, o
               property.status === 'hidden' ? 'bg-gray-500 text-white' :
               'bg-blue-100 text-blue-800'
             }`}>
-              {property.status === 'sold' ? 'Vendido' :
-               property.status === 'rented' ? 'Arrendado' :
+              {property.status === 'sold' ? t('property.sold') :
+               property.status === 'rented' ? t('property.rented') :
                property.status === 'reserved' ? 'Reservado' :
-               property.status === 'hidden' ? 'Oculto' :
+               property.status === 'hidden' ? t('property.hidden') :
                property.status}
             </span>
           )}
           <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-            {property.listingType === 'sale' ? 'Venta' : 'Arriendo'}
+            {property.listingType === 'sale' ? t('property.forSale') : t('property.forRent')}
           </span>
         </div>
       </div>
@@ -104,7 +106,7 @@ export function PropertyCard({ property, onEdit, onDelete, onView, isFavorite, o
               <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
-              {property.bedrooms} dorm
+              {property.bedrooms} {t('property.bedrooms')}
             </span>
           )}
           {property.bathrooms && (
@@ -112,7 +114,7 @@ export function PropertyCard({ property, onEdit, onDelete, onView, isFavorite, o
               <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              {property.bathrooms} baños
+              {property.bathrooms} {t('property.bathrooms')}
             </span>
           )}
           {property.surface && (
@@ -129,17 +131,17 @@ export function PropertyCard({ property, onEdit, onDelete, onView, isFavorite, o
           <div className="mt-4 flex space-x-2">
             {onView && (
               <button onClick={onView} className="flex-1 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-                View
+                {t('common.view')}
               </button>
             )}
             {onEdit && (
               <button onClick={onEdit} className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-                Edit
+                {t('common.edit')}
               </button>
             )}
             {onDelete && (
               <button onClick={onDelete} className="px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
-                Delete
+                {t('common.delete')}
               </button>
             )}
           </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import type { Property } from '../types'
 import { PropertyCard } from '../components/PropertyCard'
@@ -15,6 +16,7 @@ interface PublicProfile {
 }
 
 export default function PublicProfilePage() {
+  const { t } = useTranslation()
   const { userId } = useParams<{ userId: string }>()
   const [profile, setProfile] = useState<PublicProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -27,7 +29,7 @@ export default function PublicProfilePage() {
 
     api.get<PublicProfile>(`/users/${userId}/profile`)
       .then(({ data }) => setProfile(data))
-      .catch(() => setError('User not found'))
+      .catch(() => setError(t('profile.title')))
       .finally(() => setLoading(false))
   }, [userId])
 
@@ -42,10 +44,10 @@ export default function PublicProfilePage() {
   if (error || !profile) {
     return (
       <div className="text-center py-20">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">User not found</h2>
-        <p className="text-gray-500 mb-6">The user you're looking for doesn't exist.</p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('profile.title')}</h2>
+        <p className="text-gray-500 mb-6">{t('profile.title')}</p>
         <Link to="/properties" className="text-blue-600 hover:underline">
-          Back to properties
+          {t('property.backToProperties')}
         </Link>
       </div>
     )
@@ -60,7 +62,7 @@ export default function PublicProfilePage() {
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
-        Back to properties
+        {t('property.backToProperties')}
       </Link>
 
       {/* Profile Header */}
@@ -73,7 +75,7 @@ export default function PublicProfilePage() {
             <div className="flex items-center gap-3 mb-1">
               <h1 className="text-2xl font-bold text-gray-900">{profile.name}</h1>
               <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
-                Property Agent
+                {t('profile.contactInfo')}
               </span>
             </div>
             {profile.email && (
@@ -105,7 +107,7 @@ export default function PublicProfilePage() {
       {/* Properties Section */}
       <div>
         <h2 className="text-xl font-bold text-gray-900 mb-6">
-          Properties ({profile.properties.length})
+          {t('profile.properties')} ({profile.properties.length})
         </h2>
 
         {profile.properties.length === 0 ? (
@@ -113,7 +115,7 @@ export default function PublicProfilePage() {
             <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
-            <p className="text-gray-500">No properties listed yet.</p>
+            <p className="text-gray-500">{t('profile.noProperties')}</p>
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

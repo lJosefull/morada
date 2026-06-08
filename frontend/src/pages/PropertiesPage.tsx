@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import type { Property } from '../types'
@@ -7,6 +8,7 @@ import { SEOHead } from '../components/SEOHead'
 import AnimatedLink from '../components/AnimatedLink'
 
 export default function PropertiesPage() {
+  const { t } = useTranslation()
   const [properties, setProperties] = useState<Property[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -35,12 +37,12 @@ export default function PropertiesPage() {
         description="Browse our selection of properties for sale and rent. Find your ideal home, apartment, land or commercial property."
       />
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Properties</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('nav.properties')}</h1>
         <Link
           to="/properties/new"
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
-          + New Property
+          + {t('property.createTitle')}
         </Link>
       </div>
 
@@ -50,24 +52,24 @@ export default function PropertiesPage() {
           onChange={(e) => { setFilters((f) => ({ ...f, listingType: e.target.value })); setPage(1) }}
           className="px-4 py-2 border rounded-lg bg-white"
         >
-          <option value="">All listings</option>
-          <option value="sale">Sale</option>
-          <option value="rent">Rent</option>
+          <option value="">{t('search.allListings')}</option>
+          <option value="sale">{t('property.forSale')}</option>
+          <option value="rent">{t('property.forRent')}</option>
         </select>
         <select
           value={filters.propertyType}
           onChange={(e) => { setFilters((f) => ({ ...f, propertyType: e.target.value })); setPage(1) }}
           className="px-4 py-2 border rounded-lg bg-white"
         >
-          <option value="">All types</option>
-          <option value="house">House</option>
-          <option value="apartment">Apartment</option>
-          <option value="land">Land</option>
-          <option value="commercial">Commercial</option>
+          <option value="">{t('search.allTypes')}</option>
+          <option value="house">{t('property.propertyType.house')}</option>
+          <option value="apartment">{t('property.propertyType.apartment')}</option>
+          <option value="land">{t('property.propertyType.land')}</option>
+          <option value="commercial">{t('property.propertyType.commercial')}</option>
         </select>
         <input
           type="text"
-          placeholder="Search by location..."
+          placeholder={t('common.search')}
           value={filters.search}
           onChange={(e) => { setFilters((f) => ({ ...f, search: e.target.value })); setPage(1) }}
           className="px-4 py-2 border rounded-lg flex-1 min-w-[200px]"
@@ -79,7 +81,7 @@ export default function PropertiesPage() {
           <LoadingSpinner size="lg" />
         </div>
       ) : properties.length === 0 ? (
-        <div className="text-center py-20 text-gray-500">No properties found</div>
+        <div className="text-center py-20 text-gray-500">{t('property.noProperties')}</div>
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -97,12 +99,12 @@ export default function PropertiesPage() {
                   {p.images?.[0] ? (
                     <img src={p.images[0].url} alt={p.title} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-gray-400">No image</span>
+                    <span className="text-gray-400">{t('property.noImage')}</span>
                   )}
                 </div>
                 <div className="p-4">
                   <p className="text-xs text-blue-600 font-medium uppercase mb-1">
-                    {p.listingType === 'sale' ? 'Sale' : 'Rent'}
+                    {p.listingType === 'sale' ? t('property.forSale') : t('property.forRent')}
                   </p>
                   <h3
                     className="font-semibold text-gray-900 mb-1"
@@ -118,8 +120,8 @@ export default function PropertiesPage() {
                   </p>
                   <div className="flex items-center gap-3 text-sm text-gray-500">
                     <span>{p.location}</span>
-                    {p.bedrooms && <span>{p.bedrooms} beds</span>}
-                    {p.bathrooms && <span>{p.bathrooms} baths</span>}
+                    {p.bedrooms && <span>{p.bedrooms} {t('property.bedrooms')}</span>}
+                    {p.bathrooms && <span>{p.bathrooms} {t('property.bathrooms')}</span>}
                     {p.surface && <span>{p.surface} m²</span>}
                   </div>
                 </div>

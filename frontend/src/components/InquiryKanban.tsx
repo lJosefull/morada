@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import type { Inquiry } from '../types'
 import InquiryCard from './InquiryCard'
@@ -21,6 +22,7 @@ const columns: Column[] = [
 ]
 
 export default function InquiryKanban() {
+  const { t } = useTranslation()
   const [inquiries, setInquiries] = useState<Inquiry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -34,7 +36,7 @@ export default function InquiryKanban() {
       const { data } = await api.get<{ data: Inquiry[] }>('/inquiries/mine')
       setInquiries(data.data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load inquiries')
+      setError(err instanceof Error ? err.message : t('common.error'))
     } finally {
       setLoading(false)
     }
@@ -106,7 +108,7 @@ export default function InquiryKanban() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm text-gray-500">
-          {inquiries.length} total lead{inquiries.length !== 1 ? 's' : ''}
+          {inquiries.length} {t('inquiries.title')}
         </p>
         <button
           onClick={fetchInquiries}
@@ -115,7 +117,7 @@ export default function InquiryKanban() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          Refresh
+          {t('common.retry')}
         </button>
       </div>
 
@@ -146,7 +148,7 @@ export default function InquiryKanban() {
                     <svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                     </svg>
-                    <p className="text-xs">Drop leads here</p>
+                    <p className="text-xs">{t('inquiries.noInquiries')}</p>
                   </div>
                 ) : (
                   columnInquiries.map((inquiry) => (

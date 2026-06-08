@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface SearchBarProps {
   onSearch: (searchTerm: string) => void;
@@ -9,8 +10,10 @@ interface SearchBarProps {
 export function SearchBar({
   onSearch,
   initialValue = '',
-  placeholder = 'Search properties by title or location...',
+  placeholder,
 }: SearchBarProps) {
+  const { t } = useTranslation();
+  const placeholderText = placeholder ?? t('common.search');
   const [searchTerm, setSearchTerm] = useState(initialValue);
   const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
 
@@ -65,7 +68,7 @@ export function SearchBar({
         type="text"
         value={searchTerm}
         onChange={handleChange}
-        placeholder={placeholder}
+        placeholder={placeholderText}
         className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
       />
       {searchTerm && (

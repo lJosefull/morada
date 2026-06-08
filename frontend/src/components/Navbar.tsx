@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/auth';
 import { api } from '../lib/api';
 import { NotificationDropdown } from './NotificationDropdown';
 
 export default function Navbar() {
+  const { t } = useTranslation();
   const { accessToken, user, logout } = useAuthStore();
   const isAuthenticated = !!accessToken;
   const location = useLocation();
@@ -39,7 +41,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center space-x-2">
-            <span className="text-2xl font-bold text-blue-600">RealEstate</span>
+            <span className="text-2xl font-bold text-blue-600">{t('app.name')}</span>
             <span className="text-2xl font-bold text-gray-900">Pro</span>
           </Link>
 
@@ -52,7 +54,7 @@ export default function Navbar() {
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              Properties
+              {t('nav.properties')}
             </Link>
             {isLoggedIn && (
               <>
@@ -64,7 +66,7 @@ export default function Navbar() {
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  Dashboard
+                  {t('nav.dashboard')}
                 </Link>
                 <Link
                   to="/inquiries"
@@ -74,7 +76,7 @@ export default function Navbar() {
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  My Leads
+                  {t('nav.inquiries')}
                   {unreadCount > 0 && (
                     <span className="absolute -top-2 -right-4 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
                       {unreadCount > 99 ? '99+' : unreadCount}
@@ -89,7 +91,7 @@ export default function Navbar() {
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  For You
+                  {t('nav.feed')}
                 </Link>
                 <Link
                   to="/favorites"
@@ -99,7 +101,7 @@ export default function Navbar() {
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  Favorites
+                  {t('nav.favorites')}
                 </Link>
               </>
             )}
@@ -127,21 +129,21 @@ export default function Navbar() {
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setIsProfileMenuOpen(false)}
                     >
-                      My Profile
+                      {t('nav.profile')}
                     </Link>
                     <Link
                       to="/properties/new"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setIsProfileMenuOpen(false)}
                     >
-                      Add Property
+                      {t('nav.newProperty')}
                     </Link>
                     <Link
                       to="/inquiries"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setIsProfileMenuOpen(false)}
                     >
-                      My Leads
+                      {t('nav.inquiries')}
                       {unreadCount > 0 && (
                         <span className="ml-2 bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5">
                           {unreadCount}
@@ -153,14 +155,14 @@ export default function Navbar() {
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setIsProfileMenuOpen(false)}
                     >
-                      Favorites
+                      {t('nav.favorites')}
                     </Link>
                     <Link
                       to="/settings"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setIsProfileMenuOpen(false)}
                     >
-                      Settings
+                      {t('nav.settings')}
                     </Link>
                     <hr className="my-1 border-gray-200" />
                     <button
@@ -170,7 +172,7 @@ export default function Navbar() {
                       }}
                       className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                     >
-                      Sign Out
+                      {t('nav.logout')}
                     </button>
                   </div>
                 )}
@@ -182,13 +184,13 @@ export default function Navbar() {
                   to="/login"
                   className="text-sm font-medium text-gray-600 hover:text-gray-900"
                 >
-                  Sign In
+                  {t('nav.login')}
                 </Link>
                 <Link
                   to="/register"
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                 >
-                  Get Started
+                  {t('nav.register')}
                 </Link>
               </>
             )}
@@ -222,7 +224,7 @@ export default function Navbar() {
                 }`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Properties
+                {t('nav.properties')}
               </Link>
               {isLoggedIn && (
                 <>
@@ -235,7 +237,7 @@ export default function Navbar() {
                     }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    Dashboard
+                    {t('nav.dashboard')}
                   </Link>
                   <Link
                     to="/inquiries"
@@ -246,7 +248,7 @@ export default function Navbar() {
                     }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    My Leads
+                    {t('nav.inquiries')}
                     {unreadCount > 0 && (
                       <span className="ml-2 bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5">
                         {unreadCount}
@@ -262,7 +264,7 @@ export default function Navbar() {
                     }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    For You
+                    {t('nav.feed')}
                   </Link>
                   <Link
                     to="/favorites"
@@ -273,7 +275,7 @@ export default function Navbar() {
                     }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    Favorites
+                    {t('nav.favorites')}
                   </Link>
                   <Link
                     to="/properties/new"
@@ -284,7 +286,7 @@ export default function Navbar() {
                     }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    Add Property
+                    {t('nav.newProperty')}
                   </Link>
                 </>
               )}
@@ -297,14 +299,14 @@ export default function Navbar() {
                     className="block text-sm font-medium text-gray-600 hover:text-gray-900"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    My Profile
+                    {t('nav.profile')}
                   </Link>
                   <Link
                     to="/settings"
                     className="block text-sm font-medium text-gray-600 hover:text-gray-900"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    Settings
+                    {t('nav.settings')}
                   </Link>
                   <button
                     onClick={() => {
@@ -313,7 +315,7 @@ export default function Navbar() {
                     }}
                     className="block w-full text-left text-sm font-medium text-red-600 hover:text-red-800"
                   >
-                    Sign Out
+                    {t('nav.logout')}
                   </button>
                 </>
               ) : (
@@ -323,14 +325,14 @@ export default function Navbar() {
                     className="block text-sm font-medium text-gray-600 hover:text-gray-900"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    Sign In
+                    {t('nav.login')}
                   </Link>
                   <Link
                     to="/register"
                     className="block text-sm font-medium text-blue-600 hover:text-blue-800"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    Get Started
+                    {t('nav.register')}
                   </Link>
                 </>
               )}

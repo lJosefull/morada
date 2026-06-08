@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -18,6 +19,7 @@ interface PropertyMapProps {
 }
 
 export function PropertyMap({ latitude, longitude, title, className = '' }: PropertyMapProps) {
+  const { t } = useTranslation()
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<L.Map | null>(null)
 
@@ -38,7 +40,7 @@ export function PropertyMap({ latitude, longitude, title, className = '' }: Prop
 
     L.marker([latitude, longitude])
       .addTo(map)
-      .bindPopup(title || 'Property location')
+      .bindPopup(title || t('map.title'))
 
     mapInstanceRef.current = map
 

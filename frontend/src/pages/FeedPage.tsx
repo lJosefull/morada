@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import type { Property } from '../types'
 import { LoadingSpinner } from '../components/LoadingSpinner'
@@ -21,6 +22,7 @@ interface FeedProfile {
 }
 
 export default function FeedPage() {
+  const { t } = useTranslation()
   const [properties, setProperties] = useState<FeedProperty[]>([])
   const [profile, setProfile] = useState<FeedProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -59,13 +61,13 @@ export default function FeedPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <SEOHead title="For You" description="Personalized property recommendations based on your preferences." />
+      <SEOHead title={t('nav.feed')} description="Personalized property recommendations based on your preferences." />
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">For You</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('nav.feed')}</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Personalized recommendations based on your activity
+            {t('feed.subtitle')}
             {profile && profile.totalInteractions > 0 && (
               <span> — {profile.totalInteractions} interactions analyzed</span>
             )}
@@ -80,37 +82,37 @@ export default function FeedPage() {
             <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
-            <p className="text-sm font-semibold text-blue-900">Your Preferences</p>
+            <p className="text-sm font-semibold text-blue-900">{t('feed.yourPreferences')}</p>
           </div>
           <div className="flex flex-wrap gap-3 text-xs">
             {profile.topPropertyType && (
               <span className="px-3 py-1.5 bg-white rounded-lg border border-blue-100 text-blue-700 font-medium capitalize">
-                Prefers {profile.topPropertyType}s
+                {profile.topPropertyType}s
               </span>
             )}
             {profile.topListingType && (
               <span className="px-3 py-1.5 bg-white rounded-lg border border-blue-100 text-blue-700 font-medium">
-                Looking to {profile.topListingType === 'sale' ? 'buy' : 'rent'}
+                {profile.topListingType === 'sale' ? t('property.forSale') : t('property.forRent')}
               </span>
             )}
             {profile.preferredBedrooms && (
               <span className="px-3 py-1.5 bg-white rounded-lg border border-blue-100 text-blue-700 font-medium">
-                {profile.preferredBedrooms} bed
+                {profile.preferredBedrooms} {t('property.bedrooms')}
               </span>
             )}
             {profile.preferredBathrooms && (
               <span className="px-3 py-1.5 bg-white rounded-lg border border-blue-100 text-blue-700 font-medium">
-                {profile.preferredBathrooms} bath
+                {profile.preferredBathrooms} {t('property.bathrooms')}
               </span>
             )}
             {profile.avgPrice && (
               <span className="px-3 py-1.5 bg-white rounded-lg border border-blue-100 text-blue-700 font-medium">
-                Avg price: ${Math.round(profile.avgPrice).toLocaleString()}
+                {t('feed.avgPrice')}: ${Math.round(profile.avgPrice).toLocaleString()}
               </span>
             )}
             {profile.totalInteractions === 0 && (
               <span className="text-blue-500 text-xs">
-                Start browsing properties to get personalized recommendations
+                {t('feed.startBrowsing')}
               </span>
             )}
           </div>
@@ -126,10 +128,10 @@ export default function FeedPage() {
           <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
           </svg>
-          <p className="text-gray-500 mt-4">No recommendations yet</p>
-          <p className="text-sm text-gray-400 mt-1">Start viewing and favoriting properties to build your profile</p>
+          <p className="text-gray-500 mt-4">{t('feed.noRecommendations')}</p>
+          <p className="text-sm text-gray-400 mt-1">{t('feed.noRecommendationsHint')}</p>
           <Link to="/properties" className="inline-block mt-4 text-blue-600 hover:underline text-sm font-medium">
-            Browse properties →
+            {t('feed.browseProperties')}
           </Link>
         </div>
       ) : (
@@ -155,12 +157,12 @@ export default function FeedPage() {
                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide ${
                       p.listingType === 'sale' ? 'bg-emerald-500 text-white' : 'bg-blue-500 text-white'
                     }`}>
-                      {p.listingType === 'sale' ? 'For Sale' : 'For Rent'}
+                      {p.listingType === 'sale' ? t('property.forSale') : t('property.forRent')}
                     </span>
                   </div>
                   {/* Match score badge */}
                   <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full px-2.5 py-1 text-xs font-bold text-blue-600 shadow-sm">
-                    {Math.round(p.score * 100)}% match
+                    {Math.round(p.score * 100)}% {t('feed.matched')}
                   </div>
                 </div>
                 <div className="p-4">
@@ -180,8 +182,8 @@ export default function FeedPage() {
                   )}
 
                   <div className="flex items-center gap-3 mt-3 text-xs text-gray-400 border-t border-gray-100 pt-3">
-                    {p.bedrooms && <span>{p.bedrooms} beds</span>}
-                    {p.bathrooms && <span>{p.bathrooms} baths</span>}
+                    {p.bedrooms && <span>{p.bedrooms} {t('property.bedrooms')}</span>}
+                    {p.bathrooms && <span>{p.bathrooms} {t('property.bathrooms')}</span>}
                     {p.surface && <span>{p.surface} m²</span>}
                     <span className="capitalize">{p.propertyType}</span>
                   </div>

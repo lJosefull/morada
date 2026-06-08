@@ -1,5 +1,6 @@
 import React, { useState, FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/auth';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { SEOHead } from '../components/SEOHead';
@@ -9,6 +10,7 @@ interface LocationState {
 }
 
 const LoginPage: React.FC = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -32,11 +34,11 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-      <SEOHead title="Sign In" description="Sign in to your InmobiliarIA account to manage properties and inquiries." />
+      <SEOHead title={t('auth.loginTitle')} description={t('auth.loginSubtitle')} />
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
-          <p className="mt-2 text-sm text-gray-600">Sign in to your account</p>
+          <h2 className="text-3xl font-bold text-gray-900">{t('auth.loginTitle')}</h2>
+          <p className="mt-2 text-sm text-gray-600">{t('auth.loginSubtitle')}</p>
         </div>
 
         {error && (
@@ -48,7 +50,7 @@ const LoginPage: React.FC = () => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">{t('auth.email')}</label>
               <input id="email" name="email" type="email" autoComplete="email" required
                 value={email} onChange={(e) => setEmail(e.target.value)}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
@@ -56,7 +58,7 @@ const LoginPage: React.FC = () => {
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">{t('auth.password')}</label>
               <div className="relative mt-1">
                 <input id="password" name="password" type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password" required
@@ -86,12 +88,12 @@ const LoginPage: React.FC = () => {
           <button type="submit" disabled={isLoading}
             className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
           >
-            {isLoading ? <LoadingSpinner size="sm" /> : 'Sign in'}
+            {isLoading ? <LoadingSpinner size="sm" /> : t('auth.loginButton')}
           </button>
 
           <p className="text-center text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">Sign up</Link>
+            {t('auth.noAccount')}{' '}
+            <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">{t('auth.registerButton')}</Link>
           </p>
         </form>
       </div>

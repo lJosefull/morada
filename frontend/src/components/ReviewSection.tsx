@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { useAuthStore } from '../store/auth'
 import type { Review, ReviewStats } from '../types'
@@ -12,6 +13,7 @@ interface ReviewSectionProps {
 }
 
 export default function ReviewSection({ propertyId, propertyUserId }: ReviewSectionProps) {
+  const { t } = useTranslation()
   const { user } = useAuthStore()
   const [reviews, setReviews] = useState<Review[]>([])
   const [stats, setStats] = useState<ReviewStats | null>(null)
@@ -68,7 +70,7 @@ export default function ReviewSection({ propertyId, propertyUserId }: ReviewSect
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">Reviews &amp; Ratings</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-6">{t('reviews.title')}</h2>
 
       {loading && !stats ? (
         <div className="flex justify-center py-8">
@@ -84,7 +86,7 @@ export default function ReviewSection({ propertyId, propertyUserId }: ReviewSect
             <div className="flex justify-center lg:justify-start mb-1">
               <StarRating rating={Math.round(stats.average)} size="md" />
             </div>
-            <p className="text-sm text-gray-500">{stats.total} reviews</p>
+            <p className="text-sm text-gray-500">{stats.total} {t('reviews.title')}</p>
           </div>
 
           {/* Right: Distribution bars */}
@@ -112,15 +114,15 @@ export default function ReviewSection({ propertyId, propertyUserId }: ReviewSect
           <svg className="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
           </svg>
-          <p className="text-gray-500 font-medium">No reviews yet</p>
-          <p className="text-gray-400 text-sm mt-1">Be the first to review this property!</p>
+          <p className="text-gray-500 font-medium">{t('reviews.noReviews')}</p>
+          <p className="text-gray-400 text-sm mt-1">{t('reviews.noReviews')}</p>
         </div>
       )}
 
       {/* Review Form */}
       {canReview && !myReview && (
         <div className="mb-8 border border-gray-200 rounded-xl p-5 bg-gray-50">
-          <h3 className="text-base font-semibold text-gray-900 mb-3">Leave a Review</h3>
+          <h3 className="text-base font-semibold text-gray-900 mb-3">{t('reviews.writeReview')}</h3>
           <ReviewForm
             propertyId={propertyId}
             mode="create"
@@ -133,7 +135,7 @@ export default function ReviewSection({ propertyId, propertyUserId }: ReviewSect
       {canReview && myReview && (
         <div className="mb-8 border border-blue-200 rounded-xl p-5 bg-blue-50">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-base font-semibold text-blue-900">Your Review</h3>
+            <h3 className="text-base font-semibold text-blue-900">{t('reviews.yourReview')}</h3>
             <div className="flex gap-2">
               <button
                 onClick={() => {
@@ -145,7 +147,7 @@ export default function ReviewSection({ propertyId, propertyUserId }: ReviewSect
                 }}
                 className="text-xs text-red-600 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors"
               >
-                Delete
+                {t('common.delete')}
               </button>
             </div>
           </div>
@@ -162,7 +164,7 @@ export default function ReviewSection({ propertyId, propertyUserId }: ReviewSect
       {reviews.length > 0 && (
         <div className="space-y-5">
           <h3 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">
-            Reviews ({total})
+            {t('reviews.title')} ({total})
           </h3>
           {reviews.map((review) => (
             <ReviewCard
@@ -182,7 +184,7 @@ export default function ReviewSection({ propertyId, propertyUserId }: ReviewSect
                 disabled={page === 1}
                 className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50 transition-colors"
               >
-                Previous
+                {t('common.previous')}
               </button>
               <span className="text-sm text-gray-500 px-2">
                 {page} / {totalPages}
@@ -192,7 +194,7 @@ export default function ReviewSection({ propertyId, propertyUserId }: ReviewSect
                 disabled={page === totalPages}
                 className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50 transition-colors"
               >
-                Next
+                {t('common.next')}
               </button>
             </div>
           )}
@@ -201,7 +203,7 @@ export default function ReviewSection({ propertyId, propertyUserId }: ReviewSect
 
       {!user && (
         <div className="mt-6 text-center text-sm text-gray-500">
-          <a href="/login" className="text-blue-600 hover:underline font-medium">Log in</a> to leave a review
+          <a href="/login" className="text-blue-600 hover:underline font-medium">{t('nav.login')}</a> {t('reviews.writeReview')}
         </div>
       )}
     </div>
@@ -224,6 +226,7 @@ function ReviewCard({
   const [showReplyForm, setShowReplyForm] = useState(false)
   const [replyText, setReplyText] = useState('')
   const [replying, setReplying] = useState(false)
+  const { t } = useTranslation()
   const [replyError, setReplyError] = useState('')
 
   const hasReply = !!review.reply
@@ -300,7 +303,7 @@ function ReviewCard({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
             </svg>
             <p className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
-              Owner Response
+              {t('reviews.reply')}
             </p>
             {review.replyDate && (
               <span className="text-[10px] text-gray-400">
@@ -324,13 +327,13 @@ function ReviewCard({
                 }}
                 className="text-xs text-blue-600 hover:text-blue-700 font-medium hover:bg-blue-100 px-2 py-1 rounded transition-colors"
               >
-                Edit
+                {t('common.edit')}
               </button>
               <button
                 onClick={handleDeleteReply}
                 className="text-xs text-red-600 hover:text-red-700 font-medium hover:bg-red-50 px-2 py-1 rounded transition-colors"
               >
-                Delete
+                {t('common.delete')}
               </button>
             </div>
           )}
@@ -346,7 +349,7 @@ function ReviewCard({
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
           </svg>
-          Write a response...
+          {t('reviews.writeReview')}
         </button>
       )}
 
@@ -355,7 +358,7 @@ function ReviewCard({
         <form onSubmit={handleSubmitReply} className="mt-3 ml-6">
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
             <p className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wider">
-              Your Response
+              {t('reviews.yourReply')}
             </p>
             <textarea
               required
@@ -363,7 +366,7 @@ function ReviewCard({
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
-              placeholder="Write your response to this review..."
+              placeholder={t('reviews.yourReply')}
               maxLength={1000}
             />
             <p className="text-xs text-gray-400 mt-1 text-right">
@@ -380,7 +383,7 @@ function ReviewCard({
                 disabled={replying || !replyText.trim()}
                 className="flex-1 bg-blue-600 text-white py-1.5 px-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
               >
-                {replying ? 'Sending...' : hasReply ? 'Update Response' : 'Post Response'}
+                {replying ? t('common.loading') : hasReply ? t('common.save') : t('reviews.submitReview')}
               </button>
               <button
                 type="button"
@@ -391,7 +394,7 @@ function ReviewCard({
                 }}
                 className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-100 transition-colors"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </div>
