@@ -19,5 +19,14 @@
   <body class="bg-gray-50">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      (function(){
+        var ua = navigator.userAgent;
+        if (/facebookexternalhit|twitterbot|whatsapp|telegram|pinterest|linkedin/i.test(ua)) {
+          var m = location.pathname.match(/^\/properties\/([^/]+)/);
+          if (m) location.href = 'https://morada-api.viewsoft.com.co/api/seo/properties/' + m[1];
+        }
+      })();
+    </script>
   </body>
 </html>

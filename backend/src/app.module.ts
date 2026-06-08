@@ -24,6 +24,7 @@ import { NotificationsController } from './interfaces/notifications/notification
 import { NotificationsService } from './application/notifications/notifications.service';
 import { RecommendationsService } from './application/recommendations/recommendations.service';
 import { FollowController } from './interfaces/follow/follow.controller';
+import { SeoController } from './interfaces/seo/seo.controller';
 import { FollowService } from './application/follow/follow.service';
 import { ServeStaticModule } from './infrastructure/upload/serve-static.module';
 import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
@@ -66,6 +67,7 @@ import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
     ReviewsController,
     NotificationsController,
     FollowController,
+    SeoController,
   ],
   providers: [
     AuthService,
