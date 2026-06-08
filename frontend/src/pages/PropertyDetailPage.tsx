@@ -1,7 +1,8 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useParams, useLocation, Link, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useAuthStore } from '../store/auth'
+import { useToastStore } from '../store/toast'
 import type { Property, PropertyStats } from '../types'
 import { formatCurrency } from '../lib/utils'
 import { LoadingSpinner } from '../components/LoadingSpinner'
@@ -39,6 +40,10 @@ export default function PropertyDetailPage() {
   const [dailyStats, setDailyStats] = useState<DailyView[]>([])
   const [isFavorite, setIsFavorite] = useState(false)
 
+  const addToast = useToastStore((s) => s.addToast)
+  const [alsoViewed, setAlsoViewed] = useState<Property[]>([])
+  const [isFollowing, setIsFollowing] = useState(false)
+
   const isOwner = property && user && property.userId === user.id
 
   const maxDailyViews = useMemo(() => Math.max(...dailyStats.map((d) => d.views), 1), [dailyStats])
@@ -64,7 +69,17 @@ export default function PropertyDetailPage() {
     api.get<Record<string, boolean>>(`/favorites/check?propertyIds=${id}`)
       .then(({ data }) => setIsFavorite(data[id] ?? false))
       .catch(() => {})
-  }, [id])
+
+    api.get<Property[]>(`/properties/${id}/also-viewed`)
+      .then(({ data }) => setAlsoViewed(data))
+      .catch(() => {})
+
+    if (user && property?.userId) {
+      api.get<{ following: boolean }>(`/follow/check/${property.userId}`)
+        .then(({ data }) => setIsFollowing(data.following))
+        .catch(() => {})
+    }
+  }, [id, property?.userId])
 
   if (loading) {
     return (
@@ -322,26 +337,47 @@ export default function PropertyDetailPage() {
 
         <div className="space-y-6 mt-6 lg:mt-0 lg:self-start">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                {property.user?.name?.charAt(0).toUpperCase() || 'A'}
-              </div>
-              <div className="min-w-0">
-                {property.user ? (
-                  <Link
-                    to={`/agents/${property.user.id}`}
-                    className="font-semibold text-gray-900 text-sm truncate hover:text-blue-600 transition-colors"
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                  {property.user?.name?.charAt(0).toUpperCase() || 'A'}
+                </div>
+                <div className="min-w-0 flex-1">
+                  {property.user ? (
+                    <Link
+                      to={`/agents/${property.user.id}`}
+                      className="font-semibold text-gray-900 text-sm truncate hover:text-blue-600 transition-colors block"
+                    >
+                      {property.user.name || 'Property Owner'}
+                    </Link>
+                  ) : (
+                    <p className="font-semibold text-gray-900 text-sm truncate">
+                      Property Owner
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500">Property Agent</p>
+                </div>
+                {!isOwner && user && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        const { data } = await api.post<{ following: boolean }>('/follow/toggle', { userId: property.userId })
+                        setIsFollowing(data.following)
+                        addToast(
+                          data.following ? `Following ${property.user?.name || 'agent'}` : 'Unfollowed',
+                          data.following ? 'success' : 'info',
+                        )
+                      } catch { /* ignore */ }
+                    }}
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
+                      isFollowing
+                        ? 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
                   >
-                    {property.user.name || 'Property Owner'}
-                  </Link>
-                ) : (
-                  <p className="font-semibold text-gray-900 text-sm truncate">
-                    Property Owner
-                  </p>
+                    {isFollowing ? 'Following' : 'Follow'}
+                  </button>
                 )}
-                <p className="text-xs text-gray-500">Property Agent</p>
               </div>
-            </div>
 
             <div className="space-y-3">
               <p className="text-sm text-gray-600 font-medium">Interested in this property?</p>
@@ -497,6 +533,33 @@ export default function PropertyDetailPage() {
           )}
         </div>
       </div>
+
+      {/* People also viewed */}
+      {alsoViewed.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">People also viewed</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {alsoViewed.slice(0, 3).map((ap) => (
+              <Link
+                key={ap.id}
+                to={`/properties/${ap.id}`}
+                className="bg-white rounded-xl border border-gray-100 hover:shadow-md transition-shadow overflow-hidden group"
+              >
+                <div className="h-36 bg-gradient-to-br from-gray-100 to-gray-200">
+                  {ap.images?.[0] && (
+                    <img src={ap.images[0].url} alt={ap.title} className="w-full h-full object-cover" />
+                  )}
+                </div>
+                <div className="p-3">
+                  <p className="font-semibold text-sm text-gray-900 truncate">{ap.aiTitle || ap.title}</p>
+                  <p className="text-blue-600 font-bold text-sm mt-0.5">${ap.price.toLocaleString('es-CL')}</p>
+                  <p className="text-xs text-gray-500 truncate mt-0.5">{ap.location}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Reviews & Ratings Section */}
       <div className="mt-8">

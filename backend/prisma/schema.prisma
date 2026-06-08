@@ -24,6 +24,8 @@ model User {
   favorites     Favorite[]
   reviews       Review[]
   notifications Notification[]
+  followers     UserFollow[] @relation(name: "followers")
+  following     UserFollow[] @relation(name: "follows")
 }
 
 model Property {
@@ -178,7 +180,7 @@ model Review {
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  type      String   // inquiry_new, review_new, property_sold, etc.
+  type      String   // inquiry_new, review_new, follow, etc.
   title     String
   message   String
   link      String?  // URL to navigate to
@@ -189,4 +191,18 @@ model Notification {
 
   @@index([userId, read])
   @@index([userId, createdAt])
+}
+
+model UserFollow {
+  id          String   @id @default(cuid())
+  followerId  String   // user who follows
+  followingId String   // user being followed
+  createdAt   DateTime @default(now())
+
+  follower  User @relation(name: "follows", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation(name: "followers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
 }

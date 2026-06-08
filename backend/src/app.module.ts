@@ -23,6 +23,8 @@ import { ReviewsService } from './application/reviews/reviews.service';
 import { NotificationsController } from './interfaces/notifications/notifications.controller';
 import { NotificationsService } from './application/notifications/notifications.service';
 import { RecommendationsService } from './application/recommendations/recommendations.service';
+import { FollowController } from './interfaces/follow/follow.controller';
+import { FollowService } from './application/follow/follow.service';
 import { ServeStaticModule } from './infrastructure/upload/serve-static.module';
 import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
 
@@ -63,6 +65,7 @@ import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
     FavoritesController,
     ReviewsController,
     NotificationsController,
+    FollowController,
   ],
   providers: [
     AuthService,
@@ -75,6 +78,7 @@ import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
     ReviewsService,
     NotificationsService,
     RecommendationsService,
+    FollowService,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

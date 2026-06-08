@@ -57,6 +57,13 @@ export class PropertiesController {
   }
 
   @Public()
+  @Get(':id/also-viewed')
+  @ApiOperation({ summary: 'Get properties also viewed by people who viewed this one' })
+  async getAlsoViewed(@Param('id') id: string, @Req() req: any) {
+    return this.recommendationsService.getAlsoViewed(id, req.user?.id);
+  }
+
+  @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Get property by ID' })
   async findOne(@Param('id') id: string) {
