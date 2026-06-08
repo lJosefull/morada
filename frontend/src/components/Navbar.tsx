@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/auth';
 import { api } from '../lib/api';
+import { NotificationDropdown } from './NotificationDropdown';
 
 export default function Navbar() {
   const { accessToken, user, logout } = useAuthStore();
@@ -96,6 +97,8 @@ export default function Navbar() {
 
           <div className="hidden md:flex items-center space-x-4">
             {isLoggedIn ? (
+              <>
+              <NotificationDropdown />
               <div className="relative">
                 <button
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
@@ -162,6 +165,7 @@ export default function Navbar() {
                   </div>
                 )}
               </div>
+              </>
             ) : (
               <>
                 <Link

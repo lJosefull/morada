@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import { formatCurrency } from '../lib/utils'
+import { useToastStore } from '../store/toast'
 import type { Property, Image } from '../types'
 
 interface PropertyFormProps {
@@ -28,6 +29,7 @@ const DESCRIPTION_MAX = 2000
 export default function PropertyForm({ property, isEditing = false }: PropertyFormProps) {
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const addToast = useToastStore((s) => s.addToast)
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [uploading, setUploading] = useState(false)
@@ -43,6 +45,8 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
     bathrooms: '',
     surface: '',
     location: '',
+    latitude: '',
+    longitude: '',
     status: 'available',
   })
 
@@ -58,6 +62,8 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
         bathrooms: property.bathrooms?.toString() || '',
         surface: property.surface?.toString() || '',
         location: property.location || '',
+        latitude: property.latitude?.toString() || '',
+        longitude: property.longitude?.toString() || '',
         status: property.status || 'available',
       })
     }
@@ -97,19 +103,23 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
         bathrooms: formData.bathrooms ? Number(formData.bathrooms) : undefined,
         surface: formData.surface ? Number(formData.surface) : undefined,
         location: formData.location.trim(),
+        latitude: formData.latitude ? Number(formData.latitude) : undefined,
+        longitude: formData.longitude ? Number(formData.longitude) : undefined,
         status: formData.status,
       }
 
       if (isEditing && property) {
         await api.patch(`/properties/${property.id}`, data)
+        addToast('Property updated successfully', 'success')
         navigate(`/properties/${property.id}`)
       } else {
         const { data: newProperty } = await api.post<Property>('/properties', data)
+        addToast('Property created successfully', 'success')
         navigate(`/properties/${newProperty.id}/edit`)
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save property'
-      alert(message)
+      addToast(message, 'error')
     } finally {
       setSubmitting(false)
     }
@@ -138,7 +148,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
       )
       setImages((prev) => [...prev, uploaded])
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to upload image')
+      addToast(err instanceof Error ? err.message : 'Failed to upload image', 'error')
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -151,7 +161,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
       await api.delete(`/properties/${property.id}/images/${imageId}`)
       setImages((prev) => prev.filter((img) => img.id !== imageId))
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete image')
+      addToast(err instanceof Error ? err.message : 'Failed to delete image', 'error')
     }
   }
 
@@ -163,7 +173,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
         prev.map((img) => ({ ...img, isPrimary: img.id === imageId })),
       )
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to set primary image')
+      addToast(err instanceof Error ? err.message : 'Failed to set primary image', 'error')
     }
   }
 
@@ -246,6 +256,18 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
                 className={fieldClass('location')} placeholder="Santiago, Chile"
               />
               {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location}</p>}
+            </div>
+            <div>
+              <label htmlFor="latitude" className="block text-sm font-medium text-gray-700">Latitude</label>
+              <input type="number" step="any" id="latitude" name="latitude" value={formData.latitude} onChange={handleChange}
+                className={fieldClass('')} placeholder="-33.4489"
+              />
+            </div>
+            <div>
+              <label htmlFor="longitude" className="block text-sm font-medium text-gray-700">Longitude</label>
+              <input type="number" step="any" id="longitude" name="longitude" value={formData.longitude} onChange={handleChange}
+                className={fieldClass('')} placeholder="-70.6693"
+              />
             </div>
             <div>
               <label htmlFor="bedrooms" className="block text-sm font-medium text-gray-700">Bedrooms</label>

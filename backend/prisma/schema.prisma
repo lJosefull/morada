@@ -23,6 +23,7 @@ model User {
   propertyViews PropertyView[]
   favorites     Favorite[]
   reviews       Review[]
+  notifications Notification[]
 }
 
 model Property {
@@ -172,4 +173,20 @@ model Review {
 
   @@unique([userId, propertyId])
   @@index([propertyId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // inquiry_new, review_new, property_sold, etc.
+  title     String
+  message   String
+  link      String?  // URL to navigate to
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
 }

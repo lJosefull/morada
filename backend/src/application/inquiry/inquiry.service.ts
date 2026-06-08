@@ -6,6 +6,7 @@ import {
 import { IPropertyRepository, PROPERTY_REPOSITORY } from '../../domain/properties/property.repository';
 import { CreateInquiryInput, UpdateInquiryStatusInput, UpdateInquiryNotesInput } from '../../domain/inquiry/inquiry.entity';
 import { CreateInquiryDto, UpdateInquiryStatusDto, UpdateInquiryNotesDto } from '../../interfaces/inquiry/inquiry.dto';
+import { PrismaService } from '../../infrastructure/database/prisma.service';
 
 @Injectable()
 export class InquiryService {
@@ -14,6 +15,7 @@ export class InquiryService {
     private readonly inquiryRepository: IInquiryRepository,
     @Inject(PROPERTY_REPOSITORY)
     private readonly propertyRepository: IPropertyRepository,
+    private readonly prisma: PrismaService,
   ) {}
 
   async create(propertyId: string, dto: CreateInquiryDto, userId?: string) {
@@ -32,7 +34,20 @@ export class InquiryService {
       userId: userId || undefined,
     };
 
-    return this.inquiryRepository.create(input);
+    const inquiry = await this.inquiryRepository.create(input);
+
+    // Create notification for property owner
+    await this.prisma.notification.create({
+      data: {
+        userId: property.userId,
+        type: 'inquiry_new',
+        title: 'New inquiry received',
+        message: `${dto.name} is interested in "${property.title}"`,
+        link: `/inquiries`,
+      },
+    }).catch(() => {});
+
+    return inquiry;
   }
 
   async findMine(ownerUserId: string, status?: string) {

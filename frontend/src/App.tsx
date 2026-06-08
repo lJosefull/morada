@@ -1,7 +1,10 @@
 import React, { Suspense, lazy, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { HelmetProvider } from 'react-helmet-async'
 import ErrorBoundary from './components/ErrorBoundary'
 import { LoadingSpinner } from './components/LoadingSpinner'
+import { ToastContainer } from './components/ToastContainer'
+import { SEOHead } from './components/SEOHead'
 import { useAuthStore } from './store/auth'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
@@ -35,10 +38,12 @@ const App: React.FC = () => {
   }, [accessToken]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <ErrorBoundary>
-      <Router>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
+    <HelmetProvider>
+      <ErrorBoundary>
+        <SEOHead />
+        <Router>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route
@@ -113,8 +118,10 @@ const App: React.FC = () => {
             <Route path="*" element={<Navigate to="/properties" replace />} />
           </Routes>
         </Suspense>
+        <ToastContainer />
       </Router>
     </ErrorBoundary>
+    </HelmetProvider>
   )
 }
 

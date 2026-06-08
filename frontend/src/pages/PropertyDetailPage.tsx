@@ -5,6 +5,8 @@ import { useAuthStore } from '../store/auth'
 import type { Property, PropertyStats } from '../types'
 import { formatCurrency } from '../lib/utils'
 import { LoadingSpinner } from '../components/LoadingSpinner'
+import { SEOHead } from '../components/SEOHead'
+import { PropertyMap } from '../components/PropertyMap'
 import ContactForm from '../components/ContactForm'
 import ReviewSection from '../components/ReviewSection'
 
@@ -82,6 +84,12 @@ export default function PropertyDetailPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
+      <SEOHead
+        title={property.aiTitle || property.title}
+        description={property.description.slice(0, 160)}
+        image={property.images?.[0]?.url}
+        url={`/properties/${property.id}`}
+      />
       <Link to="/properties" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors">
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -285,20 +293,29 @@ export default function PropertyDetailPage() {
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Location</h2>
-            <div className="aspect-[21/9] rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-              <div className="text-center">
-                <svg className="w-10 h-10 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <p className="text-sm text-gray-500">{property.location}</p>
-                {property.latitude && property.longitude && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    {property.latitude.toFixed(4)}, {property.longitude.toFixed(4)}
-                  </p>
-                )}
+            {property.latitude && property.longitude ? (
+              <PropertyMap
+                latitude={property.latitude}
+                longitude={property.longitude}
+                title={property.aiTitle || property.title}
+                className="w-full"
+              />
+            ) : (
+              <div className="aspect-[21/9] rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                <div className="text-center">
+                  <svg className="w-10 h-10 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <p className="text-sm text-gray-500">{property.location}</p>
+                  {property.latitude && property.longitude && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      {property.latitude.toFixed(4)}, {property.longitude.toFixed(4)}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 

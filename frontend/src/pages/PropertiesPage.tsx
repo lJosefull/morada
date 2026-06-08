@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import type { Property } from '../types'
 import { LoadingSpinner } from '../components/LoadingSpinner'
+import { SEOHead } from '../components/SEOHead'
 import AnimatedLink from '../components/AnimatedLink'
 
 export default function PropertiesPage() {
@@ -29,6 +30,10 @@ export default function PropertiesPage() {
 
   return (
     <div className="space-y-6">
+      <SEOHead
+        title="Properties"
+        description="Browse our selection of properties for sale and rent. Find your ideal home, apartment, land or commercial property."
+      />
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Properties</h1>
         <Link

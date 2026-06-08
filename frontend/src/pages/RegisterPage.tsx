@@ -2,6 +2,7 @@ import React, { useState, FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
 import { LoadingSpinner } from '../components/LoadingSpinner'
+import { SEOHead } from '../components/SEOHead'
 
 const RegisterPage: React.FC = () => {
   const [name, setName] = useState('')
@@ -24,6 +25,7 @@ const RegisterPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+      <SEOHead title="Create Account" description="Create your InmobiliarIA account to start listing and managing properties." />
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>

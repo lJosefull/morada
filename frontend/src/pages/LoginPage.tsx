@@ -2,6 +2,7 @@ import React, { useState, FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/auth';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { SEOHead } from '../components/SEOHead';
 
 interface LocationState {
   from?: { pathname: string };
@@ -31,6 +32,7 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+      <SEOHead title="Sign In" description="Sign in to your InmobiliarIA account to manage properties and inquiries." />
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
