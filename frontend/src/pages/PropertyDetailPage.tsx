@@ -26,7 +26,6 @@ export default function PropertyDetailPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user } = useAuthStore()
-  const apiUrl = import.meta.env.VITE_API_URL || ''
   const passed = location.state as Property | null
   const typeLabels: Record<string, string> = {
     apartment: t('property.propertyType.apartment'),
@@ -110,8 +109,8 @@ export default function PropertyDetailPage() {
     <div className="max-w-6xl mx-auto">
       <SEOHead
         title={property.aiTitle || property.title}
-        description={property.description.slice(0, 160)}
-        image={property.images?.[0]?.url ? (property.images[0].url.startsWith('http') ? property.images[0].url : `${apiUrl}${property.images[0].url}`) : undefined}
+        description={property.description.slice(0, 200)}
+        image={`/api/og/property/${property.id}`}
         url={`/properties/${property.id}`}
       />
       <Link to="/properties" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors">
