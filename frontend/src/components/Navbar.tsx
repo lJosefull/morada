@@ -82,6 +82,16 @@ export default function Navbar() {
                   )}
                 </Link>
                 <Link
+                  to="/feed"
+                  className={`text-sm font-medium transition-colors ${
+                    isActive('/feed')
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  For You
+                </Link>
+                <Link
                   to="/favorites"
                   className={`text-sm font-medium transition-colors ${
                     isActive('/favorites')
@@ -242,6 +252,17 @@ export default function Navbar() {
                         {unreadCount}
                       </span>
                     )}
+                  </Link>
+                  <Link
+                    to="/feed"
+                    className={`block px-4 py-2 rounded-lg text-sm font-medium ${
+                      isActive('/feed')
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    For You
                   </Link>
                   <Link
                     to="/favorites"

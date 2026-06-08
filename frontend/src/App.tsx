@@ -21,6 +21,7 @@ const MyInquiriesPage = lazy(() => import('./pages/MyInquiriesPage'))
 const FavoritesPage = lazy(() => import('./pages/FavoritesPage'))
 const PublicProfilePage = lazy(() => import('./pages/PublicProfilePage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const FeedPage = lazy(() => import('./pages/FeedPage'))
 
 const PageLoader: React.FC = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -66,6 +67,16 @@ const App: React.FC = () => {
             >
               <Route index element={<InquiriesPage />} />
               <Route path="history" element={<MyInquiriesPage />} />
+            </Route>
+            <Route
+              path="/feed"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<FeedPage />} />
             </Route>
             <Route
               path="/favorites"

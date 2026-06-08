@@ -11,6 +11,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { PropertiesService } from '../../application/properties/properties.service';
+import { RecommendationsService } from '../../application/recommendations/recommendations.service';
 import { CreatePropertyDto, UpdatePropertyDto, PropertyQueryDto } from './properties.dto';
 import { JwtAuthGuard } from '../../infrastructure/auth/jwt-auth.guard';
 import { Public } from '../../infrastructure/auth/public.decorator';
@@ -19,7 +20,10 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 @ApiTags('properties')
 @Controller('properties')
 export class PropertiesController {
-  constructor(private readonly propertiesService: PropertiesService) {}
+  constructor(
+    private readonly propertiesService: PropertiesService,
+    private readonly recommendationsService: RecommendationsService,
+  ) {}
 
   @Public()
   @Get()
@@ -34,6 +38,22 @@ export class PropertiesController {
   @ApiOperation({ summary: 'Get my properties' })
   async findMine(@Req() req: any) {
     return this.propertiesService.findAll({ userId: req.user.id } as PropertyQueryDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('feed')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get personalized property feed based on user preferences and location' })
+  async getFeed(
+    @Req() req: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.recommendationsService.getFeed(
+      req.user.id,
+      page ? parseInt(page, 10) : 1,
+      limit ? parseInt(limit, 10) : 20,
+    );
   }
 
   @Public()
