@@ -1,3 +1,4 @@
 export default function handler(req, res) {
-  res.status(200).json({ hello: 'world', path: req.url })
+  res.setHeader('content-type', 'application/json')
+  res.status(200).json({ status: 'ok', url: req.url })
 }
