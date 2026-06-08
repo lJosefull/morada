@@ -5,10 +5,10 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
 
-COPY package.json package-lock.json ./
+COPY backend/package.json backend/package-lock.json ./
 RUN npm ci
 
-COPY . .
+COPY backend/ .
 RUN npx prisma generate
 RUN npm run build
 
