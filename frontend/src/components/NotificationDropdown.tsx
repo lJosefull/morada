@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useNotificationsStore } from '../store/notifications'
+import { useAuthStore } from '../store/auth'
 
 export function NotificationDropdown() {
   const { t } = useTranslation()
@@ -9,12 +10,14 @@ export function NotificationDropdown() {
   const [open, setOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
+  const { accessToken } = useAuthStore()
 
   useEffect(() => {
+    if (!accessToken) return
     fetchUnreadCount()
     const interval = setInterval(fetchUnreadCount, 30000)
     return () => clearInterval(interval)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [accessToken])
 
   useEffect(() => {
     if (open) fetchNotifications()
