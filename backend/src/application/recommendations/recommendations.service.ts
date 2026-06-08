@@ -7,7 +7,7 @@ const DECAY_LAMBDA = 0.04;
 const COLLAB_MAX_USERS = 50;
 const COLLAB_MAX_PROPERTIES = 20;
 
-interface ScoredProperty extends IProperty {
+export interface ScoredProperty extends IProperty {
   score: number;
   matchReasons: string[];
   isCollaborative?: boolean;
