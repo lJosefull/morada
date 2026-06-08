@@ -1,18 +1,20 @@
 import { Helmet } from 'react-helmet-async'
 
+const SITE_URL = 'https://morada.viewsoft.com.co'
+const SITE_NAME = 'Morada'
+const DEFAULT_DESCRIPTION = 'Marketplace inmobiliario inteligente — encuentra la propiedad ideal con Morada'
+
 interface SEOHeadProps {
   title?: string
   description?: string
   image?: string
   url?: string
 }
-const SITE_NAME = 'Morada'
-
-const DEFAULT_DESCRIPTION = 'Marketplace inmobiliario inteligente — encuentra la propiedad ideal con Morada'
 
 export function SEOHead({ title, description, image, url }: SEOHeadProps) {
   const fullTitle = title ? `${title} | ${SITE_NAME}` : SITE_NAME
   const desc = description || DEFAULT_DESCRIPTION
+  const ogUrl = url ? (url.startsWith('http') ? url : `${SITE_URL}${url}`) : SITE_URL
 
   return (
     <Helmet>
@@ -21,8 +23,9 @@ export function SEOHead({ title, description, image, url }: SEOHeadProps) {
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={desc} />
       {image && <meta property="og:image" content={image} />}
-      {url && <meta property="og:url" content={url} />}
+      <meta property="og:url" content={ogUrl} />
       <meta property="og:type" content="website" />
+      <meta property="og:site_name" content={SITE_NAME} />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={desc} />
