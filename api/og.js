@@ -1,56 +1,34 @@
-// Vercel Edge Middleware — runs before any caching/routing
-// Intercepts /og/:id and /properties/:id (for bots) to serve HTML
-// with OG meta tags for social media crawlers
-
-export const config = {
-  matcher: ['/og/:id', '/properties/:id'],
-};
-
 const SITE_URL = 'https://morada.viewsoft.com.co';
-const API_BASE = 'https://morada-api.viewsoft.com.co';
+const API_BASE = process.env.VITE_API_URL || 'https://morada-api.viewsoft.com.co';
 
-const BOT_PATTERN = /facebookexternalhit|Twitterbot|WhatsApp|TelegramBot|LinkedInBot|Pinterest|Slack|Discordbot|Googlebot/i;
+module.exports = async function handler(req, res) {
+  const { id } = req.query;
 
-export default async function middleware(request) {
-  const url = new URL(request.url);
-  const path = url.pathname;
-
-  // If it's /properties/:id and NOT a bot, let it through to the SPA
-  if (path.startsWith('/properties/') && !BOT_PATTERN.test(request.headers.get('user-agent') || '')) {
-    return; // Return undefined to continue to next middleware/route
-  }
-
-  // Extract the property ID from either /og/:id or /properties/:id
-  const id = path.startsWith('/og/') ? path.replace('/og/', '') : path.replace('/properties/', '');
-
-  if (!id) {
-    return new Response('Missing property id', { status: 400 });
+  if (!id || typeof id !== 'string') {
+    return res.status(400).send('Missing property id');
   }
 
   try {
-    const apiRes = await fetch(`${API_BASE}/api/properties/${id}`);
-    if (!apiRes.ok) throw new Error('Not found');
-    const property = await apiRes.json();
+    const response = await fetch(`${API_BASE}/api/properties/${id}`);
+    if (!response.ok) throw new Error('Property not found');
+    const property = await response.json();
 
     const title = property.aiTitle || property.title || 'Propiedad';
-    const description = property.description
+    const desc = property.description
       ? property.description.slice(0, 300)
       : 'Descubre esta propiedad en Morada';
     const rawImage = property.images?.[0]?.url;
     const image = rawImage
       ? (rawImage.startsWith('http') ? rawImage : `${API_BASE}${rawImage}`)
       : `${SITE_URL}/favicon-256.png`;
-    const price = property.price
-      ? `$${Number(property.price).toLocaleString('es-CO')}`
-      : '';
+    const price = property.price ? `$${Number(property.price).toLocaleString('es-CO')}` : '';
     const loc = property.location || '';
     const typeLabels = { house: 'Casa', apartment: 'Apartamento', land: 'Terreno', commercial: 'Local Comercial', office: 'Oficina', warehouse: 'Bodega' };
     const typeLabel = typeLabels[property.propertyType] || property.propertyType || '';
     const listingLabel = property.listingType === 'rent' ? 'En Arriendo' : 'En Venta';
     const ogTitle = `${title}${price ? ` - ${price}` : ''}`;
-    const targetUrl = `${SITE_URL}/properties/${id}`;
     const ogUrl = `${SITE_URL}/og/${id}`;
-    const metaDesc = [listingLabel, typeLabel, loc, price].filter(Boolean).join(' | ') || description;
+    const metaDesc = [listingLabel, typeLabel, loc, price].filter(Boolean).join(' | ') || desc;
 
     const html = `<!DOCTYPE html>
 <html lang="es">
@@ -66,23 +44,21 @@ export default async function middleware(request) {
   <meta property="og:url" content="${esc(ogUrl)}" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Morada" />
+  <meta property="og:locale" content="es_CO" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${esc(ogTitle)}" />
   <meta name="twitter:description" content="${esc(metaDesc)}" />
   <meta name="twitter:image" content="${esc(image)}" />
-  <script>location.replace('${esc(targetUrl)}')</script>
+  <script>location.replace('${SITE_URL}/properties/${esc(id)}')</script>
 </head>
 <body><p>Redirigiendo...</p></body>
 </html>`;
 
-    return new Response(html, {
-      headers: {
-        'content-type': 'text/html; charset=UTF-8',
-        'cache-control': 'no-cache, no-store, must-revalidate',
-      },
-    });
-  } catch {
-    const fallbackHtml = `<!DOCTYPE html>
+    res.setHeader('Content-Type', 'text/html; charset=UTF-8');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.status(200).send(html);
+  } catch (err) {
+    const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -99,15 +75,11 @@ export default async function middleware(request) {
 </head>
 <body><p>Redirigiendo...</p></body>
 </html>`;
-
-    return new Response(fallbackHtml, {
-      headers: {
-        'content-type': 'text/html; charset=UTF-8',
-        'cache-control': 'no-cache, no-store, must-revalidate',
-      },
-    });
+    res.setHeader('Content-Type', 'text/html; charset=UTF-8');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.status(200).send(html);
   }
-}
+};
 
 function esc(s) {
   if (typeof s !== 'string') return '';

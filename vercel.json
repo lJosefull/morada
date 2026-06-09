@@ -4,6 +4,18 @@
   "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/dist",
   "rewrites": [
+    { "source": "/og/:id", "destination": "/api/og?id=:id" },
+    {
+      "source": "/properties/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|WhatsApp).*"
+        }
+      ],
+      "destination": "/api/og?id=:id"
+    },
     { "source": "/(.*)", "destination": "/" }
   ]
 }
