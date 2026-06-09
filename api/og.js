@@ -56,6 +56,7 @@ module.exports = async function handler(req, res) {
 
     res.setHeader('Content-Type', 'text/html; charset=UTF-8');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Accept-Ranges', 'none');
     res.status(200).send(html);
   } catch {
     // Return a fallback HTML with generic OG tags instead of redirecting
@@ -75,6 +76,7 @@ module.exports = async function handler(req, res) {
 <body><p>Redirigiendo...</p></body>
 </html>`;
     res.setHeader('Content-Type', 'text/html; charset=UTF-8');
+    res.setHeader('Accept-Ranges', 'none');
     res.status(200).send(fallbackHtml);
   }
 };
