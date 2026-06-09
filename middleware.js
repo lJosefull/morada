@@ -61,6 +61,8 @@ export default async function middleware(request) {
   <meta property="og:title" content="${esc(ogTitle)}" />
   <meta property="og:description" content="${esc(metaDesc)}" />
   <meta property="og:image" content="${esc(image)}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta property="og:url" content="${esc(ogUrl)}" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Morada" />
@@ -87,6 +89,9 @@ export default async function middleware(request) {
   <title>Morada — Marketplace Inmobiliario</title>
   <meta property="og:title" content="Propiedad en Morada" />
   <meta property="og:description" content="Descubre esta propiedad en Morada" />
+  <meta property="og:image" content="${SITE_URL}/favicon-256.png" />
+  <meta property="og:image:width" content="256" />
+  <meta property="og:image:height" content="256" />
   <meta property="og:url" content="${SITE_URL}/og/${esc(id)}" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Morada" />
