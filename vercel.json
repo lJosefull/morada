@@ -1,7 +1,8 @@
 {
-  "rootDirectory": "frontend",
-  "framework": "vite",
-  "outputDirectory": "dist",
+  "framework": null,
+  "installCommand": "cd frontend && npm install",
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
   ]
