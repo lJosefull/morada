@@ -1,16 +1,27 @@
 // Vercel Edge Middleware — runs before any caching/routing
-// Intercepts /og/:id to serve HTML with OG meta tags for social media crawlers
+// Intercepts /og/:id and /properties/:id (for bots) to serve HTML
+// with OG meta tags for social media crawlers
 
 export const config = {
-  matcher: '/og/:id',
+  matcher: ['/og/:id', '/properties/:id'],
 };
 
 const SITE_URL = 'https://morada.viewsoft.com.co';
 const API_BASE = 'https://morada-api.viewsoft.com.co';
 
+const BOT_PATTERN = /facebookexternalhit|Twitterbot|WhatsApp|TelegramBot|LinkedInBot|Pinterest|Slack|Discordbot|Googlebot/i;
+
 export default async function middleware(request) {
   const url = new URL(request.url);
-  const id = url.pathname.replace('/og/', '');
+  const path = url.pathname;
+
+  // If it's /properties/:id and NOT a bot, let it through to the SPA
+  if (path.startsWith('/properties/') && !BOT_PATTERN.test(request.headers.get('user-agent') || '')) {
+    return; // Return undefined to continue to next middleware/route
+  }
+
+  // Extract the property ID from either /og/:id or /properties/:id
+  const id = path.startsWith('/og/') ? path.replace('/og/', '') : path.replace('/properties/', '');
 
   if (!id) {
     return new Response('Missing property id', { status: 400 });
