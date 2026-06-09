@@ -49,7 +49,6 @@ module.exports = async function handler(req, res) {
   <meta name="twitter:title" content="${esc(ogTitle)}" />
   <meta name="twitter:description" content="${esc(metaDesc)}" />
   <meta name="twitter:image" content="${esc(image)}" />
-  <meta http-equiv="refresh" content="0;url=${esc(url)}" />
   <script>location.replace('${esc(url)}')</script>
 </head>
 <body><p>Redirigiendo...</p></body>
@@ -59,7 +58,24 @@ module.exports = async function handler(req, res) {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.status(200).send(html);
   } catch {
-    res.redirect(302, `${SITE_URL}/properties/${id}`);
+    // Return a fallback HTML with generic OG tags instead of redirecting
+    // (Facebook follows redirects and loses the OG tags)
+    const fallbackHtml = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Morada — Marketplace Inmobiliario</title>
+  <meta property="og:title" content="Propiedad en Morada" />
+  <meta property="og:description" content="Descubre esta propiedad en Morada — Marketplace Inmobiliario Inteligente" />
+  <meta property="og:url" content="${SITE_URL}/properties/${esc(id)}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Morada" />
+  <script>location.replace('${SITE_URL}/properties/${esc(id)}')</script>
+</head>
+<body><p>Redirigiendo...</p></body>
+</html>`;
+    res.setHeader('Content-Type', 'text/html; charset=UTF-8');
+    res.status(200).send(fallbackHtml);
   }
 };
 
