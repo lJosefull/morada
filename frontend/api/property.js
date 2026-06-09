@@ -1,9 +1,24 @@
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import https from 'https'
 
 const CRAWLERS = /facebookexternalhit|twitterbot|whatsapp|telegram|linkedin|slack|discord|pinterest|slack|googlebot|bingbot/i
 const SITE_URL = 'https://morada.viewsoft.com.co'
 const API_URL = 'https://morada-api.viewsoft.com.co'
+
+function fetchProperty(id) {
+  return new Promise((resolve, reject) => {
+    const url = new URL(`/api/properties/${id}`, API_URL)
+    https.get(url.href, { headers: { 'User-Agent': 'Vercel-SEO' } }, (res) => {
+      let data = ''
+      res.on('data', (chunk) => data += chunk)
+      res.on('end', () => {
+        if (res.statusCode === 200) resolve(JSON.parse(data))
+        else reject(new Error(`Status ${res.statusCode}`))
+      })
+    }).on('error', reject)
+  })
+}
 
 export default async function handler(req, res) {
   const id = req.query?.id
@@ -18,18 +33,17 @@ export default async function handler(req, res) {
   }
 
   if (!id) {
-    return res.status(404).send('Not found')
+    const html = readFileSync(join(process.cwd(), 'dist', 'index.html'), 'utf-8')
+    res.setHeader('content-type', 'text/html; charset=utf-8')
+    return res.status(200).send(html)
   }
 
   try {
-    const r = await fetch(`${API_URL}/api/properties/${id}`)
-    if (!r.ok) throw new Error('Not found')
-
-    const p = await r.json()
-    const title = `${p.title} | Morada`
-    const desc = (p.description || '').slice(0, 200)
-    const img = p.images?.[0]?.url
-      ? (p.images[0].url.startsWith('http') ? p.images[0].url : `${API_URL}${p.images[0].url}`)
+    const property = await fetchProperty(id)
+    const title = `${property.title} | Morada`
+    const desc = (property.description || '').slice(0, 200)
+    const img = property.images?.[0]?.url
+      ? (property.images[0].url.startsWith('http') ? property.images[0].url : `${API_URL}${property.images[0].url}`)
       : ''
     const url = `${SITE_URL}/properties/${id}`
 
