@@ -1,7 +1,7 @@
 const SITE_URL = 'https://morada.viewsoft.com.co';
 const API_BASE = process.env.VITE_API_URL || 'https://morada-api.viewsoft.com.co';
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const { id } = req.query;
 
   if (!id || typeof id !== 'string') {
@@ -25,7 +25,6 @@ export default async function handler(req, res) {
     const price = property.price
       ? `$${Number(property.price).toLocaleString('es-CO')}`
       : '';
-    const location = property.location || '';
     const typeLabels = {
       house: 'Casa',
       apartment: 'Apartamento',
@@ -66,11 +65,12 @@ export default async function handler(req, res) {
 </html>`;
 
     res.setHeader('Content-Type', 'text/html; charset=UTF-8');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.status(200).send(html);
   } catch {
     res.redirect(302, `${SITE_URL}/properties/${id}`);
   }
-}
+};
 
 function esc(s) {
   if (typeof s !== 'string') return '';
