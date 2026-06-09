@@ -49,6 +49,7 @@ export default async function middleware(request) {
     const listingLabel = property.listingType === 'rent' ? 'En Arriendo' : 'En Venta';
     const ogTitle = `${title}${price ? ` - ${price}` : ''}`;
     const targetUrl = `${SITE_URL}/properties/${id}`;
+    const ogUrl = `${SITE_URL}/og/${id}`;
     const metaDesc = [listingLabel, typeLabel, loc, price].filter(Boolean).join(' | ') || description;
 
     const html = `<!DOCTYPE html>
@@ -60,7 +61,7 @@ export default async function middleware(request) {
   <meta property="og:title" content="${esc(ogTitle)}" />
   <meta property="og:description" content="${esc(metaDesc)}" />
   <meta property="og:image" content="${esc(image)}" />
-  <meta property="og:url" content="${esc(targetUrl)}" />
+  <meta property="og:url" content="${esc(ogUrl)}" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Morada" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -86,7 +87,7 @@ export default async function middleware(request) {
   <title>Morada — Marketplace Inmobiliario</title>
   <meta property="og:title" content="Propiedad en Morada" />
   <meta property="og:description" content="Descubre esta propiedad en Morada" />
-  <meta property="og:url" content="${SITE_URL}/properties/${esc(id)}" />
+  <meta property="og:url" content="${SITE_URL}/og/${esc(id)}" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Morada" />
   <script>location.replace('${SITE_URL}/properties/${esc(id)}')</script>
