@@ -10,7 +10,7 @@ module.exports = async function handler(req, res) {
   const API_BASE = process.env.VITE_API_URL || 'https://morada-api.viewsoft.com.co';
 
   try {
-    const response = await fetch(`${API_BASE}/properties/${id}`);
+    const response = await fetch(`${API_BASE}/api/properties/${id}`);
     if (!response.ok) throw new Error('Property not found');
     const property = await response.json();
 
