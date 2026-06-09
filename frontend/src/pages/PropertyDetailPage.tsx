@@ -449,7 +449,7 @@ export default function PropertyDetailPage() {
                 <div className="mt-3">
                   <ShareButton
                     title={property.aiTitle || property.title}
-                    url={`/og/properties/${property.id}`}
+                    url={`/og/${property.id}`}
                     description={property.description.slice(0, 200)}
                   />
                 </div>

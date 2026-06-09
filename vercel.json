@@ -4,8 +4,7 @@
   "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/dist",
   "rewrites": [
-    { "source": "/og/properties/:id", "destination": "/api/og/:id" },
-    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/og/:id", "destination": "/api/og?id=$id" },
     { "source": "/(.*)", "destination": "/" }
   ]
 }
