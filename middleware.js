@@ -7,6 +7,7 @@ export const config = {
 
 const SITE_URL = 'https://morada.viewsoft.com.co';
 const API_BASE = 'https://morada-api.viewsoft.com.co';
+const FB_APP_ID = '279587964583404'; // Reemplazar con tu FB App ID real
 
 const TYPE_LABELS = {
   house: 'Casa',
@@ -55,7 +56,9 @@ export default async function middleware(request) {
   <meta property="og:image" content="${esc(image)}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="${esc(title)}" />
   <meta property="og:url" content="${esc(ogUrl)}" />
+  <meta property="fb:app_id" content="${FB_APP_ID}" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Morada" />
   <meta property="og:locale" content="es_CO" />
@@ -86,7 +89,9 @@ export default async function middleware(request) {
   <meta property="og:image" content="${SITE_URL}/favicon-256.png" />
   <meta property="og:image:width" content="256" />
   <meta property="og:image:height" content="256" />
+  <meta property="og:image:alt" content="Propiedad en Morada" />
   <meta property="og:url" content="${SITE_URL}/og/${esc(id)}" />
+  <meta property="fb:app_id" content="${FB_APP_ID}" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Morada" />
   <script>location.replace('${SITE_URL}/properties/${esc(id)}')</script>
