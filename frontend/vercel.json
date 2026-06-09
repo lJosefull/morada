@@ -4,6 +4,8 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
+    { "source": "/api/property", "destination": "/api/property" },
+    { "source": "/properties/:id", "destination": "/api/property?id=:id" },
     { "source": "/(.*)", "destination": "/" }
   ]
 }
