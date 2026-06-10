@@ -50,7 +50,7 @@ export class RecommendationsService {
       },
       include: {
         images: { take: 1, orderBy: { isPrimary: 'desc' } },
-        user: { select: { id: true, name: true, email: true, phone: true } },
+        user: { select: { id: true, name: true, email: true, phone: true, plan: true, agencyName: true, agencyLogo: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -134,7 +134,7 @@ export class RecommendationsService {
       },
       include: {
         images: { take: 1, orderBy: { isPrimary: 'desc' } },
-        user: { select: { id: true, name: true, email: true, phone: true } },
+        user: { select: { id: true, name: true, email: true, phone: true, plan: true, agencyName: true, agencyLogo: true } },
       },
     });
 
@@ -458,6 +458,9 @@ export class RecommendationsService {
         name: raw.user.name,
         email: raw.user.email,
         phone: raw.user.phone,
+        plan: raw.user.plan,
+        agencyName: raw.user.agencyName,
+        agencyLogo: raw.user.agencyLogo,
       } : undefined,
       images: (raw.images || []).map((img: any) => ({
         id: img.id,

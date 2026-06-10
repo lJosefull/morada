@@ -156,7 +156,18 @@ export default function DashboardPage() {
             {user?.name?.charAt(0)?.toUpperCase() || 'U'}
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{greeting}, {user?.name?.split(' ')[0] || 'User'}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-gray-900">{greeting}, {user?.name?.split(' ')[0] || 'User'}</h1>
+              {user?.plan === 'free' && (
+                <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-medium rounded-full">Gratuito</span>
+              )}
+              {user?.plan === 'agent' && (
+                <span className="px-2 py-0.5 bg-green-50 text-green-700 text-xs font-medium rounded-full">Agente</span>
+              )}
+              {user?.plan === 'agency' && (
+                <span className="px-2 py-0.5 bg-purple-50 text-purple-700 text-xs font-medium rounded-full">{user.agencyName || 'Inmobiliaria'}</span>
+              )}
+            </div>
             <p className="text-sm text-gray-500">{t('dashboard.recentActivity')}</p>
           </div>
         </div>

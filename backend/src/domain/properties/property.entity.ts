@@ -16,6 +16,9 @@ export interface IPropertyUser {
   name: string;
   email: string;
   phone: string | null;
+  plan: string;
+  agencyName: string | null;
+  agencyLogo: string | null;
 }
 
 export interface IProperty {

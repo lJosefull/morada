@@ -36,6 +36,9 @@ export class AuthService {
         email: user.email,
         name: user.name,
         role: user.role,
+        plan: user.plan,
+        agencyName: user.agencyName,
+        agencyLogo: user.agencyLogo,
       },
     };
   }
@@ -59,6 +62,9 @@ export class AuthService {
         email: user.email,
         name: user.name,
         role: user.role,
+        plan: user.plan,
+        agencyName: user.agencyName,
+        agencyLogo: user.agencyLogo,
       },
     };
   }
@@ -90,6 +96,9 @@ export class AuthService {
         name: user.name,
         role: user.role,
         avatar: user.avatar,
+        plan: user.plan,
+        agencyName: user.agencyName,
+        agencyLogo: user.agencyLogo,
       },
     };
   }
@@ -146,6 +155,9 @@ export class AuthService {
       email: user.email,
       name: user.name,
       role: user.role,
+      plan: user.plan,
+      agencyName: user.agencyName,
+      agencyLogo: user.agencyLogo,
       createdAt: user.createdAt,
     };
   }

@@ -5,6 +5,9 @@ export interface User {
   phone?: string
   avatar?: string | null
   role: 'user' | 'admin'
+  plan: 'free' | 'agent' | 'agency'
+  agencyName?: string | null
+  agencyLogo?: string | null
   createdAt: string
 }
 
@@ -27,7 +30,7 @@ export interface Property {
   aiDescription: string | null
   aiStatus: 'pending' | 'processing' | 'completed' | 'failed'
   userId: string
-  user?: { id: string; name: string; email: string; phone?: string }
+  user?: { id: string; name: string; email: string; phone?: string; plan: string; agencyName?: string | null; agencyLogo?: string | null }
   images: Image[]
   createdAt: string
   updatedAt: string

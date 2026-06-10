@@ -362,6 +362,16 @@ export default function PropertyDetailPage() {
                       Property Owner
                     </p>
                   )}
+                  {property.user?.plan === 'agency' && property.user?.agencyName && (
+                    <p className="text-xs text-purple-600 font-medium truncate">
+                      {property.user.agencyName}
+                    </p>
+                  )}
+                  {property.user?.plan === 'agent' && (
+                    <p className="text-xs text-green-600 font-medium truncate">
+                      Agente independiente
+                    </p>
+                  )}
                   <p className="text-xs text-gray-500">{t('property.contactAgent')}</p>
                 </div>
                 {!isOwner && user && (

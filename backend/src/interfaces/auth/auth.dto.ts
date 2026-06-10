@@ -49,5 +49,8 @@ export class AuthResponseDto {
     name: string;
     role: string;
     avatar: string | null;
+    plan: string;
+    agencyName: string | null;
+    agencyLogo: string | null;
   };
 }

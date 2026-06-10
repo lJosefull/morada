@@ -137,6 +137,23 @@ export default function SettingsPage() {
                 <span className="inline-block mt-2 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full">
                   {t('profile.contactInfo')}
                 </span>
+                <div className="mt-3 flex justify-center gap-2">
+                  {user.plan === 'free' && (
+                    <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
+                      Plan gratuito
+                    </span>
+                  )}
+                  {user.plan === 'agent' && (
+                    <span className="px-3 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full">
+                      Agente
+                    </span>
+                  )}
+                  {user.plan === 'agency' && (
+                    <span className="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-medium rounded-full">
+                      {user.agencyName || 'Inmobiliaria'}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Navigation */}

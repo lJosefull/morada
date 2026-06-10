@@ -124,6 +124,12 @@ export default function PropertiesPage() {
                     {p.bathrooms && <span>{p.bathrooms} {t('property.bathrooms')}</span>}
                     {p.surface && <span>{p.surface} m²</span>}
                   </div>
+                  {p.user?.plan === 'agency' && p.user?.agencyName && (
+                    <p className="text-xs text-purple-600 mt-1.5 font-medium">{p.user.agencyName}</p>
+                  )}
+                  {p.user?.plan === 'agent' && (
+                    <p className="text-xs text-green-600 mt-1.5 font-medium">Agente</p>
+                  )}
                 </div>
               </AnimatedLink>
             ))}

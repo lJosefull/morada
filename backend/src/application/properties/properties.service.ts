@@ -1,9 +1,11 @@
-import { Inject, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import {
   IPropertyRepository,
   PROPERTY_REPOSITORY,
   PropertyFilters,
 } from '../../domain/properties/property.repository';
+import { IUserRepository, USER_REPOSITORY } from '../../domain/users/user.repository';
+import { PLAN_LIMITS } from '../../domain/users/user.entity';
 import { CreatePropertyDto, UpdatePropertyDto, PropertyQueryDto } from '../../interfaces/properties/properties.dto';
 
 @Injectable()
@@ -11,6 +13,8 @@ export class PropertiesService {
   constructor(
     @Inject(PROPERTY_REPOSITORY)
     private readonly propertyRepository: IPropertyRepository,
+    @Inject(USER_REPOSITORY)
+    private readonly userRepository: IUserRepository,
   ) {}
 
   async findAll(query: PropertyQueryDto) {
@@ -33,6 +37,16 @@ export class PropertiesService {
   }
 
   async create(createPropertyDto: CreatePropertyDto, userId: string) {
+    const user = await this.userRepository.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    const limits = PLAN_LIMITS[user.plan]
+    const count = await this.propertyRepository.countByUserId(userId)
+    if (count >= limits.maxProperties) {
+      const planLabel = user.plan === 'free' ? 'plan gratuito' : 'tu plan'
+      throw new BadRequestException(`Has alcanzado el límite de ${limits.maxProperties} propiedades del ${planLabel}. Actualiza tu plan para publicar más.`)
+    }
+
     return this.propertyRepository.create({
       ...createPropertyDto,
       userId,

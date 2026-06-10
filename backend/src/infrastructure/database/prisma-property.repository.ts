@@ -10,7 +10,7 @@ export class PrismaPropertyRepository implements IPropertyRepository {
   async findById(id: string): Promise<IProperty | null> {
     const property = await this.prisma.property.findUnique({
       where: { id },
-      include: { images: true, user: { select: { id: true, name: true, email: true, phone: true } } },
+      include: { images: true, user: { select: { id: true, name: true, email: true, phone: true, plan: true, agencyName: true, agencyLogo: true } } },
     });
     if (!property) return null;
     return this.toDomain(property);
@@ -28,7 +28,7 @@ export class PrismaPropertyRepository implements IPropertyRepository {
         skip,
         take,
         orderBy: { createdAt: 'desc' },
-        include: { images: true, user: { select: { id: true, name: true, email: true, phone: true } } },
+        include: { images: true, user: { select: { id: true, name: true, email: true, phone: true, plan: true, agencyName: true, agencyLogo: true } } },
       }),
       this.prisma.property.count({ where }),
     ]);
@@ -52,7 +52,7 @@ export class PrismaPropertyRepository implements IPropertyRepository {
         longitude: input.longitude ?? null,
         user: { connect: { id: input.userId } },
       },
-      include: { images: true, user: { select: { id: true, name: true, email: true, phone: true } } },
+      include: { images: true, user: { select: { id: true, name: true, email: true, phone: true, plan: true, agencyName: true, agencyLogo: true } } },
     });
     return this.toDomain(property);
   }
@@ -86,6 +86,10 @@ export class PrismaPropertyRepository implements IPropertyRepository {
 
   async delete(id: string): Promise<void> {
     await this.prisma.property.delete({ where: { id } });
+  }
+
+  async countByUserId(userId: string): Promise<number> {
+    return this.prisma.property.count({ where: { userId, status: { not: 'hidden' } } });
   }
 
   private buildWhereClause(filters: PropertyFilters): Record<string, unknown> {
@@ -138,6 +142,9 @@ export class PrismaPropertyRepository implements IPropertyRepository {
         name: raw.user.name,
         email: raw.user.email,
         phone: raw.user.phone,
+        plan: raw.user.plan,
+        agencyName: raw.user.agencyName,
+        agencyLogo: raw.user.agencyLogo,
       } : undefined,
       images: (raw.images || []).map((img: IProperty['images'][number]) => ({
         id: img.id,
