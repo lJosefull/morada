@@ -26,7 +26,13 @@ const RegisterPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 to-indigo-100/80" />
+      <div
+        className="absolute inset-0 bg-no-repeat bg-center bg-cover opacity-40"
+        style={{ backgroundImage: "url('/bg-login-morada.png')" }}
+      />
+      <div className="relative z-10 w-full max-w-md">
       <SEOHead title={t('auth.registerTitle')} description={t('auth.registerSubtitle')} />
       <div className="max-w-md w-full space-y-6 bg-white p-8 rounded-xl shadow-lg">
         <div className="text-center">
@@ -102,6 +108,7 @@ const RegisterPage: React.FC = () => {
           </p>
         </form>
       </div>
+    </div>
     </div>
   )
 }
