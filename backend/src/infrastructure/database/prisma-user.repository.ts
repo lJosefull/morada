@@ -59,6 +59,9 @@ export class PrismaUserRepository implements IUserRepository {
     avatar: string | null;
     googleId: string | null;
     role: string;
+    plan: string | null;
+    agencyName: string | null;
+    agencyLogo: string | null;
     createdAt: Date;
     updatedAt: Date;
   }): IUser {
@@ -71,6 +74,9 @@ export class PrismaUserRepository implements IUserRepository {
       avatar: raw.avatar,
       googleId: raw.googleId,
       role: raw.role as 'user' | 'admin',
+      plan: (raw.plan as IUser['plan']) || 'free',
+      agencyName: raw.agencyName || null,
+      agencyLogo: raw.agencyLogo || null,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     };
