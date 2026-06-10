@@ -16,9 +16,6 @@
 #root {
   min-height: 100vh;
   background-color: #f8fafc;
-  background-image: url('/bg-morada.png');
-  background-repeat: repeat;
-  background-size: 320px;
 }
 
 ::view-transition-old(root) {
