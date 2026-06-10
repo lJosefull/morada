@@ -6,23 +6,15 @@
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: #f8fafc;
+    background-image: url('/bg-morada.png');
+    background-repeat: repeat;
+    background-size: 320px;
   }
   
   body {
     @apply text-gray-900;
-    position: relative;
-    background-color: #f8fafc;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    background-image: url('/bg-morada.png');
-    background-repeat: repeat;
-    background-size: 320px;
-    opacity: 0.35;
+    background-color: transparent;
   }
 }
 
