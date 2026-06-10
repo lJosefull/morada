@@ -30,7 +30,7 @@ const RegisterPage: React.FC = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 to-indigo-100/80" />
       <div
         className="absolute inset-0 bg-no-repeat bg-center bg-cover opacity-40"
-        style={{ backgroundImage: "url('/bg-login-morada.png')" }}
+        style={{ backgroundImage: "image-set(url('/bg-login-morada.webp') type('image/webp'), url('/bg-login-morada.png') type('image/png'))" }}
       />
       <div className="relative z-10 w-full max-w-md">
       <SEOHead title={t('auth.registerTitle')} description={t('auth.registerSubtitle')} />

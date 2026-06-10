@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://morada.viewsoft.com.co/sitemap.xml
