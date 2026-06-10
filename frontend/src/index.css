@@ -9,7 +9,12 @@
   }
   
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply text-gray-900;
+    background-color: #f8fafc;
+    background-image: url('/bg-morada.png');
+    background-repeat: repeat;
+    background-size: 400px;
+    background-blend-mode: overlay;
   }
 }
 
