@@ -61,6 +61,9 @@ export class PropertiesService {
     if (property.userId !== userId) {
       throw new ForbiddenException('You can only update your own properties');
     }
+    if (!property.images?.length) {
+      throw new BadRequestException('La propiedad debe tener al menos una imagen');
+    }
     return this.propertyRepository.update(id, updatePropertyDto);
   }
 

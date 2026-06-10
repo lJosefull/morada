@@ -85,6 +85,9 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
       newErrors.price = t('property.price')
     }
     if (!formData.location.trim()) newErrors.location = t('property.location')
+    if (isEditing && images.length === 0) {
+      newErrors.images = 'Agrega al menos una imagen'
+    }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -357,6 +360,9 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
                   </label>
                 </div>
                 <p className="text-xs text-gray-400">{t('property.maxFileSize')}</p>
+                {errors.images && (
+                  <p className="text-sm text-red-500 mt-2">{errors.images}</p>
+                )}
               </div>
             ) : (
               <div className="bg-gray-50 rounded-xl p-6 text-center">
