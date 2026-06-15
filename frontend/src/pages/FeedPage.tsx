@@ -140,7 +140,7 @@ export default function FeedPage() {
             {properties.map((p) => (
               <Link
                 key={p.id}
-                to={`/properties/${p.id}`}
+                to={`/property/${p.id}`}
                 className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow overflow-hidden group"
               >
                 <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200">

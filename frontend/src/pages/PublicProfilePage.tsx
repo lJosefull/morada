@@ -123,7 +123,7 @@ export default function PublicProfilePage() {
               <PropertyCard
                 key={property.id}
                 property={property}
-                onView={() => window.location.href = `/properties/${property.id}`}
+                onView={() => window.location.href = `/property/${property.id}`}
               />
             ))}
           </div>

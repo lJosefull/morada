@@ -392,8 +392,8 @@ export default function DashboardPage() {
               <PropertyCard
                 key={p.id}
                 property={p}
-                onView={() => navigate(`/properties/${p.id}`)}
-                onEdit={() => navigate(`/properties/${p.id}/edit`)}
+                onView={() => navigate(`/property/${p.id}`)}
+                onEdit={() => navigate(`/property/${p.id}/edit`)}
                 onDelete={() => handleDelete(p.id)}
               />
             ))}

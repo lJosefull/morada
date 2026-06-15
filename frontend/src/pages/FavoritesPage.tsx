@@ -88,7 +88,7 @@ export default function FavoritesPage() {
               property={fav.property}
               isFavorite={true}
               onToggleFavorite={() => handleToggleFavorite(fav.property.id)}
-              onView={() => navigate(`/properties/${fav.property.id}`)}
+              onView={() => navigate(`/property/${fav.property.id}`)}
             />
           ))}
         </div>

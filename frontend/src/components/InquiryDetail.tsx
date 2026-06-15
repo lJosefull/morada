@@ -139,7 +139,7 @@ export default function InquiryDetail({ inquiryId, onClose, onStatusChange }: In
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wide">{t('property.title')}</h3>
               <Link
-                to={`/properties/${inquiry.propertyId}`}
+                to={`/property/${inquiry.propertyId}`}
                 className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
                 onClick={onClose}
               >

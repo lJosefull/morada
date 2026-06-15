@@ -114,7 +114,7 @@ export default function MyInquiriesPage() {
                   <td className="px-6 py-4">
                     {inquiry.property ? (
                       <Link
-                        to={`/properties/${inquiry.propertyId}`}
+                        to={`/property/${inquiry.propertyId}`}
                         className="text-sm font-medium text-blue-600 hover:underline"
                       >
                         {inquiry.property.title}
@@ -135,7 +135,7 @@ export default function MyInquiriesPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <Link
-                      to={`/properties/${inquiry.propertyId}`}
+                      to={`/property/${inquiry.propertyId}`}
                       className="text-sm text-gray-600 hover:text-gray-900 font-medium"
                     >
                       {t('common.view')}

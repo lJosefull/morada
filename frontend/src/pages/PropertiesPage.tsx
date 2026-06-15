@@ -673,7 +673,7 @@ function SkeletonCard({ viewMode }: { viewMode: ViewMode }) {
 function PropertyGridCard({ property: p, t }: { property: Property; t: (key: string) => string }) {
   return (
     <AnimatedLink
-      to={`/properties/${p.id}`}
+      to={`/property/${p.id}`}
       state={p}
       className="bg-white rounded-xl shadow-sm border hover:shadow-md transition-all hover:-translate-y-0.5 overflow-hidden block group"
     >
@@ -748,7 +748,7 @@ function PropertyGridCard({ property: p, t }: { property: Property; t: (key: str
 function PropertyListCard({ property: p, t }: { property: Property; t: (key: string) => string }) {
   return (
     <AnimatedLink
-      to={`/properties/${p.id}`}
+      to={`/property/${p.id}`}
       state={p}
       className="bg-white rounded-xl shadow-sm border hover:shadow-md transition-all overflow-hidden block group"
     >

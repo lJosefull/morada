@@ -92,7 +92,9 @@ const App: React.FC = () => {
             </Route>
             <Route path="/properties" element={<Layout />}>
               <Route index element={<PropertiesPage />} />
-              <Route path=":id" element={<PropertyDetailPage />} />
+            </Route>
+            <Route path="/property/:id" element={<Layout />}>
+              <Route index element={<PropertyDetailPage />} />
             </Route>
             <Route
               path="/properties/new"
@@ -105,7 +107,7 @@ const App: React.FC = () => {
               <Route index element={<CreatePropertyPage />} />
             </Route>
             <Route
-              path="/properties/:id/edit"
+              path="/property/:id/edit"
               element={
                 <ProtectedRoute>
                   <Layout />

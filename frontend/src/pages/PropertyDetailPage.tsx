@@ -112,7 +112,7 @@ export default function PropertyDetailPage() {
         title={property.aiTitle || property.title}
         description={property.description.slice(0, 200)}
         image={property.images?.[0]?.url ? (property.images[0].url.startsWith('http') ? property.images[0].url : `${API_BASE}${property.images[0].url}`) : undefined}
-        url={`/properties/${property.id}`}
+        url={`/property/${property.id}`}
       />
       <Link to="/properties" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors">
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -521,7 +521,7 @@ export default function PropertyDetailPage() {
                 )}
 
                 <button
-                  onClick={() => navigate(`/properties/${property.id}/edit`)}
+                  onClick={() => navigate(`/property/${property.id}/edit`)}
                   className="flex items-center justify-center gap-2 w-full bg-gray-900 text-white py-2.5 px-4 rounded-xl hover:bg-gray-800 transition-colors font-medium text-sm"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -560,7 +560,7 @@ export default function PropertyDetailPage() {
             {alsoViewed.slice(0, 3).map((ap) => (
               <Link
                 key={ap.id}
-                to={`/properties/${ap.id}`}
+                to={`/property/${ap.id}`}
                 className="bg-white rounded-xl border border-gray-100 hover:shadow-md transition-shadow overflow-hidden group"
               >
                 <div className="h-36 bg-gradient-to-br from-gray-100 to-gray-200">

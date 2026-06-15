@@ -116,11 +116,11 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
       if (isEditing && property) {
         await api.patch(`/properties/${property.id}`, data)
         addToast(t('common.save'), 'success')
-        navigate(`/properties/${property.id}`)
+        navigate(`/property/${property.id}`)
       } else {
         const { data: newProperty } = await api.post<Property>('/properties', data)
         addToast(t('common.submit'), 'success')
-        navigate(`/properties/${newProperty.id}/edit`)
+        navigate(`/property/${newProperty.id}/edit`)
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save property'
