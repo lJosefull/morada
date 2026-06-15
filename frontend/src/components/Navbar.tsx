@@ -137,8 +137,8 @@ export default function Navbar() {
             <span className="text-2xl font-bold text-blue-600">{t('app.name')}</span>
           </Link>
 
-          {/* Global Search — visible on all pages EXCEPT properties page */}
-          {!location.pathname.startsWith('/properties') && (
+          {/* Global Search — hidden only on the main properties listing (has its own search) */}
+          {location.pathname !== '/properties' && (
             <div className="hidden md:flex flex-1 max-w-md mx-4 lg:mx-8 relative" ref={dropdownRef}>
               <form onSubmit={handleSearch} className="w-full">
                 <div className={`relative w-full group transition-all duration-200 ${
