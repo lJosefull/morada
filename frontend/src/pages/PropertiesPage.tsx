@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../lib/api'
 import type { Property } from '../types'
 import { SEOHead } from '../components/SEOHead'
@@ -50,10 +50,14 @@ const SORT_OPTIONS: { value: SortOption; labelKey: string }[] = [
 
 export default function PropertiesPage() {
   const { t } = useTranslation()
+  const [searchParams] = useSearchParams()
   const [properties, setProperties] = useState<Property[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
-  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
+  const [filters, setFilters] = useState<Filters>(() => ({
+    ...DEFAULT_FILTERS,
+    search: searchParams.get('search') || '',
+  }))
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [showFilters, setShowFilters] = useState(false)
