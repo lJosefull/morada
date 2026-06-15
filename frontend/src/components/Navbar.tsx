@@ -1,9 +1,19 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/auth';
 import { api } from '../lib/api';
 import { NotificationDropdown } from './NotificationDropdown';
+
+const RECENT_SEARCHES_KEY = 'nav_recent_searches'
+const MAX_RECENT = 5
+
+const QUICK_LINKS = [
+  { labelKey: 'property.propertyType.house', icon: '🏠' },
+  { labelKey: 'property.propertyType.apartment', icon: '🏢' },
+  { labelKey: 'property.propertyType.land', icon: '🌳' },
+  { labelKey: 'property.propertyType.commercial', icon: '🏪' },
+]
 
 export default function Navbar() {
   const { t } = useTranslation();
@@ -15,7 +25,15 @@ export default function Navbar() {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(RECENT_SEARCHES_KEY)
+      return saved ? JSON.parse(saved) : []
+    } catch { return [] }
+  })
   const searchRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Keyboard shortcut: Ctrl+K or Cmd+K to focus search
   useEffect(() => {
@@ -24,20 +42,70 @@ export default function Navbar() {
         e.preventDefault();
         searchRef.current?.focus();
       }
+      if (e.key === 'Escape') {
+        setIsSearchFocused(false)
+        searchRef.current?.blur()
+      }
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    const query = searchQuery.trim()
-    if (query) {
-      navigate(`/properties?search=${encodeURIComponent(query)}`)
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
+          searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setIsSearchFocused(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const saveRecentSearch = useCallback((query: string) => {
+    setRecentSearches(prev => {
+      const filtered = prev.filter(s => s.toLowerCase() !== query.toLowerCase())
+      const updated = [query, ...filtered].slice(0, MAX_RECENT)
+      localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated))
+      return updated
+    })
+  }, [])
+
+  const removeRecentSearch = useCallback((e: React.MouseEvent, query: string) => {
+    e.stopPropagation()
+    setRecentSearches(prev => {
+      const updated = prev.filter(s => s.toLowerCase() !== query.toLowerCase())
+      localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated))
+      return updated
+    })
+  }, [])
+
+  const executeSearch = useCallback((query: string) => {
+    const trimmed = query.trim()
+    setSearchQuery('')
+    setIsSearchFocused(false)
+    searchRef.current?.blur()
+    if (trimmed) {
+      saveRecentSearch(trimmed)
+      navigate(`/properties?search=${encodeURIComponent(trimmed)}`)
     } else {
       navigate('/properties')
     }
+  }, [navigate, saveRecentSearch])
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    executeSearch(searchQuery)
+  }
+
+  const handleQuickLink = (label: string) => {
+    executeSearch(label)
+  }
+
+  const clearSearch = () => {
     setSearchQuery('')
+    searchRef.current?.focus()
   }
 
   useEffect(() => {
@@ -69,24 +137,144 @@ export default function Navbar() {
             <span className="text-2xl font-bold text-blue-600">{t('app.name')}</span>
           </Link>
 
-          {/* Global Search — visible on all pages */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-4 lg:mx-8">
-            <div className="relative w-full group">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="w-4 h-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                ref={searchRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={`${t('common.search')}...  ⌘K`}
-                className="w-full pl-10 pr-4 py-2 bg-gray-100 border border-transparent rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all placeholder:text-gray-400"
-              />
+          {/* Global Search — visible on all pages EXCEPT properties page */}
+          {!location.pathname.startsWith('/properties') && (
+            <div className="hidden md:flex flex-1 max-w-md mx-4 lg:mx-8 relative" ref={dropdownRef}>
+              <form onSubmit={handleSearch} className="w-full">
+                <div className={`relative w-full group transition-all duration-200 ${
+                  isSearchFocused ? 'scale-[1.02]' : ''
+                }`}>
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className={`w-4 h-4 transition-colors duration-200 ${
+                      isSearchFocused ? 'text-blue-500' : 'text-gray-400'
+                    }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <input
+                    ref={searchRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                    placeholder={`${t('common.search')}...`}
+                    className={`w-full pl-10 pr-10 py-2 rounded-xl text-sm transition-all duration-200 placeholder:text-gray-400 ${
+                      isSearchFocused
+                        ? 'bg-white border-blue-500 ring-2 ring-blue-500/20 shadow-lg shadow-blue-100'
+                        : 'bg-gray-100 border-transparent hover:bg-gray-200'
+                    } border focus:outline-none`}
+                  />
+                  {/* Clear button */}
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={clearSearch}
+                      className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                  {/* ⌘K badge */}
+                  {!isSearchFocused && !searchQuery && (
+                    <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
+                      <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium text-gray-400 bg-gray-200/70 rounded">
+                        <span>⌘</span>K
+                      </kbd>
+                    </div>
+                  )}
+                </div>
+              </form>
+
+              {/* Search Dropdown */}
+              {isSearchFocused && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl shadow-gray-200/50 z-50 overflow-hidden animate-[fadeIn_0.15s_ease]">
+                  {/* Recent searches */}
+                  {recentSearches.length > 0 && !searchQuery && (
+                    <div className="p-3">
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                        {t('common.recent')}
+                      </p>
+                      <div className="space-y-0.5">
+                        {recentSearches.map((query) => (
+                          <button
+                            key={query}
+                            onClick={() => executeSearch(query)}
+                            className="w-full flex items-center justify-between px-2.5 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors group/btn"
+                          >
+                            <span className="flex items-center gap-2.5">
+                              <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <span className="truncate">{query}</span>
+                            </span>
+                            <button
+                              onClick={(e) => removeRecentSearch(e, query)}
+                              className="p-0.5 rounded text-gray-300 hover:text-gray-500 hover:bg-gray-200 opacity-0 group-hover/btn:opacity-100 transition-all"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Suggestions when typing */}
+                  {searchQuery.trim() && (
+                    <div className="p-3">
+                      <button
+                        onClick={() => executeSearch(searchQuery)}
+                        className="w-full flex items-center gap-2.5 px-2.5 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <span>{t('common.search')} &quot;<strong>{searchQuery}</strong>&quot;</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Quick links — only show when not typing */}
+                  {!searchQuery && (
+                    <div className="border-t border-gray-100 p-3">
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                        {t('property.type')}
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {QUICK_LINKS.map((link) => (
+                          <button
+                            key={link.labelKey}
+                            onClick={() => handleQuickLink(t(link.labelKey))}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors"
+                          >
+                            <span>{link.icon}</span>
+                            <span>{t(link.labelKey)}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Empty state — first time */}
+                  {recentSearches.length === 0 && !searchQuery && (
+                    <div className="p-6 text-center">
+                      <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-sm text-gray-500">{t('search.noResultsHint')}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          </form>
+          )}
 
           <div className="hidden md:flex items-center space-x-8">
             <Link
