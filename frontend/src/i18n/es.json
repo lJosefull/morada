@@ -264,7 +264,11 @@
     "no": "No",
     "new": "Nuevo",
     "view": "Ver",
-    "selectFile": "Seleccionar archivo"
+    "selectFile": "Seleccionar archivo",
+    "page": "Página",
+    "of": "de",
+    "grid": "Cuadrícula",
+    "list": "Lista"
   },
   "map": {
     "title": "Ubicación",
