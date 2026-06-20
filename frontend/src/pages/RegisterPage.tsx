@@ -10,6 +10,9 @@ const RegisterPage: React.FC = () => {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [acceptTerms, setAcceptTerms] = useState(false)
+  const [acceptDataTreatment, setAcceptDataTreatment] = useState(false)
+  const [acceptCommercial, setAcceptCommercial] = useState(false)
 
   const { register, isLoading, error, clearError } = useAuthStore()
   const navigate = useNavigate()
@@ -17,7 +20,22 @@ const RegisterPage: React.FC = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     clearError()
+
+    if (!acceptTerms || !acceptDataTreatment) {
+      return
+    }
+
     try {
+      // Store consent evidence locally
+      const consentData = {
+        acceptTerms: { value: acceptTerms, timestamp: new Date().toISOString() },
+        acceptDataTreatment: { value: acceptDataTreatment, timestamp: new Date().toISOString() },
+        acceptCommercial: { value: acceptCommercial, timestamp: new Date().toISOString() },
+        ip: 'collected-at-server',
+        userAgent: navigator.userAgent,
+      }
+      localStorage.setItem('morada-consent-' + email, JSON.stringify(consentData))
+
       await register({ email, password, name })
       navigate('/dashboard', { replace: true })
     } catch {
@@ -96,7 +114,64 @@ const RegisterPage: React.FC = () => {
             </div>
           </div>
 
-          <button type="submit" disabled={isLoading}
+          {/* Legal consent checkboxes */}
+          <div className="space-y-3 bg-gray-50 rounded-xl p-4 border border-gray-100">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptTerms}
+                onChange={(e) => setAcceptTerms(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                required
+              />
+              <span className="text-xs text-gray-600">
+                He leído y acepto los{' '}
+                <a href="/legal/terms" target="_blank" className="text-blue-600 hover:underline font-medium">
+                  Términos y Condiciones
+                </a>{' '}
+                de Morada. <span className="text-red-500">*</span>
+              </span>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptDataTreatment}
+                onChange={(e) => setAcceptDataTreatment(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                required
+              />
+              <span className="text-xs text-gray-600">
+                Autorizo el tratamiento de mis datos personales conforme a la{' '}
+                <a href="/legal/data-policy" target="_blank" className="text-blue-600 hover:underline font-medium">
+                  Política de Tratamiento de Datos
+                </a>{' '}
+                de Morada. <span className="text-red-500">*</span>
+              </span>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptCommercial}
+                onChange={(e) => setAcceptCommercial(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-xs text-gray-600">
+                Acepto recibir comunicaciones comerciales y promociones de Morada por correo
+                electrónico (opcional).
+              </span>
+            </label>
+          </div>
+
+          {(!acceptTerms || !acceptDataTreatment) && (
+            <p className="text-xs text-amber-600 text-center">
+              Debes aceptar los Términos y Condiciones y la Política de Tratamiento de Datos para
+              registrarte.
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={isLoading || !acceptTerms || !acceptDataTreatment}
             className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
           >
             {isLoading ? <LoadingSpinner size="sm" /> : t('auth.registerButton')}
@@ -104,7 +179,9 @@ const RegisterPage: React.FC = () => {
 
           <p className="text-center text-sm text-gray-600">
             {t('auth.hasAccount')}{' '}
-            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">{t('auth.loginButton')}</Link>
+            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+              {t('auth.loginButton')}
+            </Link>
           </p>
         </form>
       </div>

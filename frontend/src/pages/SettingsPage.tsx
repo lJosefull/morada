@@ -205,6 +205,15 @@ export default function SettingsPage() {
                     year: 'numeric',
                   })}
                 </p>
+                {/* Version */}
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <p className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">
+                    Versión
+                  </p>
+                  <p className="text-sm text-gray-600 mt-0.5">
+                    v1.0.0
+                  </p>
+                </div>
               </div>
             </div>
           </div>

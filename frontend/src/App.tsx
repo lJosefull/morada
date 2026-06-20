@@ -23,6 +23,7 @@ const FavoritesPage = lazy(() => import('./pages/FavoritesPage'))
 const PublicProfilePage = lazy(() => import('./pages/PublicProfilePage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const FeedPage = lazy(() => import('./pages/FeedPage'))
+const LegalPage = lazy(() => import('./pages/LegalPage'))
 
 const PageLoader: React.FC = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -128,6 +129,9 @@ const App: React.FC = () => {
               }
             >
               <Route index element={<SettingsPage />} />
+            </Route>
+            <Route path="/legal/:docId" element={<Layout />}>
+              <Route index element={<LegalPage />} />
             </Route>
             <Route path="/" element={<Navigate to="/properties" replace />} />
             <Route path="*" element={<Navigate to="/properties" replace />} />

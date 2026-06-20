@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Política de Cookies - Morada</title>
+  <meta name="robots" content="index, follow">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.7; color: #1a1a2e; background: #f8f9fa; padding: 2rem 1rem; }
+    .container { max-width: 800px; margin: 0 auto; background: white; padding: 3rem 2.5rem; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    h1 { font-size: 2rem; color: #1a1a2e; margin-bottom: 0.5rem; border-bottom: 3px solid #2563eb; padding-bottom: 0.75rem; }
+    h2 { font-size: 1.25rem; color: #2563eb; margin-top: 2rem; margin-bottom: 0.75rem; }
+    h3 { font-size: 1.1rem; color: #374151; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+    p { margin-bottom: 1rem; color: #4b5563; }
+    ul, ol { margin-bottom: 1rem; padding-left: 1.5rem; color: #4b5563; }
+    li { margin-bottom: 0.5rem; }
+    strong { color: #1a1a2e; }
+    .meta { color: #6b7280; font-size: 0.875rem; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+    th, td { border: 1px solid #e5e7eb; padding: 0.75rem; text-align: left; }
+    th { background: #f9fafb; font-weight: 600; }
+    .highlight-box { background: #eff6ff; border-left: 4px solid #2563eb; padding: 1rem 1.5rem; margin: 1.5rem 0; border-radius: 0 8px 8px 0; }
+    @media (max-width: 600px) { .container { padding: 1.5rem 1rem; } h1 { font-size: 1.5rem; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Política de Cookies</h1>
+    <div class="meta">
+      <p><strong>Operador:</strong> ViewSoft SAS</p>
+      <p><strong>Plataforma:</strong> Morada (morada.viewsoft.com.co)</p>
+      <p><strong>Correo de contacto:</strong> legal@viewsoft.com.co</p>
+      <p><strong>Última actualización:</strong> 20 de junio de 2026</p>
+    </div>
+
+    <p>Esta Política de Cookies explica qué son las cookies, cómo las utilizamos en la Plataforma Morada y las opciones que tiene el Usuario para controlarlas, en cumplimiento de la Ley 1581 de 2012 y las directrices de la Superintendencia de Industria y Comercio (SIC) de Colombia.</p>
+
+    <h2>1. ¿Qué son las Cookies?</h2>
+    <p>Las cookies son pequeños archivos de texto que los sitios web almacenan en el navegador del usuario cuando los visita. Estos archivos permiten que el sitio web recuerde las preferencias del usuario, facilite la navegación, y recopile información sobre el comportamiento del usuario en el sitio.</p>
+    <p>También utilizamos tecnologías similares como almacenamiento local (localStorage) y almacenamiento de sesión (sessionStorage) para fines legítimos.</p>
+
+    <h2>2. Tipos de Cookies que Utilizamos</h2>
+
+    <table>
+      <tr>
+        <th>Tipo</th>
+        <th>Finalidad</th>
+        <th>Duración</th>
+        <th>Ejemplo</th>
+        <th>Gestión</th>
+      </tr>
+      <tr>
+        <td><strong>Cookies Técnicas</strong> (Esenciales)</td>
+        <td>Necesarias para el funcionamiento básico de la Plataforma. Permiten la autenticación del usuario, la persistencia de la sesión y la seguridad.</td>
+        <td>Sesión / Persistente</td>
+        <td>Tokens JWT (accessToken, refreshToken) almacenados en localStorage</td>
+        <td>No pueden ser desactivadas</td>
+      </tr>
+      <tr>
+        <td><strong>Cookies de Preferencias</strong></td>
+        <td>Almacenan preferencias del usuario como el idioma seleccionado y búsquedas recientes.</td>
+        <td>Persistente (hasta 30 días)</td>
+        <td>nav_recent_searches (localStorage)</td>
+        <td>El usuario puede desactivarlas perdiendo funcionalidad</td>
+      </tr>
+      <tr>
+        <td><strong>Cookies de Autenticación</strong></td>
+        <td>Mantienen la sesión del usuario activa entre páginas y reinicios del navegador.</td>
+        <td>Persistente (según configuración)</td>
+        <td>auth-storage (localStorage - Zustand persist)</td>
+        <td>No pueden ser desactivadas</td>
+      </tr>
+    </table>
+
+    <h2>3. Almacenamiento Local (localStorage)</h2>
+    <p>Morada utiliza el almacenamiento local del navegador (localStorage) para las siguientes funcionalidades:</p>
+    <ul>
+      <li><strong>Tokens de autenticación:</strong> Los tokens JWT se almacenan en localStorage para mantener la sesión del usuario activa entre recargas de página.</li>
+      <li><strong>Búsquedas recientes:</strong> Las últimas 5 búsquedas realizadas por el usuario se almacenan para facilitar la navegación.</li>
+      <li><strong>Preferencias de idioma:</strong> La selección de idioma del usuario se almacena para mantener la consistencia en la interfaz.</li>
+    </ul>
+
+    <h2>4. Cookies de Terceros</h2>
+    <p>Actualmente, Morada no utiliza cookies de terceros para publicidad o tracking. Sin embargo, la Plataforma puede integrar en el futuro servicios de terceros que utilicen sus propias cookies, incluyendo:</p>
+    <ul>
+      <li>Servicios de analítica web (Google Analytics u otros).</li>
+      <li>Pasarelas de pago (Mercado Pago, Stripe, etc.).</li>
+      <li>Redes sociales para funcionalidades de compartir (Facebook, WhatsApp, Twitter/X).</li>
+      <li>Servicios de mapas (Google Maps u otros).</li>
+    </ul>
+    <p>En caso de implementarse dichas integraciones, se actualizará esta Política y se informará al Usuario.</p>
+
+    <h2>5. Base Legal para el Uso de Cookies</h2>
+    <p>Las cookies técnicas y de autenticación se utilizan bajo la base legal del cumplimiento del contrato de servicios (Términos y Condiciones) y son necesarias para el funcionamiento de la Plataforma. Las cookies de preferencias y cualquier cookie no esencial se utilizarán previa autorización expresa del Usuario.</p>
+
+    <h2>6. Control de Cookies</h2>
+    <p>El Usuario puede controlar y gestionar las cookies de las siguientes maneras:</p>
+    <ul>
+      <li><strong>Primer aviso:</strong> Al acceder por primera vez a la Plataforma, se muestra un aviso de cookies que permite al Usuario aceptar o rechazar las cookies no esenciales.</li>
+      <li><strong>Configuración del navegador:</strong> La mayoría de los navegadores permiten controlar las cookies desde su configuración. El Usuario puede bloquear o eliminar cookies siguiendo las instrucciones de su navegador:
+        <ul>
+          <li>Chrome: Configuración → Privacidad y seguridad → Cookies y otros datos de sitios.</li>
+          <li>Firefox: Opciones → Privacidad y Seguridad → Cookies y datos del sitio.</li>
+          <li>Safari: Preferencias → Privacidad → Cookies.</li>
+          <li>Edge: Configuración → Cookies y permisos del sitio → Cookies.</li>
+        </ul>
+      </li>
+      <li><strong>Borrado de localStorage:</strong> El Usuario puede borrar los datos de localStorage desde las herramientas de desarrollador de su navegador o borrando los datos de navegación.</li>
+    </ul>
+    <div class="highlight-box">
+      <strong>ADVERTENCIA:</strong> Si el Usuario bloquea todas las cookies técnicas y de autenticación, ciertas funcionalidades de la Plataforma, incluyendo la capacidad de iniciar sesión y mantener la sesión activa, podrían verse afectadas.
+    </div>
+
+    <h2>7. Actualizaciones de la Política de Cookies</h2>
+    <p>ViewSoft SAS puede actualizar esta Política de Cookies en cualquier momento. Se recomienda al Usuario revisar esta página periódicamente para estar informado sobre cómo utilizamos las cookies. La fecha de la última actualización se indica al inicio de este documento.</p>
+
+    <h2>8. Contacto</h2>
+    <p>Si el Usuario tiene alguna pregunta sobre el uso de cookies en Morada, puede contactarnos a través de:</p>
+    <ul>
+      <li><strong>Correo electrónico:</strong> legal@viewsoft.com.co</li>
+      <li><strong>Asunto sugerido:</strong> "Política de Cookies"</li>
+    </ul>
+
+    <p style="text-align: center; margin-top: 2rem; color: #6b7280; font-size: 0.875rem;">
+      &copy; 2026 ViewSoft SAS. Todos los derechos reservados.
+    </p>
+  </div>
+</body>
+</html>
