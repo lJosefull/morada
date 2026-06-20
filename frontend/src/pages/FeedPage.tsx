@@ -5,6 +5,7 @@ import type { Property } from '../types'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 import { SEOHead } from '../components/SEOHead'
 import { useAuthStore } from '../store/auth'
+import { formatCurrency } from '../lib/utils'
 import { Link } from 'react-router-dom'
 
 interface FeedProperty extends Property {
@@ -136,24 +137,24 @@ export default function FeedPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-x-6">
             {properties.map((p) => (
+              <div key={p.id} className="break-inside-avoid mb-6">
               <Link
-                key={p.id}
                 to={`/property/${p.id}`}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow overflow-hidden group"
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all hover:-translate-y-1 overflow-hidden block group"
               >
-                <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200">
+                <div className="relative bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                   {p.images?.[0] ? (
-                    <img src={p.images[0].url} alt={p.title} className="w-full h-full object-cover" />
+                    <img src={p.images[0].url} alt={p.title} className="w-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-full aspect-[4/3] flex items-center justify-center">
                       <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>
                   )}
-                  <div className="absolute top-3 left-3">
+                  <div className="absolute top-3 left-3 flex gap-1.5">
                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide ${
                       p.listingType === 'sale' ? 'bg-emerald-500 text-white' : 'bg-blue-500 text-white'
                     }`}>
@@ -161,18 +162,29 @@ export default function FeedPage() {
                     </span>
                   </div>
                   {/* Match score badge */}
-                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full px-2.5 py-1 text-xs font-bold text-blue-600 shadow-sm">
+                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full px-2.5 py-1 text-[10px] font-bold text-blue-600 shadow-sm">
                     {Math.round(p.score * 100)}% {t('feed.matched')}
                   </div>
+                  {/* Price overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent p-4 pt-8">
+                    <p className="text-white text-xl font-bold drop-shadow-sm">
+                      {formatCurrency(p.price, 'USD')}
+                    </p>
+                  </div>
                 </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 truncate">{p.aiTitle || p.title}</h3>
-                  <p className="text-lg font-bold text-blue-600 mt-1">${p.price.toLocaleString('es-CL')}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{p.location}</p>
+                <div className="p-4 space-y-2">
+                  <h3 className="font-semibold text-gray-900 line-clamp-1 text-sm">{p.aiTitle || p.title}</h3>
+                  <p className="text-xs text-gray-400 flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {p.location}
+                  </p>
 
                   {/* Match reasons */}
                   {p.matchReasons.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-3">
+                    <div className="flex flex-wrap gap-1.5">
                       {p.matchReasons.slice(0, 2).map((reason, i) => (
                         <span key={i} className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${getReasonStyle(reason)}`}>
                           {reason}
@@ -181,14 +193,15 @@ export default function FeedPage() {
                     </div>
                   )}
 
-                  <div className="flex items-center gap-3 mt-3 text-xs text-gray-400 border-t border-gray-100 pt-3">
-                    {p.bedrooms && <span>{p.bedrooms} {t('property.bedrooms')}</span>}
-                    {p.bathrooms && <span>{p.bathrooms} {t('property.bathrooms')}</span>}
+                  <div className="flex items-center gap-3 text-xs text-gray-500 pt-1.5 border-t border-gray-50">
+                    {p.bedrooms && <span>{p.bedrooms} hab</span>}
+                    {p.bathrooms && <span>{p.bathrooms} baño{p.bathrooms > 1 ? 's' : ''}</span>}
                     {p.surface && <span>{p.surface} m²</span>}
                     <span className="capitalize">{p.propertyType}</span>
                   </div>
                 </div>
               </Link>
+              </div>
             ))}
           </div>
 
