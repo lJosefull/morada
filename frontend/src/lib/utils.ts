@@ -1,5 +1,13 @@
+const CURRENCY_LOCALE: Record<string, string> = {
+  CLP: 'es-CL',
+  USD: 'en-US',
+  EUR: 'es-ES',
+  UF: 'es-CL',
+}
+
 export function formatCurrency(amount: number, currency = 'CLP'): string {
-  return new Intl.NumberFormat('es-CL', {
+  const locale = CURRENCY_LOCALE[currency] || 'es-CL'
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
     minimumFractionDigits: 0,

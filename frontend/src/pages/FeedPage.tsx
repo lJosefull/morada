@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
+import { useToastStore } from '../store/toast'
 import type { Property } from '../types'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 import { SEOHead } from '../components/SEOHead'
@@ -24,6 +25,7 @@ interface FeedProfile {
 
 export default function FeedPage() {
   const { t } = useTranslation()
+  const addToast = useToastStore((s) => s.addToast)
   const [properties, setProperties] = useState<FeedProperty[]>([])
   const [profile, setProfile] = useState<FeedProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -42,7 +44,7 @@ export default function FeedPage() {
         setTotal(data.total || 0)
         setProfile(data.profile || null)
       })
-      .catch(() => {})
+      .catch(() => addToast(t('common.error'), 'error'))
       .finally(() => setLoading(false))
   }, [page])
 

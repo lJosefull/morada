@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
+import { useToastStore } from '../store/toast'
 import type { Inquiry } from '../types'
 import { LoadingSpinner } from './LoadingSpinner'
 
@@ -23,6 +24,7 @@ const statusOptions = ['new', 'contacted', 'interested', 'not_interested', 'conv
 
 export default function InquiryDetail({ inquiryId, onClose, onStatusChange }: InquiryDetailProps) {
   const { t } = useTranslation()
+  const addToast = useToastStore((s) => s.addToast)
   const [inquiry, setInquiry] = useState<Inquiry | null>(null)
   const [loading, setLoading] = useState(true)
   const [notes, setNotes] = useState('')
@@ -37,7 +39,7 @@ export default function InquiryDetail({ inquiryId, onClose, onStatusChange }: In
         setInquiry(data)
         setNotes(data.notes || '')
       })
-      .catch(() => {})
+      .catch(() => addToast(t('common.error'), 'error'))
       .finally(() => setLoading(false))
   }, [inquiryId])
 
@@ -49,7 +51,7 @@ export default function InquiryDetail({ inquiryId, onClose, onStatusChange }: In
       onStatusChange(inquiryId, newStatus)
       setInquiry({ ...inquiry, status: newStatus as Inquiry['status'] })
     } catch {
-      // silent
+      addToast(t('common.error'), 'error')
     } finally {
       setChangingStatus(false)
     }
@@ -62,7 +64,7 @@ export default function InquiryDetail({ inquiryId, onClose, onStatusChange }: In
       setNotesSaved(true)
       setTimeout(() => setNotesSaved(false), 2000)
     } catch {
-      // silent
+      addToast(t('common.error'), 'error')
     } finally {
       setSavingNotes(false)
     }

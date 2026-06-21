@@ -41,6 +41,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
     title: '',
     description: '',
     price: '',
+    currency: 'CLP',
     propertyType: 'house',
     listingType: 'sale',
     bedrooms: '',
@@ -58,6 +59,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
         title: property.title || '',
         description: property.description || '',
         price: property.price?.toString() || '',
+        currency: property.currency || 'CLP',
         propertyType: property.propertyType || 'house',
         listingType: property.listingType || 'sale',
         bedrooms: property.bedrooms?.toString() || '',
@@ -102,6 +104,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
         title: formData.title.trim(),
         description: formData.description.trim(),
         price: Number(formData.price),
+        currency: formData.currency,
         propertyType: formData.propertyType,
         listingType: formData.listingType,
         bedrooms: formData.bedrooms ? Number(formData.bedrooms) : undefined,
@@ -224,14 +227,28 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-                {t('property.price')} <span className="text-red-500">*</span>
-              </label>
-              <input type="number" id="price" name="price" value={formData.price} onChange={handleChange}
-                className={fieldClass('price')} min="0" placeholder={t('property.price')}
-              />
-              {errors.price && <p className="mt-1 text-sm text-red-600">{errors.price}</p>}
+            <div className="col-span-2 grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+                  {t('property.price')} <span className="text-red-500">*</span>
+                </label>
+                <input type="number" id="price" name="price" value={formData.price} onChange={handleChange}
+                  className={fieldClass('price')} min="0" placeholder={t('property.price')}
+                />
+                {errors.price && <p className="mt-1 text-sm text-red-600">{errors.price}</p>}
+              </div>
+              <div>
+                <label htmlFor="currency" className="block text-sm font-medium text-gray-700">
+                  {t('property.currency')}
+                </label>
+                <select id="currency" name="currency" value={formData.currency} onChange={handleChange}
+                  className={fieldClass('')}
+                >
+                  <option value="CLP">CLP</option>
+                  <option value="USD">USD</option>
+                  <option value="UF">UF</option>
+                </select>
+              </div>
             </div>
             <div>
               <label htmlFor="propertyType" className="block text-sm font-medium text-gray-700">{t('property.type')}</label>

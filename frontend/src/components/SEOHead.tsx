@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async'
 
-const SITE_URL = 'https://morada.viewsoft.com.co'
+const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://morada.viewsoft.com.co'
 const SITE_NAME = 'Morada'
 const DEFAULT_DESCRIPTION = 'Marketplace inmobiliario inteligente — encuentra la propiedad ideal con Morada'
 

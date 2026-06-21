@@ -47,6 +47,7 @@ export default function PropertyDetailPage() {
   const addToast = useToastStore((s) => s.addToast)
   const [alsoViewed, setAlsoViewed] = useState<Property[]>([])
   const [isFollowing, setIsFollowing] = useState(false)
+  const [followLoading, setFollowLoading] = useState(false)
 
   const isOwner = property && user && property.userId === user.id
 
@@ -62,6 +63,8 @@ export default function PropertyDetailPage() {
       })
       .finally(() => setLoading(false))
     
+    api.post(`/properties/${id}/view`).catch(() => {})
+
     api.get<Property[]>(`/properties/${id}/also-viewed`)
       .then(({ data }) => setAlsoViewed(data))
       .catch(() => {})
@@ -376,50 +379,60 @@ export default function PropertyDetailPage() {
                 </div>
                 {!isOwner && user && (
                   <button
+                    disabled={followLoading}
                     onClick={async () => {
+                      setFollowLoading(true)
                       try {
                         const { data } = await api.post<{ following: boolean }>('/follow/toggle', { userId: property.userId })
                         setIsFollowing(data.following)
                         addToast(
-                          data.following ? `Following ${property.user?.name || 'agent'}` : 'Unfollowed',
+                          data.following ? `Siguiendo a ${property.user?.name || 'agente'}` : 'Dejaste de seguir',
                           data.following ? 'success' : 'info',
                         )
-                      } catch { /* ignore */ }
+                      } catch { addToast(t('common.error'), 'error') }
+                      finally { setFollowLoading(false) }
                     }}
-                    className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors disabled:opacity-50 ${
                       isFollowing
                         ? 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600'
                         : 'bg-blue-600 text-white hover:bg-blue-700'
                     }`}
                   >
-                    {isFollowing ? 'Following' : 'Follow'}
+                    {followLoading ? (
+                      <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                    ) : isFollowing ? 'Following' : 'Follow'}
                   </button>
                 )}
               </div>
 
-            <div className="space-y-3">
-              <p className="text-sm text-gray-600 font-medium">{t('property.interested')}</p>
-              <a
-                href={`mailto:${property.user?.email || 'contact@realestate.com'}?subject=Inquiry about ${property.title}`}
-                className="flex items-center justify-center gap-2 w-full bg-blue-600 text-white py-2.5 px-4 rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                {t('property.sendInquiry')}
-              </a>
-              {property.user?.phone && (
+            {!isOwner && (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-600 font-medium">{t('property.interested')}</p>
                 <a
-                  href={`tel:${property.user.phone}`}
-                  className="flex items-center justify-center gap-2 w-full bg-white text-gray-700 py-2.5 px-4 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors font-medium text-sm"
+                  href={`mailto:${property.user?.email || 'contact@realestate.com'}?subject=Inquiry about ${property.title}`}
+                  className="flex items-center justify-center gap-2 w-full bg-blue-600 text-white py-2.5 px-4 rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
-                  {property.user.phone}
+                  {t('property.sendInquiry')}
                 </a>
-              )}
-            </div>
+                {property.user?.phone && (
+                  <a
+                    href={`tel:${property.user.phone}`}
+                    className="flex items-center justify-center gap-2 w-full bg-white text-gray-700 py-2.5 px-4 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors font-medium text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    {property.user.phone}
+                  </a>
+                )}
+              </div>
+            )}
 
             {propertyStats && (
               <div className="mt-4 pt-4 border-t border-gray-100">
@@ -442,7 +455,7 @@ export default function PropertyDetailPage() {
                       }
                       api.post('/favorites/toggle', { propertyId: property.id })
                         .then(() => setIsFavorite(!isFavorite))
-                        .catch(() => {})
+                        .catch(() => addToast(t('common.error'), 'error'))
                     }}
                     className={`flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl transition-colors font-medium text-sm ${
                       isFavorite
@@ -459,7 +472,7 @@ export default function PropertyDetailPage() {
                 <div className="mt-3">
                   <ShareButton
                     title={property.aiTitle || property.title}
-                    url={`/og/${property.id}`}
+                    url={`/property/${property.id}`}
                     description={property.description.slice(0, 200)}
                   />
                 </div>
@@ -565,7 +578,7 @@ export default function PropertyDetailPage() {
               >
                 <div className="h-36 bg-gradient-to-br from-gray-100 to-gray-200">
                   {ap.images?.[0] && (
-                    <img src={ap.images[0].url} alt={ap.title} className="w-full h-full object-cover" />
+                    <img src={ap.images[0].url} alt={ap.title} className="w-full h-full object-cover" loading="lazy" />
                   )}
                 </div>
                 <div className="p-3">

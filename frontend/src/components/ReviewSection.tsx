@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { useAuthStore } from '../store/auth'
+import { useToastStore } from '../store/toast'
 import type { Review, ReviewStats } from '../types'
 import StarRating from './StarRating'
 import ReviewForm from './ReviewForm'
@@ -15,6 +16,7 @@ interface ReviewSectionProps {
 export default function ReviewSection({ propertyId, propertyUserId }: ReviewSectionProps) {
   const { t } = useTranslation()
   const { user } = useAuthStore()
+  const addToast = useToastStore((s) => s.addToast)
   const [reviews, setReviews] = useState<Review[]>([])
   const [stats, setStats] = useState<ReviewStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -39,7 +41,7 @@ export default function ReviewSection({ propertyId, propertyUserId }: ReviewSect
       setReviews(reviewsRes.data.data)
       setTotal(reviewsRes.data.total)
       setStats(statsRes.data)
-    } catch (err) {
+    } catch {
       // silently fail
     } finally {
       setLoading(false)
@@ -138,13 +140,14 @@ export default function ReviewSection({ propertyId, propertyUserId }: ReviewSect
             <h3 className="text-base font-semibold text-blue-900">{t('reviews.yourReview')}</h3>
             <div className="flex gap-2">
               <button
-                onClick={() => {
-                  if (window.confirm('Delete your review?')) {
-                    api.delete(`/properties/${propertyId}/reviews/mine` as any)
-                      .then(() => handleReviewSubmitted())
-                      .catch(() => {})
-                  }
-                }}
+                onClick={() =>
+                  api.delete(`/properties/${propertyId}/reviews/mine` as any)
+                    .then(() => {
+                      handleReviewSubmitted()
+                      addToast(t('common.delete'), 'success')
+                    })
+                    .catch(() => addToast(t('common.error'), 'error'))
+                }
                 className="text-xs text-red-600 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors"
               >
                 {t('common.delete')}
@@ -227,6 +230,7 @@ function ReviewCard({
   const [replyText, setReplyText] = useState('')
   const [replying, setReplying] = useState(false)
   const { t } = useTranslation()
+  const addToast = useToastStore((s) => s.addToast)
   const [replyError, setReplyError] = useState('')
 
   const hasReply = !!review.reply
@@ -256,15 +260,14 @@ function ReviewCard({
   }
 
   const handleDeleteReply = async () => {
-    if (!window.confirm('Delete your reply to this review?')) return
-
     try {
       await api.delete(`/properties/${propertyId}/reviews/mine/reply` as any, {
         data: { reviewId: review.id },
       } as any)
       onReplyChanged()
+      addToast(t('common.delete'), 'success')
     } catch {
-      // silently fail
+      addToast(t('common.error'), 'error')
     }
   }
 

@@ -27,6 +27,10 @@
     "registerSubtitle": "Regístrate para comenzar",
     "email": "Correo electrónico",
     "password": "Contraseña",
+    "currentPassword": "Contraseña actual",
+    "newPassword": "Nueva contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "passwordHint": "Usa una contraseña segura con al menos 6 caracteres",
     "name": "Nombre",
     "phone": "Teléfono",
     "loginButton": "Entrar",
@@ -93,6 +97,7 @@
     "uploadImages": "Subir imágenes",
     "dragAndDrop": "Arrastra y suelta imágenes aquí",
     "maxFileSize": "Tamaño máximo: 5MB",
+    "currency": "Moneda",
     "propertyDetails": "Detalles de la propiedad",
     "rooms": "Habitaciones"
   },
@@ -269,7 +274,8 @@
     "page": "Página",
     "of": "de",
     "grid": "Cuadrícula",
-    "list": "Lista"
+    "list": "Lista",
+    "date": "Fecha"
   },
   "map": {
     "title": "Ubicación",

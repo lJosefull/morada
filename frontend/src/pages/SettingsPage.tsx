@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { useAuthStore } from '../store/auth'
+import VersionBadge from '../components/VersionBadge'
 
 type TabId = 'profile' | 'security'
 
@@ -210,9 +211,7 @@ export default function SettingsPage() {
                   <p className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">
                     Versión
                   </p>
-                  <p className="text-sm text-gray-600 mt-0.5">
-                    v1.0.0
-                  </p>
+                  <VersionBadge className="mt-0.5" />
                 </div>
               </div>
             </div>
@@ -386,14 +385,14 @@ export default function SettingsPage() {
                 >
                   <div className="max-w-md">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t('auth.password')}
+                        {t('auth.currentPassword')}
                       </label>
                     <input
                       type="password"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                      placeholder={t('auth.password')}
+                      placeholder={t('auth.currentPassword')}
                       required
                     />
                   </div>
@@ -401,28 +400,28 @@ export default function SettingsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t('auth.password')}
+                        {t('auth.newPassword')}
                       </label>
                       <input
                         type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                        placeholder={t('auth.password')}
+                        placeholder={t('auth.newPassword')}
                         minLength={6}
                         required
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t('auth.password')}
+                        {t('auth.confirmPassword')}
                       </label>
                       <input
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                        placeholder={t('auth.password')}
+                        placeholder={t('auth.confirmPassword')}
                         minLength={6}
                         required
                       />
@@ -445,7 +444,7 @@ export default function SettingsPage() {
                       />
                     </svg>
                     <p className="text-sm text-amber-800">
-                      {t('auth.password')}
+                      {t('auth.passwordHint')}
                     </p>
                   </div>
 

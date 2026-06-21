@@ -98,7 +98,7 @@ export default function MyInquiriesPage() {
                   {t('property.title')}
                 </th>
                 <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                  {t('common.noData')}
+                  {t('common.date')}
                 </th>
                 <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
                   {t('property.status')}

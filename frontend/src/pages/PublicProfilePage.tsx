@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import type { Property } from '../types'
@@ -17,6 +17,7 @@ interface PublicProfile {
 
 export default function PublicProfilePage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { userId } = useParams<{ userId: string }>()
   const [profile, setProfile] = useState<PublicProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -123,7 +124,7 @@ export default function PublicProfilePage() {
               <PropertyCard
                 key={property.id}
                 property={property}
-                onView={() => window.location.href = `/property/${property.id}`}
+                onView={() => navigate(`/property/${property.id}`)}
               />
             ))}
           </div>

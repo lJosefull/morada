@@ -16,7 +16,9 @@ export default function ContactForm({ propertyId, propertyTitle }: ContactFormPr
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState(
+    `Hola, me interesa la propiedad: ${propertyTitle}. Me gustaría recibir más información.`
+  )
   const [status, setStatus] = useState<FormStatus>('idle')
   const [errorMsg, setErrorMsg] = useState('')
 

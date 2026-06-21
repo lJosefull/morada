@@ -1,4 +1,4 @@
-const APP_VERSION = '1.0.0'
+const APP_VERSION = '1.1.0'
 const APP_BUILD = '20260620'
 
 export default function VersionBadge({ className = '' }: { className?: string }) {

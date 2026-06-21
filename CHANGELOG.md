@@ -87,9 +87,38 @@ Ver [CHANGELOG detallado](./CHANGELOG.md#100) para la lista completa de cambios 
 
 ---
 
-## [1.1.0] — Planeado
+## [1.1.0] — 2026-06-20
 
-### Pendiente
+### Auditoría y Correcciones Frontend 🐛
+
+Release de mantenimiento basada en una auditoría completa del frontend que
+identificó y corrigió 18 issues.
+
+#### Correcciones
+- **View tracking:** Agregada llamada a `POST /properties/:id/view` en PropertyDetailPage
+- **Currency:** Agregado selector de moneda (CLP/USD/UF) en PropertyForm
+- **ShareButton URL:** Corregida de `/og/{id}` a `/property/{id}`
+- **Owner block:** Propietario ya no puede contactarse a sí mismo
+- **Labels password:** 3 campos ahora con etiquetas únicas (actual, nueva, confirmar)
+- **Columna tabla:** Encabezado usaba `t('common.noData')` → corregido a "Fecha"
+- **Catches silenciosos:** Toast de error en favoritos, follow, consultas, feed
+- **window.confirm:** Reemplazado por toasts + acción directa en ReviewSection
+
+#### Mejoras
+- **Paginación en favoritos** (12 por página)
+- **PropertyCard reutilizado** en FavoritesPage (elimina duplicación de layout)
+- **Loading state** en botón Follow
+- **Template de mensaje** predefinido en ContactForm
+- **SITE_URL** movida a variable de entorno `VITE_SITE_URL`
+- **Navegación SPA** (`useNavigate` en lugar de `window.location.href`)
+- **Lazy loading** en imágenes de galería y "también vieron"
+- **formatCurrency** con locale dinámico según moneda
+
+#### Limpieza
+- Componentes eliminados: `SearchFilters.tsx`, `SearchBar.tsx`, `ErrorMessage.tsx`
+- `FRONTEND_REVIEW.md` con inventario completo de issues
+
+#### Pendiente para próximas versiones
 - [ ] Integración de pagos (Mercado Pago)
 - [ ] Facturación electrónica (DIAN)
 - [ ] Verificación de email
@@ -98,6 +127,10 @@ Ver [CHANGELOG detallado](./CHANGELOG.md#100) para la lista completa de cambios 
 - [ ] Sistema de reembolsos
 - [ ] Contratos SaaS para inmobiliarias
 - [ ] SLA (Acuerdo de Nivel de Servicio)
+- [ ] Frontend tests (Vitest + React Testing Library)
+- [ ] React Query / SWR para cache de datos
+- [ ] Amenities en modelo y formulario (parking, pool, gym)
+- [ ] Mapa interactivo para selección de ubicación
 
 ---
 
