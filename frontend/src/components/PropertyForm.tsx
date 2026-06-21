@@ -36,6 +36,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [uploading, setUploading] = useState(false)
   const [images, setImages] = useState<Image[]>(property?.images || [])
+  const [pendingFiles, setPendingFiles] = useState<File[]>([])
 
   const [formData, setFormData] = useState({
     title: '',
@@ -122,8 +123,14 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
         navigate(`/property/${property.id}`)
       } else {
         const { data: newProperty } = await api.post<Property>('/properties', data)
+        for (const file of pendingFiles) {
+          const fd = new FormData()
+          fd.append('image', file)
+          await api.post(`/properties/${newProperty.id}/images`, fd)
+        }
+        setPendingFiles([])
         addToast(t('common.submit'), 'success')
-        navigate(`/property/${newProperty.id}/edit`)
+        navigate(`/property/${newProperty.id}`)
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save property'
@@ -144,7 +151,13 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !property) return
+    if (!file) return
+
+    if (!property || !isEditing) {
+      setPendingFiles((prev) => [...prev, file!])
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
 
     setUploading(true)
     try {
@@ -161,6 +174,10 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
+  }
+
+  const handleRemovePending = (index: number) => {
+    setPendingFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
   const handleDeleteImage = async (imageId: string) => {
@@ -326,69 +343,80 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
 
           <div className="border-t border-gray-100 pt-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">{t('property.images')}</label>
-            {isEditing && property ? (
-              <div className="space-y-4">
-                <div className="flex flex-wrap gap-3">
-                  {images.map((img) => (
-                    <div key={img.id} className="relative group w-24 h-24 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
-                      <img src={img.url} alt="" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
-                        {!img.isPrimary && (
-                          <button type="button" onClick={() => handleSetPrimary(img.id)}
-                            className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
-                            title={t('property.uploadImages')}
-                          >
-                            <svg className="w-3.5 h-3.5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                            </svg>
-                          </button>
-                        )}
-                        <button type="button" onClick={() => handleDeleteImage(img.id)}
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-3">
+                {isEditing && images.map((img) => (
+                  <div key={img.id} className="relative group w-24 h-24 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
+                    <img src={img.url} alt="" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+                      {!img.isPrimary && (
+                        <button type="button" onClick={() => handleSetPrimary(img.id)}
                           className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
-                          title={t('common.delete')}
+                          title={t('property.uploadImages')}
                         >
-                          <svg className="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          <svg className="w-3.5 h-3.5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                           </svg>
                         </button>
-                      </div>
-                      {img.isPrimary && (
-                        <span className="absolute top-1 left-1 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-1.5 py-0.5 rounded">
-                          {t('common.view')}
-                        </span>
                       )}
-                    </div>
-                  ))}
-                  <label className={`w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 cursor-pointer flex flex-col items-center justify-center gap-1 transition-colors flex-shrink-0 ${uploading ? 'pointer-events-none opacity-50' : ''}`}>
-                    <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleUpload} className="hidden" />
-                    {uploading ? (
-                      <svg className="w-5 h-5 text-gray-400 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                      </svg>
-                    ) : (
-                      <>
-                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      <button type="button" onClick={() => handleDeleteImage(img.id)}
+                        className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
+                        title={t('common.delete')}
+                      >
+                        <svg className="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
-                        <span className="text-[10px] text-gray-400 font-medium">{t('property.uploadImages')}</span>
-                      </>
+                      </button>
+                    </div>
+                    {img.isPrimary && (
+                      <span className="absolute top-1 left-1 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                        {t('common.view')}
+                      </span>
                     )}
-                  </label>
-                </div>
-                <p className="text-xs text-gray-400">{t('property.maxFileSize')}</p>
-                {errors.images && (
-                  <p className="text-sm text-red-500 mt-2">{errors.images}</p>
-                )}
+                  </div>
+                ))}
+                {!isEditing && pendingFiles.map((file, i) => (
+                  <div key={i} className="relative group w-24 h-24 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
+                    <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <button type="button" onClick={() => handleRemovePending(i)}
+                        className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
+                        title={t('common.delete')}
+                      >
+                        <svg className="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <label className={`w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 cursor-pointer flex flex-col items-center justify-center gap-1 transition-colors flex-shrink-0 ${uploading ? 'pointer-events-none opacity-50' : ''}`}>
+                  <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleUpload} className="hidden" />
+                  {uploading ? (
+                    <svg className="w-5 h-5 text-gray-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      <span className="text-[10px] text-gray-400 font-medium">{t('property.uploadImages')}</span>
+                    </>
+                  )}
+                </label>
               </div>
-            ) : (
-              <div className="bg-gray-50 rounded-xl p-6 text-center">
-                <svg className="w-10 h-10 mx-auto text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <p className="text-sm text-gray-500">{t('property.uploadImages')}</p>
-              </div>
-            )}
+              {!isEditing && pendingFiles.length > 0 && (
+                <p className="text-xs text-blue-600">
+                  {pendingFiles.length} imagen(es) seleccionada(s) — se subirán al crear la propiedad
+                </p>
+              )}
+              <p className="text-xs text-gray-400">{t('property.maxFileSize')}</p>
+              {errors.images && (
+                <p className="text-sm text-red-500 mt-2">{errors.images}</p>
+              )}
+            </div>
           </div>
         </div>
 
