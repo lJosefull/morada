@@ -17,7 +17,7 @@ export interface Property {
   description: string
   price: number
   currency: string
-  propertyType: 'house' | 'apartment' | 'land' | 'commercial'
+  propertyType: 'house' | 'apartment' | 'office' | 'land' | 'lote' | 'commercial' | 'warehouse'
   listingType: 'sale' | 'rent'
   bedrooms: number | null
   bathrooms: number | null
