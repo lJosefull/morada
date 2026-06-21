@@ -14,8 +14,11 @@ import { Type, Transform } from 'class-transformer';
 export enum PropertyType {
   HOUSE = 'house',
   APARTMENT = 'apartment',
+  OFFICE = 'office',
   LAND = 'land',
+  LOTE = 'lote',
   COMMERCIAL = 'commercial',
+  WAREHOUSE = 'warehouse',
 }
 
 export enum ListingType {
@@ -99,6 +102,11 @@ export class CreatePropertyDto {
   @Type(() => Number)
   longitude?: number;
 
+  @ApiPropertyOptional({ default: 'COP' })
+  @IsOptional()
+  @IsString()
+  currency?: string;
+
   @ApiPropertyOptional({ enum: PropertyStatus })
   @IsOptional()
   @IsEnum(PropertyStatus)
@@ -178,6 +186,11 @@ export class UpdatePropertyDto {
   @IsNumber()
   @Type(() => Number)
   longitude?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  currency?: string;
 
   @ApiPropertyOptional({ enum: PropertyStatus })
   @IsOptional()

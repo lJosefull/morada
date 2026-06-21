@@ -47,7 +47,7 @@ export interface IProperty {
   updatedAt: Date;
 }
 
-export type PropertyType = 'house' | 'apartment' | 'land' | 'commercial';
+export type PropertyType = 'house' | 'apartment' | 'office' | 'land' | 'lote' | 'commercial' | 'warehouse';
 export type ListingType = 'sale' | 'rent';
 export type AiStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
