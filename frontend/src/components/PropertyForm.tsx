@@ -14,8 +14,11 @@ interface PropertyFormProps {
 const typeLabels: Record<string, string> = {
   house: 'Casa',
   apartment: 'Departamento',
+  office: 'Oficina',
   land: 'Terreno',
-  commercial: 'Comercial',
+  lote: 'Lote',
+  commercial: 'Local comercial',
+  warehouse: 'Bodega',
 }
 
 const typeIcons: Record<string, string> = {
@@ -23,6 +26,9 @@ const typeIcons: Record<string, string> = {
   apartment: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
   land: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
   commercial: 'M21 13.255A23.93 23.93 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+  office: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+  warehouse: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10',
+  lote: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
 }
 
 const DESCRIPTION_MAX = 2000
@@ -275,8 +281,11 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
               >
                 <option value="house">{t('property.propertyType.house')}</option>
                 <option value="apartment">{t('property.propertyType.apartment')}</option>
+                <option value="office">{t('property.propertyType.office')}</option>
                 <option value="land">{t('property.propertyType.land')}</option>
+                <option value="lote">{t('property.propertyType.lote')}</option>
                 <option value="commercial">{t('property.propertyType.commercial')}</option>
+                <option value="warehouse">{t('property.propertyType.warehouse')}</option>
               </select>
             </div>
             <div>

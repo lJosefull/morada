@@ -89,7 +89,8 @@
       "office": "Oficina",
       "commercial": "Local comercial",
       "land": "Terreno",
-      "warehouse": "Bodega"
+      "warehouse": "Bodega",
+      "lote": "Lote"
     },
     "forSale": "En venta",
     "forRent": "En arriendo",
