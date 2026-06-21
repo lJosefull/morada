@@ -5,7 +5,7 @@ import { api } from '../lib/api'
 import type { Property } from '../types'
 import { SEOHead } from '../components/SEOHead'
 import { Pagination } from '../components/Pagination'
-import { formatCurrency } from '../lib/utils'
+import { formatCurrency, getImageUrl } from '../lib/utils'
 import AnimatedLink from '../components/AnimatedLink'
 
 type ViewMode = 'grid' | 'list'
@@ -684,7 +684,7 @@ function PropertyGridCard({ property: p, t }: { property: Property; t: (key: str
       <div className="relative bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
         {p.images?.[0] ? (
           <img
-            src={p.images[0].url}
+            src={getImageUrl(p.images[0].url)}
             alt={p.title}
             className="w-full object-cover group-hover:scale-105 transition-transform duration-700"
           />
@@ -760,7 +760,7 @@ function PropertyListCard({ property: p, t }: { property: Property; t: (key: str
         <div className="sm:w-56 h-44 sm:h-auto bg-gradient-to-br from-blue-100 to-indigo-100 shrink-0 relative overflow-hidden">
           {p.images?.[0] ? (
             <img
-              src={p.images[0].url}
+              src={getImageUrl(p.images[0].url)}
               alt={p.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />

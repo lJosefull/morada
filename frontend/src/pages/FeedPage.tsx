@@ -6,7 +6,7 @@ import type { Property } from '../types'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 import { SEOHead } from '../components/SEOHead'
 import { useAuthStore } from '../store/auth'
-import { formatCurrency } from '../lib/utils'
+import { formatCurrency, getImageUrl } from '../lib/utils'
 import { Link } from 'react-router-dom'
 
 interface FeedProperty extends Property {
@@ -148,7 +148,7 @@ export default function FeedPage() {
               >
                 <div className="relative bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                   {p.images?.[0] ? (
-                    <img src={p.images[0].url} alt={p.title} className="w-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <img src={getImageUrl(p.images[0].url)} alt={p.title} className="w-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   ) : (
                     <div className="w-full aspect-[4/3] flex items-center justify-center">
                       <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">

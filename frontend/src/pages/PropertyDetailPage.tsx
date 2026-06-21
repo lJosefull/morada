@@ -5,7 +5,7 @@ import { api } from '../lib/api'
 import { useAuthStore } from '../store/auth'
 import { useToastStore } from '../store/toast'
 import type { Property, PropertyStats } from '../types'
-import { formatCurrency } from '../lib/utils'
+import { formatCurrency, getImageUrl } from '../lib/utils'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 import { SEOHead } from '../components/SEOHead'
 import { PropertyMap } from '../components/PropertyMap'
@@ -134,7 +134,7 @@ export default function PropertyDetailPage() {
               {property.images && property.images.length > 0 ? (
                 <>
                   <img
-                    src={property.images[currentImage].url}
+                    src={getImageUrl(property.images[currentImage].url)}
                     alt={`${property.title} - image ${currentImage + 1}`}
                     className="w-full h-full object-cover transition-opacity duration-300"
                   />
@@ -224,7 +224,7 @@ export default function PropertyDetailPage() {
                         : 'border-transparent opacity-60 hover:opacity-80'
                     }`}
                   >
-                    <img src={img.url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    <img src={getImageUrl(img.url)} alt="" className="w-full h-full object-cover" loading="lazy" />
                   </button>
                 ))}
               </div>
@@ -578,7 +578,7 @@ export default function PropertyDetailPage() {
               >
                 <div className="h-36 bg-gradient-to-br from-gray-100 to-gray-200">
                   {ap.images?.[0] && (
-                    <img src={ap.images[0].url} alt={ap.title} className="w-full h-full object-cover" loading="lazy" />
+                    <img src={getImageUrl(ap.images[0].url)} alt={ap.title} className="w-full h-full object-cover" loading="lazy" />
                   )}
                 </div>
                 <div className="p-3">

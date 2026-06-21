@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Property } from '../types'
-import { formatCurrency } from '../lib/utils'
+import { formatCurrency, getImageUrl } from '../lib/utils'
 
 interface PropertyCardProps {
   property: Property
@@ -39,7 +39,7 @@ export function PropertyCard({ property, onEdit, onDelete, onView, isFavorite, o
           </div>
         ) : (
           <img
-            src={property.images?.[0]?.url || defaultImage}
+            src={getImageUrl(property.images?.[0]?.url) || defaultImage}
             alt={property.title}
             className={`w-full h-full object-cover transition-opacity duration-300 ${
               isImageLoaded ? 'opacity-100' : 'opacity-0'
