@@ -5,7 +5,7 @@ import { api } from '../lib/api'
 import type { Property } from '../types'
 import { SEOHead } from '../components/SEOHead'
 import { Pagination } from '../components/Pagination'
-import { formatCurrency, getImageUrl } from '../lib/utils'
+import { formatCurrency, getImageUrl, handleImageError } from '../lib/utils'
 import AnimatedLink from '../components/AnimatedLink'
 
 type ViewMode = 'grid' | 'list'
@@ -687,6 +687,7 @@ function PropertyGridCard({ property: p, t }: { property: Property; t: (key: str
             src={getImageUrl(p.images[0].url)}
             alt={p.title}
             className="w-full object-cover group-hover:scale-105 transition-transform duration-700"
+            onError={handleImageError}
           />
         ) : (
           <div className="w-full aspect-[4/3] flex items-center justify-center">
@@ -763,6 +764,7 @@ function PropertyListCard({ property: p, t }: { property: Property; t: (key: str
               src={getImageUrl(p.images[0].url)}
               alt={p.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              onError={handleImageError}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">

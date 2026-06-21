@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
-import { formatCurrency, getImageUrl } from '../lib/utils'
+import { formatCurrency, getImageUrl, handleImageError } from '../lib/utils'
 import { useToastStore } from '../store/toast'
 import type { Property, Image } from '../types'
 
@@ -357,7 +357,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
               <div className="flex flex-wrap gap-3">
                 {isEditing && images.map((img) => (
                   <div key={img.id} className="relative group w-24 h-24 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
-                    <img src={getImageUrl(img.url)} alt="" className="w-full h-full object-cover" />
+                    <img src={getImageUrl(img.url)} alt="" className="w-full h-full object-cover" onError={handleImageError} />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
                       {!img.isPrimary && (
                         <button type="button" onClick={() => handleSetPrimary(img.id)}

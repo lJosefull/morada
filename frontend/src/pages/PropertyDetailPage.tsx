@@ -5,7 +5,7 @@ import { api } from '../lib/api'
 import { useAuthStore } from '../store/auth'
 import { useToastStore } from '../store/toast'
 import type { Property, PropertyStats } from '../types'
-import { formatCurrency, getImageUrl } from '../lib/utils'
+import { formatCurrency, getImageUrl, handleImageError } from '../lib/utils'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 import { SEOHead } from '../components/SEOHead'
 import { PropertyMap } from '../components/PropertyMap'
@@ -137,6 +137,7 @@ export default function PropertyDetailPage() {
                     src={getImageUrl(property.images[currentImage].url)}
                     alt={`${property.title} - image ${currentImage + 1}`}
                     className="w-full h-full object-cover transition-opacity duration-300"
+                    onError={handleImageError}
                   />
                   {property.images.length > 1 && (
                     <>
@@ -224,7 +225,7 @@ export default function PropertyDetailPage() {
                         : 'border-transparent opacity-60 hover:opacity-80'
                     }`}
                   >
-                    <img src={getImageUrl(img.url)} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    <img src={getImageUrl(img.url)} alt="" className="w-full h-full object-cover" loading="lazy" onError={handleImageError} />
                   </button>
                 ))}
               </div>
@@ -578,7 +579,7 @@ export default function PropertyDetailPage() {
               >
                 <div className="h-36 bg-gradient-to-br from-gray-100 to-gray-200">
                   {ap.images?.[0] && (
-                    <img src={getImageUrl(ap.images[0].url)} alt={ap.title} className="w-full h-full object-cover" loading="lazy" />
+                    <img src={getImageUrl(ap.images[0].url)} alt={ap.title} className="w-full h-full object-cover" loading="lazy" onError={handleImageError} />
                   )}
                 </div>
                 <div className="p-3">
