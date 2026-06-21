@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { formatCurrency, getImageUrl, handleImageError } from '../lib/utils'
 import { useToastStore } from '../store/toast'
+import LocationAutocomplete from './LocationAutocomplete'
 import type { Property, Image } from '../types'
 
 interface PropertyFormProps {
@@ -301,8 +302,14 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
               <label htmlFor="location" className="block text-sm font-medium text-gray-700">
                 {t('property.location')} <span className="text-red-500">*</span>
               </label>
-              <input type="text" id="location" name="location" value={formData.location} onChange={handleChange}
-                className={fieldClass('location')} placeholder={t('property.location')}
+              <LocationAutocomplete
+                value={formData.location}
+                onChange={(data) => {
+                  setFormData((prev) => ({ ...prev, ...data }))
+                  if (data.location) setErrors((prev) => ({ ...prev, location: '' }))
+                }}
+                className={fieldClass('location')}
+                placeholder={t('property.location')}
               />
               {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location}</p>}
             </div>
