@@ -26,7 +26,6 @@ import { RecommendationsService } from './application/recommendations/recommenda
 import { FollowController } from './interfaces/follow/follow.controller';
 import { SeoController } from './interfaces/seo/seo.controller';
 import { FollowService } from './application/follow/follow.service';
-import { ServeStaticModule } from './infrastructure/upload/serve-static.module';
 import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
 
 @Module({
@@ -54,7 +53,6 @@ import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
     ]),
     PrismaModule,
     AuthInfrastructureModule,
-    ServeStaticModule,
   ],
   controllers: [
     AuthController,
