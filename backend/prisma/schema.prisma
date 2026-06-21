@@ -38,7 +38,7 @@ model Property {
   title        String
   description  String
   price        Float
-  currency     String   @default("CLP")
+  currency     String   @default("COP")
   propertyType String
   listingType  String
   bedrooms     Int?

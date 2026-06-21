@@ -42,7 +42,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
     title: '',
     description: '',
     price: '',
-    currency: 'CLP',
+    currency: 'COP',
     propertyType: 'house',
     listingType: 'sale',
     bedrooms: '',
@@ -60,7 +60,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
         title: property.title || '',
         description: property.description || '',
         price: property.price?.toString() || '',
-        currency: property.currency || 'CLP',
+        currency: property.currency || 'COP',
         propertyType: property.propertyType || 'house',
         listingType: property.listingType || 'sale',
         bedrooms: property.bedrooms?.toString() || '',
@@ -261,6 +261,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
                 <select id="currency" name="currency" value={formData.currency} onChange={handleChange}
                   className={fieldClass('')}
                 >
+                  <option value="COP">COP</option>
                   <option value="CLP">CLP</option>
                   <option value="USD">USD</option>
                   <option value="UF">UF</option>
