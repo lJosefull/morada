@@ -7,7 +7,6 @@ import {
   Body,
   HttpCode,
   HttpStatus,
-  ParseUUIDPipe,
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
@@ -24,7 +23,7 @@ export class ImagesController {
   @UploadFile('image')
   @ApiBearerAuth()
   async upload(
-    @Param('propertyId', ParseUUIDPipe) propertyId: string,
+    @Param('propertyId') propertyId: string,
     @Req() req: Request,
     @Body('isPrimary') isPrimary?: string,
   ) {
