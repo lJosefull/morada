@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
-import { join } from 'path';
+import { resolve } from 'path';
 import * as express from 'express';
 
 async function bootstrap() {
@@ -13,8 +13,10 @@ async function bootstrap() {
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
   // Serve uploaded files
-  const uploadsPath = join(process.cwd(), process.env.UPLOAD_DIR || './uploads');
-  console.log('Serving uploads from:', uploadsPath);
+  const uploadsPath = resolve(process.env.UPLOAD_DIR || './uploads');
+  console.log('[bootstrap] CWD:', process.cwd());
+  console.log('[bootstrap] UPLOAD_DIR env:', process.env.UPLOAD_DIR);
+  console.log('[bootstrap] Serving uploads from:', uploadsPath);
   app.use('/uploads', express.static(uploadsPath));
 
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
