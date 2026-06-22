@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams, Link } from 'react-router-dom'
 
 const LEGAL_FILES: Record<string, { title: string; path: string }> = {
@@ -13,6 +14,7 @@ const LEGAL_FILES: Record<string, { title: string; path: string }> = {
 }
 
 export default function LegalPage() {
+  const { t } = useTranslation()
   const { docId } = useParams<{ docId: string }>()
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
@@ -56,7 +58,7 @@ export default function LegalPage() {
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-gray-400">Cargando documento...</p>
+          <p className="text-sm text-gray-400">{t('legal.loading')}</p>
         </div>
       </div>
     )
@@ -65,10 +67,10 @@ export default function LegalPage() {
   if (error || !doc) {
     return (
       <div className="max-w-2xl mx-auto text-center py-16">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Documento no encontrado</h1>
-        <p className="text-gray-500 mb-6">El documento legal solicitado no está disponible.</p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('legal.notFound')}</h1>
+        <p className="text-gray-500 mb-6">{t('legal.notFoundHint')}</p>
         <Link to="/legal/terms" className="text-blue-600 hover:underline">
-          Ver Términos y Condiciones
+          {t('legal.viewTerms')}
         </Link>
       </div>
     )

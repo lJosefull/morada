@@ -88,9 +88,9 @@ export default function SettingsPage() {
         await api.patch('/users/me', body)
       }
       await fetchUser()
-      setProfileSuccess('Profile updated successfully!')
+      setProfileSuccess(t('common.profileUpdated'))
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to update profile'
+      const message = err instanceof Error ? err.message : t('common.profileUpdateError')
       setProfileError(message)
     } finally {
       setProfileSaving(false)
@@ -103,19 +103,19 @@ export default function SettingsPage() {
     setPasswordError(null)
     setPasswordSuccess(null)
     if (newPassword !== confirmPassword)
-      return void setPasswordError('Passwords do not match')
+      return void setPasswordError(t('common.passwordsDoNotMatch'))
     if (newPassword.length < 6)
-      return void setPasswordError('Password must be at least 6 characters')
+      return void setPasswordError(t('common.passwordTooShort'))
     setPasswordSaving(true)
     try {
       await api.patch('/users/me/password', { currentPassword, newPassword })
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
-      setPasswordSuccess('Password updated successfully')
+      setPasswordSuccess(t('common.passwordUpdated'))
     } catch (err) {
       setPasswordError(
-        err instanceof Error ? err.message : 'Current password is incorrect'
+        err instanceof Error ? err.message : t('common.incorrectPassword')
       )
     } finally {
       setPasswordSaving(false)

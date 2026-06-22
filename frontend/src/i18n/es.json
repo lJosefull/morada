@@ -153,6 +153,9 @@
   },
   "dashboard": {
     "title": "Panel de control",
+    "greetingMorning": "Buenos días",
+    "greetingAfternoon": "Buenas tardes",
+    "greetingEvening": "Buenas noches",
     "welcome": "Bienvenido",
     "totalProperties": "Total propiedades",
     "activeProperties": "Propiedades activas",
@@ -163,7 +166,15 @@
     "noActivity": "Sin actividad reciente",
     "quickActions": "Acciones rápidas",
     "viewProperties": "Ver propiedades",
-    "createProperty": "Publicar propiedad"
+    "createProperty": "Publicar propiedad",
+    "statusNew": "Nueva",
+    "statusContacted": "Contactado",
+    "statusInterested": "Interesado",
+    "statusNotInterested": "No Interesado",
+    "statusConverted": "Convertido",
+    "planFree": "Gratuito",
+    "planAgent": "Agente",
+    "planAgency": "Inmobiliaria"
   },
   "settings": {
     "title": "Configuración",
@@ -241,6 +252,12 @@
     "markAllRead": "Marcar todas como leídas",
     "noNotifications": "Sin notificaciones nuevas"
   },
+  "legal": {
+    "loading": "Cargando documento...",
+    "notFound": "Documento no encontrado",
+    "notFoundHint": "El documento legal solicitado no está disponible.",
+    "viewTerms": "Ver Términos y Condiciones"
+  },
   "common": {
     "loading": "Cargando...",
     "error": "Ha ocurrido un error",
@@ -277,7 +294,19 @@
     "of": "de",
     "grid": "Cuadrícula",
     "list": "Lista",
-    "date": "Fecha"
+    "date": "Fecha",
+    "saveError": "Error al guardar",
+    "uploadError": "Error al subir",
+    "deleteError": "Error al eliminar",
+    "loadError": "Error al cargar datos",
+    "sendError": "Error al enviar",
+    "profileUpdateError": "Error al actualizar perfil",
+    "passwordsDoNotMatch": "Las contraseñas no coinciden",
+    "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+    "passwordUpdated": "Contraseña actualizada correctamente",
+    "profileUpdated": "Perfil actualizado correctamente",
+    "passwordUpdateError": "Error al actualizar contraseña",
+    "incorrectPassword": "Contraseña actual incorrecta"
   },
   "map": {
     "title": "Ubicación",
@@ -287,6 +316,22 @@
     "success": "Operación exitosa",
     "error": "Error en la operación",
     "info": "Información"
+  },
+  "propertyDetail": {
+    "totalViews": "Total Vistas",
+    "thisWeek": "Esta Semana",
+    "dailyAvg": "Promedio Diario",
+    "viewsLast14": "Vistas (Últimos 14 días)",
+    "views": "vistas",
+    "trendingUp": "↑ Subiendo",
+    "trendingDown": "↓ Bajando",
+    "propertyId": "ID Propiedad",
+    "listedOn": "Publicada el",
+    "propertyOwner": "Propietario",
+    "following": "Siguiendo",
+    "follow": "Seguir",
+    "followingAgent": "Siguiendo a {{name}}",
+    "stoppedFollowing": "Dejaste de seguir"
   },
   "peopleAlsoViewed": {
     "title": "Personas también vieron"

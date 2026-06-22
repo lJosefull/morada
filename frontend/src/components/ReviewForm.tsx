@@ -45,7 +45,7 @@ export default function ReviewForm({ propertyId, mode, existingReview, onSuccess
       onSuccess()
     } catch (err) {
       setStatus('error')
-      setErrorMsg(err instanceof Error ? err.message : 'Failed to submit review')
+      setErrorMsg(err instanceof Error ? err.message : t('common.sendError'))
     }
   }
 

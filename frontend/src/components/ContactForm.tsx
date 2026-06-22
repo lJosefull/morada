@@ -50,7 +50,7 @@ export default function ContactForm({ propertyId, propertyTitle }: ContactFormPr
       }
     } catch (err) {
       setStatus('error')
-      setErrorMsg(err instanceof Error ? err.message : 'Failed to send message')
+      setErrorMsg(err instanceof Error ? err.message : t('common.sendError'))
     }
   }
 

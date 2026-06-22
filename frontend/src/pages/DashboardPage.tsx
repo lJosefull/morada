@@ -8,21 +8,19 @@ import type { Property, InquiryStats } from '../types'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 import { PropertyCard } from '../components/PropertyCard'
 
-type TimeGreeting = 'Good morning' | 'Good afternoon' | 'Good evening'
-
-function getGreeting(): TimeGreeting {
+function getGreeting(): string {
   const h = new Date().getHours()
-  if (h < 12) return 'Good morning'
-  if (h < 18) return 'Good afternoon'
-  return 'Good evening'
+  if (h < 12) return 'dashboard.greetingMorning'
+  if (h < 18) return 'dashboard.greetingAfternoon'
+  return 'dashboard.greetingEvening'
 }
 
 const statusConfig = [
-  { key: 'new' as const, label: 'New', color: 'bg-blue-500', textColor: 'text-blue-700', bgColor: 'bg-blue-50' },
-  { key: 'contacted' as const, label: 'Contacted', color: 'bg-amber-500', textColor: 'text-amber-700', bgColor: 'bg-amber-50' },
-  { key: 'interested' as const, label: 'Interested', color: 'bg-green-500', textColor: 'text-green-700', bgColor: 'bg-green-50' },
-  { key: 'not_interested' as const, label: 'Not Interested', color: 'bg-red-500', textColor: 'text-red-700', bgColor: 'bg-red-50' },
-  { key: 'converted' as const, label: 'Converted', color: 'bg-purple-500', textColor: 'text-purple-700', bgColor: 'bg-purple-50' },
+  { key: 'new' as const, labelKey: 'dashboard.statusNew', color: 'bg-blue-500', textColor: 'text-blue-700', bgColor: 'bg-blue-50' },
+  { key: 'contacted' as const, labelKey: 'dashboard.statusContacted', color: 'bg-amber-500', textColor: 'text-amber-700', bgColor: 'bg-amber-50' },
+  { key: 'interested' as const, labelKey: 'dashboard.statusInterested', color: 'bg-green-500', textColor: 'text-green-700', bgColor: 'bg-green-50' },
+  { key: 'not_interested' as const, labelKey: 'dashboard.statusNotInterested', color: 'bg-red-500', textColor: 'text-red-700', bgColor: 'bg-red-50' },
+  { key: 'converted' as const, labelKey: 'dashboard.statusConverted', color: 'bg-purple-500', textColor: 'text-purple-700', bgColor: 'bg-purple-50' },
 ]
 
 function getStatusValue(stats: InquiryStats, key: string): number {
@@ -98,7 +96,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [inquiryStats, setInquiryStats] = useState<InquiryStats | null>(null)
-  const [greeting] = useState<TimeGreeting>(getGreeting)
+  const [greeting] = useState(getGreeting)
 
   useEffect(() => {
     if (!accessToken) {
@@ -119,7 +117,7 @@ export default function DashboardPage() {
       setProperties(propsRes.data.data)
       if (statsRes) setInquiryStats(statsRes.data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
+      setError(err instanceof Error ? err.message : t('common.loadError'))
     } finally {
       setLoading(false)
     }
@@ -130,7 +128,7 @@ export default function DashboardPage() {
       await api.delete(`/properties/${id}`)
       setProperties((prev) => prev.filter((p) => p.id !== id))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete property')
+      setError(err instanceof Error ? err.message : t('common.deleteError'))
     }
   }
 
@@ -162,15 +160,15 @@ export default function DashboardPage() {
           )}
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-gray-900">{greeting}, {user?.name?.split(' ')[0] || 'User'}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{t(greeting)}, {user?.name?.split(' ')[0] || 'User'}</h1>
               {user?.plan === 'free' && (
-                <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-medium rounded-full">Gratuito</span>
+                <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-medium rounded-full">{t('dashboard.planFree')}</span>
               )}
               {user?.plan === 'agent' && (
-                <span className="px-2 py-0.5 bg-green-50 text-green-700 text-xs font-medium rounded-full">Agente</span>
+                <span className="px-2 py-0.5 bg-green-50 text-green-700 text-xs font-medium rounded-full">{t('dashboard.planAgent')}</span>
               )}
               {user?.plan === 'agency' && (
-                <span className="px-2 py-0.5 bg-purple-50 text-purple-700 text-xs font-medium rounded-full">{user.agencyName || 'Inmobiliaria'}</span>
+                <span className="px-2 py-0.5 bg-purple-50 text-purple-700 text-xs font-medium rounded-full">{user.agencyName || t('dashboard.planAgency')}</span>
               )}
             </div>
             <p className="text-sm text-gray-500">{t('dashboard.recentActivity')}</p>
@@ -267,7 +265,7 @@ export default function DashboardPage() {
                   {statusConfig.map((s) => (
                     <MetricCard
                       key={s.key}
-                      label={s.label}
+                      label={t(s.labelKey)}
                       value={getStatusValue(inquiryStats, s.key)}
                       total={totalLeads}
                       color={s.color}

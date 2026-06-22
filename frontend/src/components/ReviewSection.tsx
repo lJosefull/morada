@@ -252,7 +252,7 @@ function ReviewCard({
       onReplyChanged()
     } catch (err) {
       setReplyError(
-        err instanceof Error ? err.message : 'Failed to submit reply'
+        err instanceof Error ? err.message : t('common.sendError')
       )
     } finally {
       setReplying(false)

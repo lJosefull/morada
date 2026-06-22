@@ -145,7 +145,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
         navigate(`/property/${newProperty.id}`)
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to save property'
+      const message = err instanceof Error ? err.message : t('common.saveError')
       addToast(message, 'error')
     } finally {
       setSubmitting(false)
@@ -181,7 +181,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
       )
       setImages((prev) => [...prev, uploaded])
     } catch (err) {
-      addToast(err instanceof Error ? err.message : 'Failed to upload image', 'error')
+      addToast(err instanceof Error ? err.message : t('common.uploadError'), 'error')
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -212,7 +212,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
         prev.map((img) => ({ ...img, isPrimary: img.id === imageId })),
       )
     } catch (err) {
-      addToast(err instanceof Error ? err.message : 'Failed to set primary image', 'error')
+      addToast(err instanceof Error ? err.message : t('common.uploadError'), 'error')
     }
   }
 

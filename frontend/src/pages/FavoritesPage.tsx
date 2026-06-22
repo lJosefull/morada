@@ -30,7 +30,7 @@ export default function FavoritesPage() {
       setFavorites(data.data)
       setTotal(data.total ?? data.data.length)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load favorites')
+      setError(err instanceof Error ? err.message : t('common.loadError'))
     } finally {
       setLoading(false)
     }

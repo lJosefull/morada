@@ -118,7 +118,7 @@ export default function Navbar() {
       .then(({ data }) => {
         setUnreadCount(data.new || 0);
       })
-      .catch(() => {});
+      .catch((err) => console.error('Failed to load inquiry stats:', err));
   }, [isAuthenticated]);
 
   const handleLogout = () => {

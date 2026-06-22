@@ -63,11 +63,11 @@ export default function PropertyDetailPage() {
       })
       .finally(() => setLoading(false))
     
-    api.post(`/properties/${id}/view`).catch(() => {})
+    api.post(`/properties/${id}/view`).catch((err) => console.error('Failed to track view:', err))
 
     api.get<Property[]>(`/properties/${id}/also-viewed`)
       .then(({ data }) => setAlsoViewed(data))
-      .catch(() => {})
+      .catch((err) => console.error('Failed to load also-viewed:', err))
   }, [id])
 
   useEffect(() => {
@@ -79,18 +79,18 @@ export default function PropertyDetailPage() {
       })
     api.get<DailyView[]>(`/properties/${id}/stats/daily`)
       .then(({ data }) => setDailyStats(data.slice(-14)))
-      .catch(() => {})
+      .catch((err) => console.error('Failed to load daily stats:', err))
   }, [id, isOwner])
 
   useEffect(() => {
     if (!id || !user) return
     api.get<Record<string, boolean>>(`/favorites/check?propertyIds=${id}`)
       .then(({ data }) => setIsFavorite(data[id] ?? false))
-      .catch(() => {})
+      .catch((err) => console.error('Failed to check favorites:', err))
     if (property?.userId) {
       api.get<{ following: boolean }>(`/follow/check/${property.userId}`)
         .then(({ data }) => setIsFollowing(data.following))
-        .catch(() => {})
+        .catch((err) => console.error('Failed to check follow status:', err))
     }
   }, [id, user, property?.userId])
 
@@ -365,11 +365,11 @@ export default function PropertyDetailPage() {
                       to={`/agents/${property.user.id}`}
                       className="font-semibold text-gray-900 text-sm truncate hover:text-blue-600 transition-colors block"
                     >
-                      {property.user.name || 'Property Owner'}
+                      {property.user.name || t('propertyDetail.propertyOwner')}
                     </Link>
                   ) : (
                     <p className="font-semibold text-gray-900 text-sm truncate">
-                      Property Owner
+                      {t('propertyDetail.propertyOwner')}
                     </p>
                   )}
                   {property.user?.plan === 'agency' && property.user?.agencyName && (
@@ -379,7 +379,7 @@ export default function PropertyDetailPage() {
                   )}
                   {property.user?.plan === 'agent' && (
                     <p className="text-xs text-green-600 font-medium truncate">
-                      Agente independiente
+                      {t('dashboard.planAgent')}
                     </p>
                   )}
                   <p className="text-xs text-gray-500">{t('property.contactAgent')}</p>
@@ -393,7 +393,7 @@ export default function PropertyDetailPage() {
                         const { data } = await api.post<{ following: boolean }>('/follow/toggle', { userId: property.userId })
                         setIsFollowing(data.following)
                         addToast(
-                          data.following ? `Siguiendo a ${property.user?.name || 'agente'}` : 'Dejaste de seguir',
+                          data.following ? t('propertyDetail.followingAgent', { name: property.user?.name || '' }) : t('propertyDetail.stoppedFollowing'),
                           data.following ? 'success' : 'info',
                         )
                       } catch { addToast(t('common.error'), 'error') }
@@ -410,7 +410,7 @@ export default function PropertyDetailPage() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
-                    ) : isFollowing ? 'Following' : 'Follow'}
+                    ) : isFollowing ? t('propertyDetail.following') : t('propertyDetail.follow')}
                   </button>
                 )}
               </div>
@@ -491,11 +491,11 @@ export default function PropertyDetailPage() {
                 <p className="text-sm font-semibold text-gray-900 mb-3">{t('property.propertyDetails')}</p>
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div className="bg-blue-50 rounded-lg p-3">
-                    <p className="text-[10px] text-blue-700 font-semibold uppercase tracking-wider">Total Views</p>
+                    <p className="text-[10px] text-blue-700 font-semibold uppercase tracking-wider">{t('propertyDetail.totalViews')}</p>
                     <p className="text-xl font-bold text-blue-900 mt-0.5">{propertyStats.totalViews}</p>
                   </div>
                   <div className="bg-amber-50 rounded-lg p-3">
-                    <p className="text-[10px] text-amber-700 font-semibold uppercase tracking-wider">This Week</p>
+                    <p className="text-[10px] text-amber-700 font-semibold uppercase tracking-wider">{t('propertyDetail.thisWeek')}</p>
                     <p className="text-xl font-bold text-amber-900 mt-0.5">{propertyStats.weeklyViews}</p>
                   </div>
                   <div className="bg-green-50 rounded-lg p-3">
@@ -503,7 +503,7 @@ export default function PropertyDetailPage() {
                     <p className="text-xl font-bold text-green-900 mt-0.5">{propertyStats.inquiryCount}</p>
                   </div>
                   <div className="bg-purple-50 rounded-lg p-3">
-                    <p className="text-[10px] text-purple-700 font-semibold uppercase tracking-wider">Daily Avg</p>
+                    <p className="text-[10px] text-purple-700 font-semibold uppercase tracking-wider">{t('propertyDetail.dailyAvg')}</p>
                     <p className="text-xl font-bold text-purple-900 mt-0.5">
                       {dailyStats.length > 0
                         ? Math.round(dailyStats.reduce((a, d) => a + d.views, 0) / dailyStats.length)
@@ -515,7 +515,7 @@ export default function PropertyDetailPage() {
                 {/* Weekly Mini Chart */}
                 {dailyStats.length > 0 && (
                   <div className="mb-4">
-                    <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider mb-2">Views (Last 14 days)</p>
+                    <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider mb-2">{t('propertyDetail.viewsLast14')}</p>
                     <div className="flex items-end gap-[3px] h-16">
                       {dailyStats.map((d, i) => {
                         const pct = Math.round((d.views / maxDailyViews) * 100)
@@ -526,7 +526,7 @@ export default function PropertyDetailPage() {
                             style={{ height: `${Math.max(pct, 4)}%` }}
                           >
                             <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity">
-                              {d.views} views
+                              {d.views} {t('propertyDetail.views')}
                             </div>
                           </div>
                         )
@@ -534,7 +534,7 @@ export default function PropertyDetailPage() {
                     </div>
                     {dailyStats.length >= 2 && (
                       <p className="text-[10px] text-gray-400 mt-1.5">
-                        {dailyStats[dailyStats.length - 1].views > dailyStats[0].views ? '↑ Trending up' : '↓ Trending down'}
+                        {dailyStats[dailyStats.length - 1].views > dailyStats[0].views ? t('propertyDetail.trendingUp') : t('propertyDetail.trendingDown')}
                       </p>
                     )}
                   </div>
@@ -553,11 +553,11 @@ export default function PropertyDetailPage() {
             )}
             <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Property ID</span>
+                <span className="text-gray-500">{t('propertyDetail.propertyId')}</span>
                 <span className="text-gray-700 font-mono text-xs">{property.id.slice(0, 13)}...</span>
               </div>
               <div className="flex items-center justify-between text-sm mt-2">
-                <span className="text-gray-500">Listed on</span>
+                <span className="text-gray-500">{t('propertyDetail.listedOn')}</span>
                 <span className="text-gray-700">{new Date(property.createdAt).toLocaleDateString('es-CL')}</span>
               </div>
             </div>
@@ -590,7 +590,7 @@ export default function PropertyDetailPage() {
                 </div>
                 <div className="p-3">
                   <p className="font-semibold text-sm text-gray-900 truncate">{ap.aiTitle || ap.title}</p>
-                  <p className="text-blue-600 font-bold text-sm mt-0.5">${ap.price.toLocaleString('es-CL')}</p>
+                  <p className="text-blue-600 font-bold text-sm mt-0.5">{formatCurrency(ap.price)}</p>
                   <p className="text-xs text-gray-500 truncate mt-0.5">{ap.location}</p>
                 </div>
               </Link>
