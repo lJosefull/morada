@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 declare global {
   interface Window {
@@ -8,6 +8,8 @@ declare global {
 
 interface LocationAutocompleteProps {
   value: string
+  latitude?: string
+  longitude?: string
   onChange: (data: { location: string; latitude: string; longitude: string }) => void
   className?: string
   placeholder?: string
@@ -15,16 +17,27 @@ interface LocationAutocompleteProps {
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
-export default function LocationAutocomplete({ value, onChange, className = '', placeholder }: LocationAutocompleteProps) {
+const DEFAULT_CENTER = { lat: 4.711, lng: -74.072 }
+
+export default function LocationAutocomplete({
+  value, latitude, longitude, onChange, className = '', placeholder,
+}: LocationAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const mapRef = useRef<HTMLDivElement>(null)
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null)
   const listenerRef = useRef<google.maps.MapsEventListener | null>(null)
+  const mapInstanceRef = useRef<google.maps.Map | null>(null)
+  const markerRef = useRef<google.maps.Marker | null>(null)
+  const pendingCenterRef = useRef<{ lat: number; lng: number } | null>(null)
+  const [loaded, setLoaded] = useState(false)
+
+  const hasCoords = latitude && longitude
 
   useEffect(() => {
-    if (!API_KEY || !inputRef.current) return
+    if (!API_KEY) return
 
     if (window.google?.maps?.places) {
-      initAutocomplete()
+      setLoaded(true)
       return
     }
 
@@ -32,15 +45,13 @@ export default function LocationAutocomplete({ value, onChange, className = '', 
       const check = setInterval(() => {
         if (window.google?.maps?.places) {
           clearInterval(check)
-          initAutocomplete()
+          setLoaded(true)
         }
       }, 300)
       return () => clearInterval(check)
     }
 
-    window.initGoogleMaps = () => {
-      initAutocomplete()
-    }
+    window.initGoogleMaps = () => setLoaded(true)
 
     const script = document.createElement('script')
     script.id = 'google-maps-script'
@@ -48,42 +59,133 @@ export default function LocationAutocomplete({ value, onChange, className = '', 
     script.async = true
     script.defer = true
     document.head.appendChild(script)
+  }, [])
+
+  useEffect(() => {
+    if (!loaded || !inputRef.current || !mapRef.current) return
+
+    if (!mapInstanceRef.current) {
+      const center = hasCoords
+        ? { lat: Number(latitude), lng: Number(longitude) }
+        : DEFAULT_CENTER
+
+      mapInstanceRef.current = new google.maps.Map(mapRef.current, {
+        center,
+        zoom: 14,
+        mapTypeControl: false,
+        streetViewControl: false,
+      })
+
+      markerRef.current = new google.maps.Marker({
+        position: center,
+        map: mapInstanceRef.current,
+        draggable: true,
+      })
+
+      markerRef.current.addListener('dragend', () => {
+        const pos = markerRef.current!.getPosition()
+        if (!pos) return
+        reverseGeocode(pos.lat(), pos.lng())
+      })
+
+      mapInstanceRef.current.addListener('click', (e: google.maps.MapMouseEvent) => {
+        if (!e.latLng) return
+        markerRef.current!.setPosition(e.latLng)
+        reverseGeocode(e.latLng.lat(), e.latLng.lng())
+      })
+    }
+
+    if (!autocompleteRef.current) {
+      autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
+        types: ['address'],
+        componentRestrictions: { country: 'co' },
+      })
+
+      listenerRef.current = autocompleteRef.current.addListener('place_changed', () => {
+        const place = autocompleteRef.current?.getPlace()
+        if (!place || !place.geometry?.location) return
+
+        const lat = place.geometry.location.lat()
+        const lng = place.geometry.location.lng()
+
+        onChange({
+          location: place.formatted_address || '',
+          latitude: lat.toString(),
+          longitude: lng.toString(),
+        })
+
+        mapInstanceRef.current?.setCenter({ lat, lng })
+        mapInstanceRef.current?.setZoom(16)
+        markerRef.current?.setPosition({ lat, lng })
+      })
+    }
+
+    if (pendingCenterRef.current) {
+      const c = pendingCenterRef.current
+      mapInstanceRef.current?.setCenter(c)
+      markerRef.current?.setPosition(c)
+      pendingCenterRef.current = null
+    }
 
     return () => {
       if (listenerRef.current) {
         google.maps.event.removeListener(listenerRef.current)
       }
     }
-  }, [])
+  }, [loaded])
 
-  function initAutocomplete() {
-    if (!inputRef.current || !window.google?.maps?.places) return
+  useEffect(() => {
+    if (!loaded || !mapInstanceRef.current || !markerRef.current) return
+    if (!latitude || !longitude) return
 
-    autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
-      types: ['address'],
-      componentRestrictions: { country: 'co' },
-    })
+    const lat = Number(latitude)
+    const lng = Number(longitude)
+    if (isNaN(lat) || isNaN(lng)) return
 
-    listenerRef.current = autocompleteRef.current.addListener('place_changed', () => {
-      const place = autocompleteRef.current?.getPlace()
-      if (!place || !place.geometry?.location) return
+    const currentPos = markerRef.current.getPosition()
+    if (currentPos && currentPos.lat() === lat && currentPos.lng() === lng) return
 
-      onChange({
-        location: place.formatted_address || '',
-        latitude: place.geometry.location.lat().toString(),
-        longitude: place.geometry.location.lng().toString(),
-      })
+    mapInstanceRef.current.setCenter({ lat, lng })
+    mapInstanceRef.current.setZoom(16)
+    markerRef.current.setPosition({ lat, lng })
+  }, [latitude, longitude, loaded])
+
+  async function reverseGeocode(lat: number, lng: number) {
+    onChange({ latitude: lat.toString(), longitude: lng.toString(), location: value })
+
+    if (!window.google?.maps) return
+
+    const geocoder = new google.maps.Geocoder()
+    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+      if (status === 'OK' && results?.[0]) {
+        onChange({
+          location: results[0].formatted_address,
+          latitude: lat.toString(),
+          longitude: lng.toString(),
+        })
+      }
     })
   }
 
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onChange({ location: e.target.value, latitude: '', longitude: '' })
+  }
+
   return (
-    <input
-      ref={inputRef}
-      type="text"
-      value={value}
-      onChange={(e) => onChange({ location: e.target.value, latitude: '', longitude: '' })}
-      className={className}
-      placeholder={placeholder}
-    />
+    <div>
+      <input
+        ref={inputRef}
+        type="text"
+        value={value}
+        onChange={handleInputChange}
+        className={className}
+        placeholder={placeholder}
+      />
+      <div
+        ref={mapRef}
+        className="mt-2 w-full rounded-lg border border-gray-300"
+        style={{ height: '250px' }}
+      />
+    </div>
   )
 }

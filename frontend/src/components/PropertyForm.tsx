@@ -304,6 +304,8 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
               </label>
               <LocationAutocomplete
                 value={formData.location}
+                latitude={formData.latitude}
+                longitude={formData.longitude}
                 onChange={(data) => {
                   setFormData((prev) => ({ ...prev, ...data }))
                   if (data.location) setErrors((prev) => ({ ...prev, location: '' }))
@@ -463,7 +465,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
           <div className="rounded-xl overflow-hidden border border-gray-200">
             <div className="aspect-[16/10] bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 relative">
               {previewImage ? (
-                <img src={previewImage.url} alt="" className="w-full h-full object-cover" />
+                <img src={getImageUrl(previewImage.url)} alt="" className="w-full h-full object-cover" onError={handleImageError} />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <svg className="w-12 h-12 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
