@@ -80,6 +80,7 @@
     "rented": "Arrendada",
     "sold": "Vendida",
     "hidden": "Oculta",
+    "reserved": "Reservada",
     "listingType": "Tipo de operación",
     "rent": "Arriendo",
     "sale": "Venta",

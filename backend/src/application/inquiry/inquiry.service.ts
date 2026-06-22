@@ -45,7 +45,7 @@ export class InquiryService {
         message: `${dto.name} is interested in "${property.title}"`,
         link: `/inquiries`,
       },
-    }).catch(() => {});
+    }).catch((err) => console.error('Failed to create notification:', err));
 
     return inquiry;
   }

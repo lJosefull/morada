@@ -42,7 +42,7 @@ export class FollowService {
         message: `${follower?.name || 'Someone'} started following you`,
         link: `/agents/${followerId}`,
       },
-    }).catch(() => {});
+    }).catch((err) => console.error('Failed to create notification:', err));
 
     return { following: true };
   }

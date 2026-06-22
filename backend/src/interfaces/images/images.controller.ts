@@ -28,14 +28,16 @@ export class ImagesController {
     @Body('isPrimary') isPrimary?: string,
   ) {
     const file = (req as any).file;
-    return this.imagesService.upload(propertyId, file, isPrimary === 'true');
+    const userId = (req as any).user.id;
+    return this.imagesService.upload(propertyId, file, userId, isPrimary === 'true');
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth()
-  async delete(@Param('id') id: string) {
-    await this.imagesService.delete(id);
+  async delete(@Param('id') id: string, @Req() req: Request) {
+    const userId = (req as any).user.id;
+    await this.imagesService.delete(id, userId);
   }
 
   @Post(':id/primary')
@@ -44,8 +46,10 @@ export class ImagesController {
   async setPrimary(
     @Param('id') id: string,
     @Param('propertyId') propertyId: string,
+    @Req() req: Request,
   ) {
-    await this.imagesService.setPrimary(id, propertyId);
+    const userId = (req as any).user.id;
+    await this.imagesService.setPrimary(id, propertyId, userId);
     return { message: 'Primary image updated' };
   }
 }

@@ -35,6 +35,24 @@ export class PrismaViewRepository implements IViewRepository {
     return this.prisma.propertyView.count({ where: { propertyId } });
   }
 
+  async countByUserAndProperty(userId: string, propertyId: string): Promise<number> {
+    return this.prisma.propertyView.count({
+      where: { userId, propertyId },
+    });
+  }
+
+  async countByPropertySince(propertyId: string, since: Date): Promise<number> {
+    return this.prisma.propertyView.count({
+      where: { propertyId, createdAt: { gte: since } },
+    });
+  }
+
+  async countInquiriesSince(propertyId: string, since: Date): Promise<number> {
+    return this.prisma.inquiry.count({
+      where: { propertyId, createdAt: { gte: since } },
+    });
+  }
+
   async countUniqueByPropertyId(propertyId: string): Promise<number> {
     // Count views where userId is distinct (non-null) + separate count by IP
     const [withUser, uniqueIps] = await Promise.all([

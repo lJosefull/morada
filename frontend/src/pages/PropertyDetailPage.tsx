@@ -74,7 +74,9 @@ export default function PropertyDetailPage() {
     if (!id || !isOwner) return
     api.get<PropertyStats>(`/properties/${id}/stats`)
       .then(({ data }) => setPropertyStats(data))
-      .catch(() => {})
+      .catch(() => {
+        addToast('Error al cargar estadísticas', 'error')
+      })
     api.get<DailyView[]>(`/properties/${id}/stats/daily`)
       .then(({ data }) => setDailyStats(data.slice(-14)))
       .catch(() => {})
@@ -205,7 +207,7 @@ export default function PropertyDetailPage() {
                   }`}>
                     {property.status === 'sold' ? t('property.sold') :
                      property.status === 'rented' ? t('property.rented') :
-                     property.status === 'reserved' ? 'Reserved' :
+                     property.status === 'reserved' ? t('property.reserved') :
                      property.status === 'hidden' ? t('property.hidden') :
                      property.status}
                   </span>

@@ -7,6 +7,12 @@ import { PrismaService } from './prisma.service';
 export class PrismaImageRepository implements IImageRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findById(id: string): Promise<IImage | null> {
+    const image = await this.prisma.image.findUnique({ where: { id } });
+    if (!image) return null;
+    return this.toDomain(image);
+  }
+
   async findByPropertyId(propertyId: string): Promise<IImage[]> {
     const images = await this.prisma.image.findMany({
       where: { propertyId },

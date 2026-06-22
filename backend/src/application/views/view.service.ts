@@ -25,6 +25,12 @@ export class ViewService {
       throw new NotFoundException('Property not found');
     }
 
+    let isUnique = !userId
+    if (userId) {
+      const existing = await this.viewRepository.countByUserAndProperty(userId, propertyId)
+      isUnique = existing === 0
+    }
+
     const input: CreatePropertyViewInput = {
       propertyId,
       userId: userId || undefined,
@@ -32,16 +38,6 @@ export class ViewService {
     };
 
     const view = await this.viewRepository.create(input);
-
-    // Check if this is a unique view from this user
-    let isUnique = false;
-    if (userId) {
-      const countForUser = 1; // Just created this view, so count = 1 = unique
-      isUnique = true;
-    } else {
-      // For anonymous views, we count all views as unique (per IP)
-      isUnique = true;
-    }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -60,11 +56,19 @@ export class ViewService {
     }
 
     const totalViews = await this.viewRepository.countByPropertyId(propertyId);
-    const uniqueViews = await this.viewRepository.countUniqueByPropertyId(propertyId);
+
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    weekAgo.setHours(0, 0, 0, 0);
+    const weeklyViews = await this.viewRepository.countByPropertySince(propertyId, weekAgo);
+
+    const dailyStats = await this.dailyStatsRepository.findByPropertyId(propertyId, 30);
+    const inquiryCount = dailyStats.reduce((sum, d) => sum + d.inquiriesCount, 0);
 
     return {
       totalViews,
-      uniqueViews,
+      weeklyViews,
+      inquiryCount,
     };
   }
 

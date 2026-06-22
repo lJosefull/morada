@@ -34,7 +34,7 @@ export default function PublicProfilePage() {
 
     api.get<PublicProfile>(`/users/${userId}/profile`)
       .then(({ data }) => setProfile(data))
-      .catch(() => setError(t('profile.title')))
+      .catch(() => setError(t('property.notFound')))
       .finally(() => setLoading(false))
   }, [userId])
 
