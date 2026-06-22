@@ -100,11 +100,4 @@ export class PropertiesController {
   async remove(@Param('id') id: string, @Req() req: any) {
     return this.propertiesService.remove(id, req.user.id);
   }
-
-  @Public()
-  @Post('reset')
-  @ApiOperation({ summary: 'Delete ALL properties (requires confirm token)' })
-  async resetAll(@Query('confirm') confirm: string) {
-    return this.propertiesService.resetAll(confirm);
-  }
 }

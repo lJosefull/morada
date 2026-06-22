@@ -88,10 +88,6 @@ export class PrismaPropertyRepository implements IPropertyRepository {
     await this.prisma.property.delete({ where: { id } });
   }
 
-  async deleteAll(): Promise<void> {
-    await this.prisma.property.deleteMany();
-  }
-
   async countByUserId(userId: string): Promise<number> {
     return this.prisma.property.count({ where: { userId, status: { not: 'hidden' } } });
   }

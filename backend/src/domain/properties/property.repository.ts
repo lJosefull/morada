@@ -20,6 +20,5 @@ export interface IPropertyRepository {
   create(input: CreatePropertyInput & { userId: string }): Promise<IProperty>;
   update(id: string, input: UpdatePropertyInput): Promise<IProperty>;
   delete(id: string): Promise<void>;
-  deleteAll(): Promise<void>;
   countByUserId(userId: string): Promise<number>;
 }
