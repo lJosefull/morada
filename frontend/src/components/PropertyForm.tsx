@@ -44,6 +44,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
   const [uploading, setUploading] = useState(false)
   const [images, setImages] = useState<Image[]>(property?.images || [])
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
+  const [deletedImageIds, setDeletedImageIds] = useState<Set<string>>(new Set())
 
   const [formData, setFormData] = useState({
     title: '',
@@ -95,7 +96,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
       newErrors.price = t('property.price')
     }
     if (!formData.location.trim()) newErrors.location = t('property.location')
-    if (isEditing && images.length === 0) {
+    if (isEditing && images.filter((img) => !deletedImageIds.has(img.id)).length === 0) {
       newErrors.images = 'Agrega al menos una imagen'
     }
     setErrors(newErrors)
@@ -126,6 +127,10 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
 
       if (isEditing && property) {
         await api.patch(`/properties/${property.id}`, data)
+        for (const imageId of deletedImageIds) {
+          await api.delete(`/properties/${property.id}/images/${imageId}`)
+        }
+        setDeletedImageIds(new Set())
         addToast(t('common.save'), 'success')
         navigate(`/property/${property.id}`)
       } else {
@@ -187,16 +192,16 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
     setPendingFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const handleDeleteImage = async (imageId: string) => {
-    if (!property) return
-    if (!window.confirm('¿Estás seguro de eliminar esta imagen?')) return
-    try {
-      await api.delete(`/properties/${property.id}/images/${imageId}`)
-      setImages((prev) => prev.filter((img) => img.id !== imageId))
-      addToast('Imagen eliminada', 'success')
-    } catch (err) {
-      addToast(err instanceof Error ? err.message : 'Error al eliminar la imagen', 'error')
-    }
+  const handleDeleteImage = (imageId: string) => {
+    setDeletedImageIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(imageId)) {
+        next.delete(imageId)
+      } else {
+        next.add(imageId)
+      }
+      return next
+    })
   }
 
   const handleSetPrimary = async (imageId: string) => {
@@ -367,28 +372,41 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
             <div className="space-y-4">
               <div className="flex flex-wrap gap-3">
                 {isEditing && images.map((img) => (
-                  <div key={img.id} className="relative group w-24 h-24 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
+                  <div key={img.id} className={`relative group w-24 h-24 rounded-lg overflow-hidden border flex-shrink-0 ${deletedImageIds.has(img.id) ? 'border-red-400 opacity-50' : 'border-gray-200'}`}>
                     <img src={getImageUrl(img.url)} alt="" className="w-full h-full object-cover" onError={handleImageError} />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
-                      {!img.isPrimary && (
-                        <button type="button" onClick={() => handleSetPrimary(img.id)}
-                          className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
-                          title={t('property.uploadImages')}
+                    {deletedImageIds.has(img.id) ? (
+                      <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                        <button type="button" onClick={() => handleDeleteImage(img.id)}
+                          className="w-7 h-7 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors shadow"
+                          title="Restaurar imagen"
                         >
-                          <svg className="w-3.5 h-3.5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                           </svg>
                         </button>
-                      )}
-                      <button type="button" onClick={() => handleDeleteImage(img.id)}
-                        className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
-                        title={t('common.delete')}
-                      >
-                        <svg className="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+                        {!img.isPrimary && (
+                          <button type="button" onClick={() => handleSetPrimary(img.id)}
+                            className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
+                            title={t('property.uploadImages')}
+                          >
+                            <svg className="w-3.5 h-3.5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                            </svg>
+                          </button>
+                        )}
+                        <button type="button" onClick={() => handleDeleteImage(img.id)}
+                          className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"
+                          title={t('common.delete')}
+                        >
+                          <svg className="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
                     {img.isPrimary && (
                       <span className="absolute top-1 left-1 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-1.5 py-0.5 rounded">
                         {t('common.view')}
