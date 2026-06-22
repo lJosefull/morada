@@ -189,11 +189,13 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
 
   const handleDeleteImage = async (imageId: string) => {
     if (!property) return
+    if (!window.confirm('¿Estás seguro de eliminar esta imagen?')) return
     try {
       await api.delete(`/properties/${property.id}/images/${imageId}`)
       setImages((prev) => prev.filter((img) => img.id !== imageId))
+      addToast('Imagen eliminada', 'success')
     } catch (err) {
-      addToast(err instanceof Error ? err.message : 'Failed to delete image', 'error')
+      addToast(err instanceof Error ? err.message : 'Error al eliminar la imagen', 'error')
     }
   }
 
