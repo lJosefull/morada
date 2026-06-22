@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { useAuthStore } from '../store/auth'
+import { getImageUrl } from '../lib/utils'
 import VersionBadge from '../components/VersionBadge'
 
 type TabId = 'profile' | 'security'
@@ -43,7 +44,27 @@ export default function SettingsPage() {
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null)
 
+  // Avatar
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
 
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setAvatarPreview(URL.createObjectURL(file))
+    setAvatarUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('avatar', file)
+      const { data } = await api.post<{ avatar: string }>('/users/me/avatar', fd)
+      await fetchUser()
+    } catch {
+      setAvatarPreview(null)
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
 
   useEffect(() => {
     if (user) {
@@ -128,9 +149,15 @@ export default function SettingsPage() {
             <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
               {/* Avatar + Info */}
               <div className="p-6 text-center border-b border-gray-100">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold mx-auto shadow-lg shadow-indigo-200">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
+                {user.avatar ? (
+                  <div className="relative w-20 h-20 mx-auto">
+                    <img src={getImageUrl(user.avatar)} alt={user.name} className="w-20 h-20 rounded-full object-cover shadow-lg shadow-indigo-200" />
+                  </div>
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold mx-auto shadow-lg shadow-indigo-200">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <h2 className="mt-4 font-semibold text-gray-900">
                   {user.name}
                 </h2>
@@ -235,6 +262,42 @@ export default function SettingsPage() {
                   onSubmit={handleProfileSubmit}
                   className="px-8 py-6 space-y-6"
                 >
+                  <div className="flex items-center gap-6 pb-6 border-b border-gray-100">
+                    <div className="relative">
+                      {avatarPreview || user.avatar ? (
+                        <img
+                          src={avatarPreview || getImageUrl(user.avatar!)}
+                          alt={user.name}
+                          className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
+                          {user.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Foto de perfil
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={handleAvatarChange}
+                          className="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors"
+                        />
+                        {avatarUploading && (
+                          <svg className="w-5 h-5 text-blue-600 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          </svg>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">JPG, PNG o WEBP. Máximo 5MB.</p>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">

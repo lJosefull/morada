@@ -30,7 +30,7 @@ export interface Property {
   aiDescription: string | null
   aiStatus: 'pending' | 'processing' | 'completed' | 'failed'
   userId: string
-  user?: { id: string; name: string; email: string; phone?: string; plan: string; agencyName?: string | null; agencyLogo?: string | null }
+  user?: { id: string; name: string; email: string; phone?: string; avatar?: string | null; plan: string; agencyName?: string | null; agencyLogo?: string | null }
   images: Image[]
   createdAt: string
   updatedAt: string

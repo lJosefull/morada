@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import type { Property } from '../types'
+import { getImageUrl } from '../lib/utils'
 import { PropertyCard } from '../components/PropertyCard'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 
@@ -11,7 +12,10 @@ interface PublicProfile {
   name: string
   email: string
   phone: string | null
+  avatar: string | null
   role: string
+  plan: string
+  agencyName: string | null
   properties: Property[]
 }
 
@@ -69,9 +73,13 @@ export default function PublicProfilePage() {
       {/* Profile Header */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
         <div className="flex items-center gap-6">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-3xl flex-shrink-0">
-            {profile.name.charAt(0).toUpperCase()}
-          </div>
+          {profile.avatar ? (
+            <img src={getImageUrl(profile.avatar)} alt={profile.name} className="w-20 h-20 rounded-full object-cover flex-shrink-0" />
+          ) : (
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-3xl flex-shrink-0">
+              {profile.name.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div>
             <div className="flex items-center gap-3 mb-1">
               <h1 className="text-2xl font-bold text-gray-900">{profile.name}</h1>

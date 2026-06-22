@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { api } from '../lib/api'
 import { useAuthStore } from '../store/auth'
+import { getImageUrl } from '../lib/utils'
 import type { Property, InquiryStats } from '../types'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 import { PropertyCard } from '../components/PropertyCard'
@@ -152,9 +153,13 @@ export default function DashboardPage() {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-lg font-bold shadow-sm">
-            {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-          </div>
+          {user?.avatar ? (
+            <img src={getImageUrl(user.avatar)} alt={user.name} className="w-12 h-12 rounded-full object-cover shadow-sm" />
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-lg font-bold shadow-sm">
+              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+            </div>
+          )}
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-bold text-gray-900">{greeting}, {user?.name?.split(' ')[0] || 'User'}</h1>

@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/auth';
 import { api } from '../lib/api';
+import { getImageUrl } from '../lib/utils';
 import { NotificationDropdown } from './NotificationDropdown';
 
 const RECENT_SEARCHES_KEY = 'nav_recent_searches'
@@ -347,9 +348,13 @@ export default function Navbar() {
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                   className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none"
                 >
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                    {user?.name?.charAt(0).toUpperCase() || 'U'}
-                  </div>
+                  {user?.avatar ? (
+                    <img src={getImageUrl(user.avatar)} alt={user.name} className="w-8 h-8 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                      {user?.name?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                  )}
                   <span className="text-sm font-medium">{user?.name}</span>
                 </button>
 

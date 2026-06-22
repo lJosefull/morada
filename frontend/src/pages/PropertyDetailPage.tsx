@@ -350,9 +350,13 @@ export default function PropertyDetailPage() {
         <div className="space-y-6 mt-6 lg:mt-0 lg:self-start">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                  {property.user?.name?.charAt(0).toUpperCase() || 'A'}
-                </div>
+                {property.user?.avatar ? (
+                  <img src={getImageUrl(property.user.avatar)} alt={property.user.name} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                    {property.user?.name?.charAt(0).toUpperCase() || 'A'}
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   {property.user ? (
                     <Link

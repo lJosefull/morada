@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException, ConflictException, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, ConflictException, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { IUserRepository, USER_REPOSITORY } from '../../domain/users/user.repository';
 import { IUser } from '../../domain/users/user.entity';
 import {
@@ -38,7 +38,10 @@ export class UsersService {
       name: user.name,
       email: user.email,
       phone: user.phone,
+      avatar: user.avatar,
       role: user.role,
+      plan: user.plan,
+      agencyName: user.agencyName,
       properties,
     };
   }
@@ -68,9 +71,22 @@ export class UsersService {
       email: updatedUser.email,
       name: updatedUser.name,
       phone: updatedUser.phone,
+      avatar: updatedUser.avatar,
       role: updatedUser.role,
+      plan: updatedUser.plan,
+      agencyName: updatedUser.agencyName,
+      agencyLogo: updatedUser.agencyLogo,
       createdAt: updatedUser.createdAt,
     };
+  }
+
+  async updateAvatar(userId: string, file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file provided');
+    }
+    const url = `/uploads/${file.filename}`;
+    await this.userRepository.update(userId, { avatar: url } as any);
+    return { avatar: url };
   }
 
   async changePassword(userId: string, dto: ChangePasswordDto) {
