@@ -47,23 +47,13 @@ export default function SettingsPage() {
   // Avatar
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null)
 
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-
+    setPendingAvatarFile(file)
     setAvatarPreview(URL.createObjectURL(file))
-    setAvatarUploading(true)
-    try {
-      const fd = new FormData()
-      fd.append('avatar', file)
-      const { data } = await api.post<{ avatar: string }>('/users/me/avatar', fd)
-      await fetchUser()
-    } catch {
-      setAvatarPreview(null)
-    } finally {
-      setAvatarUploading(false)
-    }
   }
 
   useEffect(() => {
@@ -80,18 +70,31 @@ export default function SettingsPage() {
     setProfileSuccess(null)
     setProfileSaving(true)
     try {
+      if (pendingAvatarFile) {
+        setAvatarUploading(true)
+        const fd = new FormData()
+        fd.append('avatar', pendingAvatarFile)
+        await api.post('/users/me/avatar', fd)
+        setPendingAvatarFile(null)
+        setAvatarPreview(null)
+        setAvatarUploading(false)
+      }
+
       const body: Record<string, string> = {}
       if (name !== user?.name) body.name = name
       if (email !== user?.email) body.email = email
       if (phone !== (user?.phone || '')) body.phone = phone
-      if (Object.keys(body).length === 0) throw new Error('No changes to save')
-      await api.patch('/users/me', body)
+      if (Object.keys(body).length > 0) {
+        await api.patch('/users/me', body)
+      }
       await fetchUser()
-      setProfileSuccess('Changes saved successfully')
+      setProfileSuccess('Profile updated successfully!')
     } catch (err) {
-      setProfileError(err instanceof Error ? err.message : 'Something went wrong')
+      const message = err instanceof Error ? err.message : 'Failed to update profile'
+      setProfileError(message)
     } finally {
       setProfileSaving(false)
+      setAvatarUploading(false)
     }
   }
 
