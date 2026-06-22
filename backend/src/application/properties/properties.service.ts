@@ -77,4 +77,12 @@ export class PropertiesService {
     }
     return this.propertyRepository.delete(id);
   }
+
+  async resetAll(confirm: string) {
+    if (confirm !== 'reset-todo-2024') {
+      throw new ForbiddenException('Invalid confirmation token');
+    }
+    await this.propertyRepository.deleteAll();
+    return { message: 'All properties have been deleted' };
+  }
 }
