@@ -7,6 +7,7 @@ import { useToastStore } from '../store/toast'
 import type { Property, PropertyStats } from '../types'
 import { formatCurrency, getImageUrl, handleImageError } from '../lib/utils'
 import { LoadingSpinner } from '../components/LoadingSpinner'
+import ImageLightbox from '../components/ImageLightbox'
 import { SEOHead } from '../components/SEOHead'
 import { PropertyMap } from '../components/PropertyMap'
 import { ShareButton } from '../components/ShareButton'
@@ -39,6 +40,7 @@ export default function PropertyDetailPage() {
   const [property, setProperty] = useState<Property | null>(passed)
   const [loading, setLoading] = useState(!passed)
   const [currentImage, setCurrentImage] = useState(0)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
   interface DailyView { date: string; views: number }
   const [propertyStats, setPropertyStats] = useState<PropertyStats | null>(null)
   const [dailyStats, setDailyStats] = useState<DailyView[]>([])
@@ -135,10 +137,15 @@ export default function PropertyDetailPage() {
             >
               {property.images && property.images.length > 0 ? (
                 <>
+                  <button
+                    onClick={() => setLightboxOpen(true)}
+                    className="absolute inset-0 w-full h-full cursor-pointer"
+                    aria-label="Abrir galería"
+                  />
                   <img
                     src={getImageUrl(property.images[currentImage].url)}
                     alt={`${property.title} - image ${currentImage + 1}`}
-                    className="w-full h-full object-cover transition-opacity duration-300"
+                    className="w-full h-full object-cover transition-opacity duration-300 pointer-events-none"
                     onError={handleImageError}
                   />
                   {property.images.length > 1 && (
@@ -170,8 +177,15 @@ export default function PropertyDetailPage() {
                           />
                         ))}
                       </div>
-                      <div className="absolute top-4 right-4 bg-black/50 text-white text-xs px-2.5 py-1 rounded-full">
-                        {currentImage + 1} / {property.images.length}
+                      <div className="absolute top-4 right-4 flex items-center gap-2">
+                        <div className="bg-black/50 text-white text-xs px-2.5 py-1 rounded-full">
+                          {currentImage + 1} / {property.images.length}
+                        </div>
+                        <div className="bg-black/50 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                          </svg>
+                        </div>
                       </div>
                     </>
                   )}
@@ -606,6 +620,17 @@ export default function PropertyDetailPage() {
           propertyUserId={property.userId}
         />
       </div>
+
+      {lightboxOpen && property.images && (
+        <ImageLightbox
+          images={property.images}
+          currentIndex={currentImage}
+          onClose={() => setLightboxOpen(false)}
+          onNavigate={setCurrentImage}
+          getImageUrl={getImageUrl}
+          onImageError={handleImageError}
+        />
+      )}
     </div>
   )
 }
