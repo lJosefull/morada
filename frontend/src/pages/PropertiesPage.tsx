@@ -7,6 +7,7 @@ import { SEOHead } from '../components/SEOHead'
 import { Pagination } from '../components/Pagination'
 import { formatCurrency, getImageUrl, handleImageError } from '../lib/utils'
 import AnimatedLink from '../components/AnimatedLink'
+import LocationAutocomplete from '../components/LocationAutocomplete'
 
 type ViewMode = 'grid' | 'list'
 type SortOption = 'newest' | 'oldest' | 'price_asc' | 'price_desc'
@@ -20,6 +21,10 @@ interface Filters {
   bedrooms: string
   bathrooms: string
   sort: SortOption
+  location: string
+  latitude: string
+  longitude: string
+  radius: string
 }
 
 const DEFAULT_FILTERS: Filters = {
@@ -31,6 +36,10 @@ const DEFAULT_FILTERS: Filters = {
   bedrooms: '',
   bathrooms: '',
   sort: 'newest',
+  location: '',
+  latitude: '',
+  longitude: '',
+  radius: '',
 }
 
 const PROPERTY_TYPES = [
@@ -76,7 +85,7 @@ export default function PropertiesPage() {
   const activeFiltersCount = useMemo(
     () =>
       Object.entries(filters).filter(([key, value]) => {
-        if (key === 'sort') return false
+        if (key === 'sort' || key === 'latitude' || key === 'longitude') return false
         return value !== '' && value !== 0
       }).length,
     [filters]
@@ -87,6 +96,7 @@ export default function PropertiesPage() {
   useEffect(() => {
     setLoading(true)
     const params: Record<string, string | number> = { page, limit }
+    if (filters.location) params.location = filters.location
     if (filters.search) params.search = filters.search
     if (filters.listingType) params.listingType = filters.listingType
     if (filters.propertyType) params.propertyType = filters.propertyType
@@ -95,6 +105,9 @@ export default function PropertiesPage() {
     if (filters.bedrooms) params.bedrooms = filters.bedrooms
     if (filters.bathrooms) params.bathrooms = filters.bathrooms
     if (filters.sort && filters.sort !== 'newest') params.sort = filters.sort
+    if (filters.latitude) params.latitude = filters.latitude
+    if (filters.longitude) params.longitude = filters.longitude
+    if (filters.radius) params.radius = filters.radius
 
     api
       .get<{ data: Property[]; total: number }>('/properties', { params } as any)
@@ -319,6 +332,15 @@ export default function PropertiesPage() {
               onRemove={() => updateFilter('bathrooms', '')}
             />
           )}
+          {filters.location && (
+            <Chip
+              label={`${filters.location}${filters.radius ? ` (${filters.radius} km)` : ''}`}
+              onRemove={() => {
+                setFilters((prev) => ({ ...prev, location: '', latitude: '', longitude: '', radius: '' }))
+                setPage(1)
+              }}
+            />
+          )}
           {filters.search && (
             <Chip label={`"${filters.search}"`} onRemove={() => updateFilter('search', '')} />
           )}
@@ -508,6 +530,69 @@ export default function PropertiesPage() {
                     className="w-full pl-7 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all placeholder:text-gray-400"
                   />
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Location & Radius */}
+          <div className="mt-5 pt-5 border-t border-gray-100">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider sm:w-32 shrink-0">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {t('property.location')}
+              </label>
+              <div className="flex-1 space-y-3">
+                <LocationAutocomplete
+                  value={filters.location}
+                  latitude={filters.latitude}
+                  longitude={filters.longitude}
+                  onChange={(data) => {
+                    setFilters((prev) => ({
+                      ...prev,
+                      location: data.location,
+                      latitude: data.latitude,
+                      longitude: data.longitude,
+                    }))
+                    setPage(1)
+                  }}
+                  className="w-full pl-3 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all placeholder:text-gray-400"
+                  placeholder={t('search.locationPlaceholder') || 'Buscar ciudad o dirección...'}
+                />
+                {filters.latitude && filters.longitude && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-gray-500 font-medium">{t('search.radius') || 'Radio'}:</span>
+                    {['1', '3', '5', '10', '25', '50'].map((km) => (
+                      <button
+                        key={km}
+                        onClick={() => {
+                          setFilters((prev) => ({ ...prev, radius: prev.radius === km ? '' : km }))
+                          setPage(1)
+                        }}
+                        className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-all duration-200 ${
+                          filters.radius === km
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50'
+                        }`}
+                      >
+                        {km} km
+                      </button>
+                    ))}
+                    {filters.radius && (
+                      <button
+                        onClick={() => {
+                          setFilters((prev) => ({ ...prev, radius: '' }))
+                          setPage(1)
+                        }}
+                        className="text-xs text-red-500 hover:text-red-600 font-medium"
+                      >
+                        {t('search.clear') || 'Limpiar'}
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

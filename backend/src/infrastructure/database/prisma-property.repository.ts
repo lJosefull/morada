@@ -22,14 +22,31 @@ export class PrismaPropertyRepository implements IPropertyRepository {
     take = 20,
   ): Promise<[IProperty[], number]> {
     const where = this.buildWhereClause(filters);
-    const [properties, total] = await Promise.all([
-      this.prisma.property.findMany({
+    const include = { images: true, user: { select: { id: true, name: true, email: true, phone: true, plan: true, agencyName: true, agencyLogo: true } as const } };
+
+    if (filters.latitude && filters.longitude && filters.radius) {
+      const allProperties = await this.prisma.property.findMany({
         where,
-        skip,
-        take,
         orderBy: { createdAt: 'desc' },
-        include: { images: true, user: { select: { id: true, name: true, email: true, phone: true, plan: true, agencyName: true, agencyLogo: true } } },
-      }),
+        include,
+      });
+
+      const filtered = allProperties.filter((p) => {
+        if (!p.latitude || !p.longitude) return false;
+        const dist = this.haversineDistance(
+          filters.latitude!, filters.longitude!,
+          p.latitude, p.longitude,
+        );
+        return dist <= filters.radius!;
+      });
+
+      const total = filtered.length;
+      const data = filtered.slice(skip, skip + take);
+      return [data.map((p) => this.toDomain(p)), total];
+    }
+
+    const [properties, total] = await Promise.all([
+      this.prisma.property.findMany({ where, skip, take, orderBy: { createdAt: 'desc' }, include }),
       this.prisma.property.count({ where }),
     ]);
     return [properties.map((p) => this.toDomain(p)), total];
@@ -110,7 +127,23 @@ export class PrismaPropertyRepository implements IPropertyRepository {
       if (filters.minPrice !== undefined) (where.price as Record<string, unknown>).gte = filters.minPrice;
       if (filters.maxPrice !== undefined) (where.price as Record<string, unknown>).lte = filters.maxPrice;
     }
+    if (filters.latitude && filters.longitude && filters.radius) {
+      const latDelta = filters.radius / 111;
+      const lngDelta = filters.radius / (111 * Math.cos((filters.latitude * Math.PI) / 180));
+      where.latitude = { gte: filters.latitude - latDelta, lte: filters.latitude + latDelta };
+      where.longitude = { gte: filters.longitude - lngDelta, lte: filters.longitude + lngDelta };
+    }
     return where;
+  }
+
+  private haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

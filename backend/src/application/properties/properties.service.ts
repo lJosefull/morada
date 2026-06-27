@@ -22,7 +22,7 @@ export class PropertiesService {
     const skip = (page - 1) * limit;
     const filters: PropertyFilters = {
       ...rest,
-      location: search,
+      location: rest.location || search,
     };
     const [data, total] = await this.propertyRepository.findMany(filters, skip, limit);
     return { data, total, page, limit };

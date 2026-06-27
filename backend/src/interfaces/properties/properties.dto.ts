@@ -271,4 +271,23 @@ export class PropertyQueryDto {
   @Type(() => Number)
   limit?: number;
 
+  @ApiPropertyOptional({ description: 'Latitude for geo-search' })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  latitude?: number;
+
+  @ApiPropertyOptional({ description: 'Longitude for geo-search' })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  longitude?: number;
+
+  @ApiPropertyOptional({ description: 'Search radius in kilometers' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0.1)
+  @Max(500)
+  @Type(() => Number)
+  radius?: number;
 }

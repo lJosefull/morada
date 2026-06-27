@@ -12,6 +12,9 @@ export type PropertyFilters = {
   location?: string;
   status?: string;
   userId?: string;
+  latitude?: number;
+  longitude?: number;
+  radius?: number;
 };
 
 export interface IPropertyRepository {

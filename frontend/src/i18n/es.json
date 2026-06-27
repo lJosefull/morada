@@ -228,7 +228,10 @@
     "priceDesc": "Mayor precio",
     "results": "resultados",
     "noResults": "No se encontraron propiedades",
-    "noResultsHint": "Intenta ajustar los filtros de búsqueda"
+    "noResultsHint": "Intenta ajustar los filtros de búsqueda",
+    "locationPlaceholder": "Buscar ciudad o dirección...",
+    "radius": "Radio",
+    "clear": "Limpiar"
   },
   "share": {
     "title": "Compartir",
