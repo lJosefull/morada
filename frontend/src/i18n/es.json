@@ -231,7 +231,10 @@
     "noResultsHint": "Intenta ajustar los filtros de búsqueda",
     "locationPlaceholder": "Buscar ciudad o dirección...",
     "radius": "Radio",
-    "clear": "Limpiar"
+    "clear": "Limpiar",
+    "selectOnMap": "Seleccionar en mapa",
+    "hideMap": "Ocultar mapa",
+    "nearMe": "Cerca de mí"
   },
   "share": {
     "title": "Compartir",

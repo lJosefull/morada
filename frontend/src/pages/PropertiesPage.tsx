@@ -70,6 +70,8 @@ export default function PropertiesPage() {
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [showFilters, setShowFilters] = useState(false)
+  const [showLocationMap, setShowLocationMap] = useState(false)
+  const [geoLoading, setGeoLoading] = useState(false)
   const limit = 12
 
   const updateFilter = useCallback(<K extends keyof Filters>(key: K, value: Filters[K]) => {
@@ -356,7 +358,7 @@ export default function PropertiesPage() {
       {/* Filters Panel (Collapsible) — redesigned */}
       <div
         className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          showFilters ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
+          showFilters ? 'max-h-[1200px] opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
         <div className="bg-white border border-gray-200 rounded-xl shadow-lg shadow-gray-100/50 p-5 sm:p-6">
@@ -381,6 +383,134 @@ export default function PropertiesPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
+          </div>
+          {/* Location & City — first, most important filter */}
+          <div className="mb-5 pb-5 border-b border-gray-100">
+            <div className="flex flex-col gap-3">
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {t('property.location')}
+              </label>
+              <LocationAutocomplete
+                value={filters.location}
+                latitude={filters.latitude}
+                longitude={filters.longitude}
+                showMap={showLocationMap}
+                onChange={(data) => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    location: data.location,
+                    latitude: data.latitude,
+                    longitude: data.longitude,
+                  }))
+                  setPage(1)
+                }}
+                className="w-full pl-3 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all placeholder:text-gray-400"
+                placeholder={t('search.locationPlaceholder') || 'Buscar ciudad o dirección...'}
+              />
+              <div className="flex items-center flex-wrap gap-2">
+                <button
+                  onClick={() => {
+                    if (!navigator.geolocation) return
+                    setGeoLoading(true)
+                    navigator.geolocation.getCurrentPosition(
+                      (pos) => {
+                        const { latitude, longitude } = pos.coords
+                        setFilters((prev) => ({
+                          ...prev,
+                          latitude: latitude.toString(),
+                          longitude: longitude.toString(),
+                          radius: prev.radius || '10',
+                        }))
+                        setPage(1)
+                        setGeoLoading(false)
+                        if (window.google?.maps) {
+                          const geocoder = new google.maps.Geocoder()
+                          geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
+                            if (status === 'OK' && results?.[0]) {
+                              setFilters((prev) => ({ ...prev, location: results[0].formatted_address }))
+                            }
+                          })
+                        }
+                      },
+                      () => { setGeoLoading(false) },
+                      { enableHighAccuracy: true, timeout: 10000 },
+                    )
+                  }}
+                  disabled={geoLoading}
+                  className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all ${
+                    geoLoading
+                      ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-wait'
+                      : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-600 hover:bg-emerald-50'
+                  }`}
+                >
+                  <svg className={`w-3.5 h-3.5 ${geoLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  {geoLoading ? (t('common.loading') || 'Localizando...') : (t('search.nearMe') || 'Cerca de mí')}
+                </button>
+                <button
+                  onClick={() => setShowLocationMap((prev) => !prev)}
+                  className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all ${
+                    showLocationMap
+                      ? 'bg-blue-50 text-blue-700 border-blue-200'
+                      : 'bg-white text-gray-500 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                  }`}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  </svg>
+                  {showLocationMap ? t('search.hideMap') || 'Ocultar mapa' : t('search.selectOnMap') || 'Seleccionar en mapa'}
+                </button>
+                {filters.latitude && filters.longitude && (
+                  <button
+                    onClick={() => {
+                      setFilters((prev) => ({ ...prev, location: '', latitude: '', longitude: '', radius: '' }))
+                      setPage(1)
+                    }}
+                    className="text-xs text-red-500 hover:text-red-600 font-medium"
+                  >
+                    {t('search.clear') || 'Limpiar'}
+                  </button>
+                )}
+              </div>
+              {filters.latitude && filters.longitude && (
+                <div className="flex items-center flex-wrap gap-2">
+                  <span className="text-xs text-gray-500 font-medium">{t('search.radius') || 'Radio'}:</span>
+                  {['1', '3', '5', '10', '25', '50'].map((km) => (
+                    <button
+                      key={km}
+                      onClick={() => {
+                        setFilters((prev) => ({ ...prev, radius: prev.radius === km ? '' : km }))
+                        setPage(1)
+                      }}
+                      className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-all duration-200 ${
+                        filters.radius === km
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50'
+                      }`}
+                    >
+                      {km} km
+                    </button>
+                  ))}
+                  {filters.radius && (
+                    <button
+                      onClick={() => {
+                        setFilters((prev) => ({ ...prev, radius: '' }))
+                        setPage(1)
+                      }}
+                      className="text-xs text-red-500 hover:text-red-600 font-medium"
+                    >
+                      {t('search.clear') || 'Limpiar'}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5">
@@ -530,69 +660,6 @@ export default function PropertiesPage() {
                     className="w-full pl-7 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all placeholder:text-gray-400"
                   />
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Location & Radius */}
-          <div className="mt-5 pt-5 border-t border-gray-100">
-            <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-              <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider sm:w-32 shrink-0">
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                {t('property.location')}
-              </label>
-              <div className="flex-1 space-y-3">
-                <LocationAutocomplete
-                  value={filters.location}
-                  latitude={filters.latitude}
-                  longitude={filters.longitude}
-                  onChange={(data) => {
-                    setFilters((prev) => ({
-                      ...prev,
-                      location: data.location,
-                      latitude: data.latitude,
-                      longitude: data.longitude,
-                    }))
-                    setPage(1)
-                  }}
-                  className="w-full pl-3 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all placeholder:text-gray-400"
-                  placeholder={t('search.locationPlaceholder') || 'Buscar ciudad o dirección...'}
-                />
-                {filters.latitude && filters.longitude && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-500 font-medium">{t('search.radius') || 'Radio'}:</span>
-                    {['1', '3', '5', '10', '25', '50'].map((km) => (
-                      <button
-                        key={km}
-                        onClick={() => {
-                          setFilters((prev) => ({ ...prev, radius: prev.radius === km ? '' : km }))
-                          setPage(1)
-                        }}
-                        className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-all duration-200 ${
-                          filters.radius === km
-                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200'
-                            : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50'
-                        }`}
-                      >
-                        {km} km
-                      </button>
-                    ))}
-                    {filters.radius && (
-                      <button
-                        onClick={() => {
-                          setFilters((prev) => ({ ...prev, radius: '' }))
-                          setPage(1)
-                        }}
-                        className="text-xs text-red-500 hover:text-red-600 font-medium"
-                      >
-                        {t('search.clear') || 'Limpiar'}
-                      </button>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
           </div>

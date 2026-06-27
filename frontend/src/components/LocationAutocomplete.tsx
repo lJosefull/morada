@@ -13,6 +13,7 @@ interface LocationAutocompleteProps {
   onChange: (data: { location: string; latitude: string; longitude: string }) => void
   className?: string
   placeholder?: string
+  showMap?: boolean
 }
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
@@ -20,7 +21,7 @@ const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 const DEFAULT_CENTER = { lat: 4.711, lng: -74.072 }
 
 export default function LocationAutocomplete({
-  value, latitude, longitude, onChange, className = '', placeholder,
+  value, latitude, longitude, onChange, className = '', placeholder, showMap = true,
 }: LocationAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const mapRef = useRef<HTMLDivElement>(null)
@@ -62,7 +63,7 @@ export default function LocationAutocomplete({
   }, [])
 
   useEffect(() => {
-    if (!loaded || !inputRef.current || !mapRef.current) return
+    if (!loaded || !inputRef.current || !mapRef.current || !showMap) return
 
     if (!mapInstanceRef.current) {
       const center = hasCoords
@@ -132,7 +133,7 @@ export default function LocationAutocomplete({
         google.maps.event.removeListener(listenerRef.current)
       }
     }
-  }, [loaded])
+  }, [loaded, showMap])
 
   useEffect(() => {
     if (!loaded || !mapInstanceRef.current || !markerRef.current) return
@@ -181,11 +182,13 @@ export default function LocationAutocomplete({
         className={className}
         placeholder={placeholder}
       />
-      <div
-        ref={mapRef}
-        className="mt-2 w-full rounded-lg border border-gray-300"
-        style={{ height: '250px' }}
-      />
+      {showMap && (
+        <div
+          ref={mapRef}
+          className="mt-2 w-full rounded-lg border border-gray-300"
+          style={{ height: '250px' }}
+        />
+      )}
     </div>
   )
 }
