@@ -7,16 +7,24 @@ import { resolve } from 'path';
 import * as express from 'express';
 
 async function bootstrap() {
+  // Validate critical secrets before starting
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'your-super-secret-jwt-key-change-in-production') {
+    throw new Error('JWT_SECRET must be set and changed from the default value');
+  }
+  if (!process.env.JWT_REFRESH_SECRET || process.env.JWT_REFRESH_SECRET === 'your-super-secret-refresh-key-change-in-production') {
+    throw new Error('JWT_REFRESH_SECRET must be set and changed from the default value');
+  }
+
   const app = await NestFactory.create(AppModule);
 
   // Security headers
-  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: false, // disabled for Swagger UI
+  }));
 
   // Serve uploaded files
   const uploadsPath = resolve(process.env.UPLOAD_DIR || './uploads');
-  console.log('[bootstrap] CWD:', process.cwd());
-  console.log('[bootstrap] UPLOAD_DIR env:', process.env.UPLOAD_DIR);
-  console.log('[bootstrap] Serving uploads from:', uploadsPath);
   app.use('/uploads', express.static(uploadsPath));
 
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -40,14 +48,16 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  const config = new DocumentBuilder()
-    .setTitle('Real Estate API')
-    .setDescription('The Real Estate API documentation')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('Real Estate API')
+      .setDescription('The Real Estate API documentation')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('docs', app, document);
+  }
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

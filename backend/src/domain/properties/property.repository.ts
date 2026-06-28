@@ -19,6 +19,7 @@ export type PropertyFilters = {
 
 export interface IPropertyRepository {
   findById(id: string): Promise<IProperty | null>;
+  findByIdIncludingHidden(id: string): Promise<IProperty | null>;
   findMany(filters: PropertyFilters, skip?: number, take?: number): Promise<[IProperty[], number]>;
   create(input: CreatePropertyInput & { userId: string }): Promise<IProperty>;
   update(id: string, input: UpdatePropertyInput): Promise<IProperty>;

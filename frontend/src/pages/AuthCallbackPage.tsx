@@ -1,18 +1,21 @@
 import React, { useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 
 const AuthCallbackPage: React.FC = () => {
-  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const setTokens = useAuthStore((s) => s.setTokens)
   const fetchUser = useAuthStore((s) => s.fetchUser)
 
   useEffect(() => {
-    const accessToken = searchParams.get('accessToken')
-    const refreshToken = searchParams.get('refreshToken')
-    const error = searchParams.get('error')
+    const hash = window.location.hash.slice(1)
+    const params = new URLSearchParams(hash)
+    const accessToken = params.get('accessToken')
+    const refreshToken = params.get('refreshToken')
+    const error = params.get('error')
+
+    window.location.hash = ''
 
     if (error) {
       navigate('/login', { replace: true })

@@ -57,6 +57,10 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        const refreshToken = get().refreshToken
+        if (refreshToken) {
+          api.post('/auth/logout', { refreshToken }).catch(() => {})
+        }
         set({ user: null, accessToken: null, refreshToken: null, error: null })
       },
 

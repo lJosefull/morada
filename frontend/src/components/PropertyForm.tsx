@@ -43,7 +43,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [uploading, setUploading] = useState(false)
   const [images, setImages] = useState<Image[]>(property?.images || [])
-  const [pendingFiles, setPendingFiles] = useState<File[]>([])
+  const [pendingFiles, setPendingFiles] = useState<{ file: File; url: string }[]>([])
   const [deletedImageIds, setDeletedImageIds] = useState<Set<string>>(new Set())
 
   const [formData, setFormData] = useState({
@@ -135,7 +135,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
         navigate(`/property/${property.id}`)
       } else {
         const { data: newProperty } = await api.post<Property>('/properties', data)
-        for (const file of pendingFiles) {
+        for (const { file } of pendingFiles) {
           const fd = new FormData()
           fd.append('image', file)
           await api.post(`/properties/${newProperty.id}/images`, fd)
@@ -166,7 +166,8 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
     if (!file) return
 
     if (!property || !isEditing) {
-      setPendingFiles((prev) => [...prev, file!])
+      const url = URL.createObjectURL(file!)
+      setPendingFiles((prev) => [...prev, { file: file!, url }])
       if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }
@@ -189,8 +190,19 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
   }
 
   const handleRemovePending = (index: number) => {
-    setPendingFiles((prev) => prev.filter((_, i) => i !== index))
+    setPendingFiles((prev) => {
+      const removed = prev[index]
+      if (removed) URL.revokeObjectURL(removed.url)
+      return prev.filter((_, i) => i !== index)
+    })
   }
+
+  // Clean up blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      pendingFiles.forEach((pf) => URL.revokeObjectURL(pf.url))
+    }
+  }, [])
 
   const handleDeleteImage = (imageId: string) => {
     setDeletedImageIds((prev) => {
@@ -414,9 +426,9 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
                     )}
                   </div>
                 ))}
-                {!isEditing && pendingFiles.map((file, i) => (
+                {!isEditing && pendingFiles.map((pf, i) => (
                   <div key={i} className="relative group w-24 h-24 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
-                    <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
+                    <img src={pf.url} alt="" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                       <button type="button" onClick={() => handleRemovePending(i)}
                         className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors"

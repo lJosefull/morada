@@ -4,6 +4,7 @@ import { LoginDto, RegisterDto, RefreshTokenDto } from './auth.dto';
 import { JwtAuthGuard } from '../../infrastructure/auth/jwt-auth.guard';
 import { GoogleAuthGuard } from '../../infrastructure/auth/google-auth.guard';
 import { Public } from '../../infrastructure/auth/public.decorator';
+import { Throttle } from '@nestjs/throttler';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { Response } from 'express';
 
@@ -14,6 +15,7 @@ export class AuthController {
 
   @Public()
   @Post('register')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Register a new user' })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
@@ -21,6 +23,7 @@ export class AuthController {
 
   @Public()
   @Post('login')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @ApiOperation({ summary: 'Login user' })
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
@@ -28,6 +31,7 @@ export class AuthController {
 
   @Public()
   @Post('refresh')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   @ApiOperation({ summary: 'Refresh access token' })
   async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshToken(refreshTokenDto.refreshToken);
@@ -63,7 +67,7 @@ export class AuthController {
     const result = await this.authService.googleLogin(req.user);
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     res.redirect(
-      `${frontendUrl}/auth/callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`,
+      `${frontendUrl}/auth/callback#accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`,
     );
   }
 }

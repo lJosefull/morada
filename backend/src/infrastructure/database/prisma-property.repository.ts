@@ -8,6 +8,15 @@ export class PrismaPropertyRepository implements IPropertyRepository {
   constructor(private prisma: PrismaService) {}
 
   async findById(id: string): Promise<IProperty | null> {
+    const property = await this.prisma.property.findFirst({
+      where: { id, status: { not: 'hidden' } },
+      include: { images: true, user: { select: { id: true, name: true, email: true, phone: true, plan: true, agencyName: true, agencyLogo: true } } },
+    });
+    if (!property) return null;
+    return this.toDomain(property);
+  }
+
+  async findByIdIncludingHidden(id: string): Promise<IProperty | null> {
     const property = await this.prisma.property.findUnique({
       where: { id },
       include: { images: true, user: { select: { id: true, name: true, email: true, phone: true, plan: true, agencyName: true, agencyLogo: true } } },
@@ -24,7 +33,7 @@ export class PrismaPropertyRepository implements IPropertyRepository {
     const where = this.buildWhereClause(filters);
     const include = { images: true, user: { select: { id: true, name: true, email: true, phone: true, plan: true, agencyName: true, agencyLogo: true } as const } };
 
-    if (filters.latitude && filters.longitude && filters.radius) {
+    if (filters.latitude !== undefined && filters.longitude !== undefined && filters.radius !== undefined && filters.radius > 0) {
       const allProperties = await this.prisma.property.findMany({
         where,
         orderBy: { createdAt: 'desc' },
@@ -32,7 +41,7 @@ export class PrismaPropertyRepository implements IPropertyRepository {
       });
 
       const filtered = allProperties.filter((p) => {
-        if (!p.latitude || !p.longitude) return false;
+        if (p.latitude === null || p.longitude === null) return false;
         const dist = this.haversineDistance(
           filters.latitude!, filters.longitude!,
           p.latitude, p.longitude,
@@ -127,7 +136,7 @@ export class PrismaPropertyRepository implements IPropertyRepository {
       if (filters.minPrice !== undefined) (where.price as Record<string, unknown>).gte = filters.minPrice;
       if (filters.maxPrice !== undefined) (where.price as Record<string, unknown>).lte = filters.maxPrice;
     }
-    if (filters.latitude && filters.longitude && filters.radius) {
+    if (filters.latitude !== undefined && filters.longitude !== undefined && filters.radius !== undefined && filters.radius > 0) {
       const latDelta = filters.radius / 111;
       const lngDelta = filters.radius / (111 * Math.cos((filters.latitude * Math.PI) / 180));
       where.latitude = { gte: filters.latitude - latDelta, lte: filters.latitude + latDelta };

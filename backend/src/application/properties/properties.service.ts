@@ -54,7 +54,7 @@ export class PropertiesService {
   }
 
   async update(id: string, updatePropertyDto: UpdatePropertyDto, userId: string) {
-    const property = await this.propertyRepository.findById(id);
+    const property = await this.propertyRepository.findByIdIncludingHidden(id);
     if (!property) {
       throw new NotFoundException('Property not found');
     }
@@ -68,7 +68,7 @@ export class PropertiesService {
   }
 
   async remove(id: string, userId: string) {
-    const property = await this.propertyRepository.findById(id);
+    const property = await this.propertyRepository.findByIdIncludingHidden(id);
     if (!property) {
       throw new NotFoundException('Property not found');
     }

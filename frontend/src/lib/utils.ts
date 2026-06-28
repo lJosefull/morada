@@ -35,11 +35,18 @@ const CURRENCY_LOCALE: Record<string, string> = {
 }
 
 export function formatCurrency(amount: number, currency = 'COP'): string {
+  if (currency === 'UF') {
+    return `UF ${amount.toLocaleString('es-CL')}`
+  }
   const locale = CURRENCY_LOCALE[currency] || 'es-CL'
-  return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  } catch {
+    return `${currency} ${amount.toLocaleString('es-CL')}`
+  }
 }
