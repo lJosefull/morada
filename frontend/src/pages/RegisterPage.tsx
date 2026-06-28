@@ -37,7 +37,7 @@ const RegisterPage: React.FC = () => {
       localStorage.setItem('morada-consent-' + email, JSON.stringify(consentData))
 
       await register({ email, password, name })
-      navigate(`/verify-email?email=${encodeURIComponent(email)}`, { replace: true })
+      navigate('/', { replace: true })
     } catch {
       // Error handled by store
     }

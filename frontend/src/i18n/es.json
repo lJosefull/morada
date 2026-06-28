@@ -344,5 +344,14 @@
   },
   "footer": {
     "rights": "Todos los derechos reservados"
+  },
+  "verificationBanner": {
+    "title": "Correo no verificado",
+    "message": "Aún no has verificado tu correo electrónico. Revisa tu bandeja de entrada o solicita un nuevo enlace.",
+    "resend": "Reenviar enlace",
+    "resending": "Reenviando...",
+    "resent": "Enlace reenviado. Revisa tu correo.",
+    "dismiss": "Entendido",
+    "error": "Error al reenviar. Intenta de nuevo."
   }
 }
