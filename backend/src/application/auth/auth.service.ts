@@ -24,18 +24,12 @@ export class AuthService {
       throw new ConflictException('Email already registered');
     }
 
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
     const user = await this.userRepository.create({
       email: registerDto.email,
       name: registerDto.name,
       passwordHash: hashedPassword,
-      verificationToken,
-    });
-
-    await this.mailService.sendVerificationEmail(user.email, verificationToken).catch((err) => {
-      console.error('Failed to send verification email:', err);
+      emailVerified: true,
     });
 
     const tokens = await this.generateTokens(user);
