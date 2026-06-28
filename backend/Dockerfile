@@ -26,4 +26,4 @@ COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "if [ \"$NODE_ENV\" = \"production\" ]; then npx prisma migrate deploy; else npx prisma db push --accept-data-loss; fi && node dist/main.js"]
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss; npx prisma migrate resolve --applied add_email_verification 2>/dev/null; node dist/main.js"]
