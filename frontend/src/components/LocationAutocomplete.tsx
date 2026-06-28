@@ -65,63 +65,67 @@ export default function LocationAutocomplete({
   }, [])
 
   useEffect(() => {
-    if (!loaded || !inputRef.current || !mapRef.current || !showMap) return
-
-    if (!mapInstanceRef.current) {
-      const center = hasCoords
-        ? { lat: Number(latitude), lng: Number(longitude) }
-        : DEFAULT_CENTER
-
-      mapInstanceRef.current = new google.maps.Map(mapRef.current, {
-        center,
-        zoom: 14,
-        mapTypeControl: false,
-        streetViewControl: false,
-      })
-
-      markerRef.current = new google.maps.Marker({
-        position: center,
-        map: mapInstanceRef.current,
-        draggable: true,
-      })
-
-      markerRef.current.addListener('dragend', () => {
-        const pos = markerRef.current!.getPosition()
-        if (!pos) return
-        reverseGeocode(pos.lat(), pos.lng())
-      })
-
-      mapInstanceRef.current.addListener('click', (e: google.maps.MapMouseEvent) => {
-        if (!e.latLng) return
-        markerRef.current!.setPosition(e.latLng)
-        reverseGeocode(e.latLng.lat(), e.latLng.lng())
-      })
+    if (!showMap) {
+      if (circleRef.current) { circleRef.current.setMap(null); circleRef.current = null }
+      if (markerRef.current) { markerRef.current.setMap(null); markerRef.current = null }
+      if (mapInstanceRef.current) { mapInstanceRef.current = null }
+      if (autocompleteRef.current) { autocompleteRef.current = null }
+      if (listenerRef.current) { listenerRef.current = null }
+      return
     }
+    if (!loaded || !inputRef.current || !mapRef.current) return
 
-    if (!autocompleteRef.current) {
-      autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
-        types: ['address'],
-        componentRestrictions: { country: 'co' },
+    const center = hasCoords
+      ? { lat: Number(latitude), lng: Number(longitude) }
+      : DEFAULT_CENTER
+
+    mapInstanceRef.current = new google.maps.Map(mapRef.current, {
+      center,
+      zoom: 14,
+      mapTypeControl: false,
+      streetViewControl: false,
+    })
+
+    markerRef.current = new google.maps.Marker({
+      position: center,
+      map: mapInstanceRef.current,
+      draggable: true,
+    })
+
+    markerRef.current.addListener('dragend', () => {
+      const pos = markerRef.current!.getPosition()
+      if (!pos) return
+      reverseGeocode(pos.lat(), pos.lng())
+    })
+
+    mapInstanceRef.current.addListener('click', (e: google.maps.MapMouseEvent) => {
+      if (!e.latLng) return
+      markerRef.current!.setPosition(e.latLng)
+      reverseGeocode(e.latLng.lat(), e.latLng.lng())
+    })
+
+    autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
+      types: ['address'],
+      componentRestrictions: { country: 'co' },
+    })
+
+    listenerRef.current = autocompleteRef.current.addListener('place_changed', () => {
+      const place = autocompleteRef.current?.getPlace()
+      if (!place || !place.geometry?.location) return
+
+      const lat = place.geometry.location.lat()
+      const lng = place.geometry.location.lng()
+
+      onChange({
+        location: place.formatted_address || '',
+        latitude: lat.toString(),
+        longitude: lng.toString(),
       })
 
-      listenerRef.current = autocompleteRef.current.addListener('place_changed', () => {
-        const place = autocompleteRef.current?.getPlace()
-        if (!place || !place.geometry?.location) return
-
-        const lat = place.geometry.location.lat()
-        const lng = place.geometry.location.lng()
-
-        onChange({
-          location: place.formatted_address || '',
-          latitude: lat.toString(),
-          longitude: lng.toString(),
-        })
-
-        mapInstanceRef.current?.setCenter({ lat, lng })
-        mapInstanceRef.current?.setZoom(16)
-        markerRef.current?.setPosition({ lat, lng })
-      })
-    }
+      mapInstanceRef.current?.setCenter({ lat, lng })
+      mapInstanceRef.current?.setZoom(16)
+      markerRef.current?.setPosition({ lat, lng })
+    })
 
     if (pendingCenterRef.current) {
       const c = pendingCenterRef.current
@@ -133,6 +137,7 @@ export default function LocationAutocomplete({
     return () => {
       if (listenerRef.current) {
         google.maps.event.removeListener(listenerRef.current)
+        listenerRef.current = null
       }
     }
   }, [loaded, showMap])
@@ -198,7 +203,7 @@ export default function LocationAutocomplete({
         circleRef.current = null
       }
     }
-  }, [loaded, latitude, longitude, radius, showMap])
+  }, [loaded, latitude, longitude, radius])
 
   async function reverseGeocode(lat: number, lng: number) {
     onChange({ latitude: lat.toString(), longitude: lng.toString(), location: value })
