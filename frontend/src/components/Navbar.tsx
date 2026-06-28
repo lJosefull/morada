@@ -26,6 +26,10 @@ export default function Navbar() {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchListingType, setSearchListingType] = useState('');
+  const [searchMinPrice, setSearchMinPrice] = useState('');
+  const [searchMaxPrice, setSearchMaxPrice] = useState('');
+  const [searchLocation, setSearchLocation] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
     try {
@@ -82,18 +86,48 @@ export default function Navbar() {
     })
   }, [])
 
+  const buildSearchUrl = useCallback(() => {
+    const trimmed = searchQuery.trim()
+    const params = new URLSearchParams()
+    if (trimmed) params.set('search', trimmed)
+    if (searchLocation) params.set('location', searchLocation)
+    if (searchListingType) params.set('listingType', searchListingType)
+    if (searchMinPrice) params.set('minPrice', searchMinPrice)
+    if (searchMaxPrice) params.set('maxPrice', searchMaxPrice)
+    const qs = params.toString()
+    return `/properties${qs ? `?${qs}` : ''}`
+  }, [searchQuery, searchLocation, searchListingType, searchMinPrice, searchMaxPrice])
+
   const executeSearch = useCallback((query: string) => {
     const trimmed = query.trim()
-    setSearchQuery('')
     setIsSearchFocused(false)
     searchRef.current?.blur()
     if (trimmed) {
       saveRecentSearch(trimmed)
-      navigate(`/properties?search=${encodeURIComponent(trimmed)}`)
-    } else {
-      navigate('/properties')
     }
-  }, [navigate, saveRecentSearch])
+    const url = buildSearchUrl()
+    setSearchQuery('')
+    navigate(url)
+  }, [navigate, saveRecentSearch, buildSearchUrl])
+
+  const executeFilteredSearch = useCallback(() => {
+    const trimmed = searchQuery.trim()
+    setIsSearchFocused(false)
+    searchRef.current?.blur()
+    if (trimmed) {
+      saveRecentSearch(trimmed)
+    }
+    const url = buildSearchUrl()
+    setSearchQuery('')
+    navigate(url)
+  }, [navigate, saveRecentSearch, buildSearchUrl])
+
+  const clearFilters = () => {
+    setSearchLocation('')
+    setSearchListingType('')
+    setSearchMinPrice('')
+    setSearchMaxPrice('')
+  }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -161,7 +195,11 @@ export default function Navbar() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => setIsSearchFocused(true)}
-                    onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                    onBlur={(e) => {
+                      // Keep dropdown open if focus moves inside the dropdown
+                      if (dropdownRef.current && e.relatedTarget && dropdownRef.current.contains(e.relatedTarget as Node)) return
+                      setTimeout(() => setIsSearchFocused(false), 200)
+                    }}
                     placeholder={`${t('common.search')}...`}
                     className={`w-full pl-10 pr-10 py-2 rounded-xl text-sm transition-all duration-200 placeholder:text-gray-400 ${
                       isSearchFocused
@@ -194,10 +232,121 @@ export default function Navbar() {
 
               {/* Search Dropdown */}
               {isSearchFocused && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl shadow-gray-200/50 z-50 overflow-hidden animate-[fadeIn_0.15s_ease]">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl shadow-gray-200/50 z-50 overflow-hidden animate-[fadeIn_0.15s_ease]" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+                  {/* Filters section */}
+                  <div className="p-3 space-y-3">
+                    {/* Location */}
+                    <div>
+                      <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 block">
+                        {t('property.location')}
+                      </label>
+                      <input
+                        type="text"
+                        value={searchLocation}
+                        onChange={(e) => setSearchLocation(e.target.value)}
+                        placeholder={t('search.locationPlaceholder')}
+                        className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all placeholder:text-gray-400"
+                      />
+                    </div>
+
+                    {/* Listing type */}
+                    <div>
+                      <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 block">
+                        {t('property.listingType')}
+                      </label>
+                      <div className="flex gap-1.5">
+                        {[
+                          { value: '', label: t('common.all') },
+                          { value: 'sale', label: t('property.sale') },
+                          { value: 'rent', label: t('property.rent') },
+                        ].map((opt) => (
+                          <button
+                            key={opt.value}
+                            onClick={() => setSearchListingType(opt.value)}
+                            className={`flex-1 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                              searchListingType === opt.value
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Budget */}
+                    <div>
+                      <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 block">
+                        Presupuesto
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          value={searchMinPrice}
+                          onChange={(e) => setSearchMinPrice(e.target.value)}
+                          placeholder={t('search.minPrice')}
+                          className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all placeholder:text-gray-400"
+                        />
+                        <span className="text-gray-400 shrink-0">—</span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={searchMaxPrice}
+                          onChange={(e) => setSearchMaxPrice(e.target.value)}
+                          placeholder={t('search.maxPrice')}
+                          className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all placeholder:text-gray-400"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Clear filters */}
+                    {(searchLocation || searchListingType || searchMinPrice || searchMaxPrice) && (
+                      <button
+                        onClick={clearFilters}
+                        className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                      >
+                        {t('search.clear')}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Quick links — property type */}
+                  <div className="border-t border-gray-100 p-3">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                      {t('property.type')}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {QUICK_LINKS.map((link) => (
+                        <button
+                          key={link.value}
+                          onClick={() => handleQuickLink(link.value)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors"
+                        >
+                          <span>{link.icon}</span>
+                          <span>{t(link.labelKey)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Search button */}
+                  <div className="border-t border-gray-100 p-3">
+                    <button
+                      onClick={executeFilteredSearch}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      <span>{t('common.search')}</span>
+                    </button>
+                  </div>
+
                   {/* Recent searches */}
-                  {recentSearches.length > 0 && !searchQuery && (
-                    <div className="p-3">
+                  {recentSearches.length > 0 && (
+                    <div className="border-t border-gray-100 p-3">
                       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
                         {t('common.recent')}
                       </p>
@@ -228,44 +377,8 @@ export default function Navbar() {
                     </div>
                   )}
 
-                  {/* Suggestions when typing */}
-                  {searchQuery.trim() && (
-                    <div className="p-3">
-                      <button
-                        onClick={() => executeSearch(searchQuery)}
-                        className="w-full flex items-center gap-2.5 px-2.5 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        <span>{t('common.search')} &quot;<strong>{searchQuery}</strong>&quot;</span>
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Quick links — only show when not typing */}
-                  {!searchQuery && (
-                    <div className="border-t border-gray-100 p-3">
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                        {t('property.type')}
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {QUICK_LINKS.map((link) => (
-                          <button
-                            key={link.value}
-                            onClick={() => handleQuickLink(link.value)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors"
-                          >
-                            <span>{link.icon}</span>
-                            <span>{t(link.labelKey)}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Empty state — first time */}
-                  {recentSearches.length === 0 && !searchQuery && (
+                  {/* Empty state — first time (only if no recent searches and no filters active) */}
+                  {recentSearches.length === 0 && (
                     <div className="p-6 text-center">
                       <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-2">
                         <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -454,8 +567,8 @@ export default function Navbar() {
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-gray-200 py-4">
             {/* Mobile search */}
-            <form onSubmit={(e) => { handleSearch(e); setIsMobileMenuOpen(false) }} className="px-4 mb-4">
-              <div className="relative">
+            <form onSubmit={(e) => { executeFilteredSearch(); setIsMobileMenuOpen(false) }} className="px-4 mb-4">
+              <div className="relative mb-3">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -469,6 +582,65 @@ export default function Navbar() {
                   className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all"
                 />
               </div>
+              {/* Mobile location filter */}
+              <input
+                type="text"
+                value={searchLocation}
+                onChange={(e) => setSearchLocation(e.target.value)}
+                placeholder={t('search.locationPlaceholder')}
+                className="w-full px-3 py-2 mb-2 text-sm bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all placeholder:text-gray-400"
+              />
+              {/* Mobile listing type */}
+              <div className="flex gap-1.5 mb-2">
+                {[
+                  { value: '', label: t('common.all') },
+                  { value: 'sale', label: t('property.sale') },
+                  { value: 'rent', label: t('property.rent') },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setSearchListingType(opt.value)}
+                    className={`flex-1 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                      searchListingType === opt.value
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {/* Mobile budget */}
+              <div className="flex items-center gap-2 mb-3">
+                <input
+                  type="number"
+                  min="0"
+                  value={searchMinPrice}
+                  onChange={(e) => setSearchMinPrice(e.target.value)}
+                  placeholder={t('search.minPrice')}
+                  className="w-full px-3 py-2 text-sm bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all placeholder:text-gray-400"
+                />
+                <span className="text-gray-400 shrink-0">—</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={searchMaxPrice}
+                  onChange={(e) => setSearchMaxPrice(e.target.value)}
+                  placeholder={t('search.maxPrice')}
+                  className="w-full px-3 py-2 text-sm bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all placeholder:text-gray-400"
+                />
+              </div>
+              {/* Mobile search button */}
+              <button
+                type="submit"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <span>{t('common.search')}</span>
+              </button>
             </form>
             <div className="space-y-2 mb-4">
               <Link
