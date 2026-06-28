@@ -59,14 +59,17 @@ const SORT_OPTIONS: { value: SortOption; labelKey: string }[] = [
 
 export default function PropertiesPage() {
   const { t } = useTranslation()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [properties, setProperties] = useState<Property[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
-  const [filters, setFilters] = useState<Filters>(() => ({
-    ...DEFAULT_FILTERS,
-    search: searchParams.get('search') || '',
-  }))
+  const [filters, setFilters] = useState<Filters>(() => {
+    const fromUrl: Record<string, string> = {}
+    for (const [key, value] of searchParams.entries()) {
+      if (key !== 'page' && key !== 'limit') fromUrl[key] = value
+    }
+    return { ...DEFAULT_FILTERS, ...fromUrl }
+  })
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [showFilters, setShowFilters] = useState(false)
@@ -123,6 +126,23 @@ export default function PropertiesPage() {
       })
       .finally(() => setLoading(false))
   }, [page, filters])
+
+  useEffect(() => {
+    const params: Record<string, string> = {}
+    if (filters.search) params.search = filters.search
+    if (filters.location) params.location = filters.location
+    if (filters.listingType) params.listingType = filters.listingType
+    if (filters.propertyType) params.propertyType = filters.propertyType
+    if (filters.minPrice) params.minPrice = filters.minPrice
+    if (filters.maxPrice) params.maxPrice = filters.maxPrice
+    if (filters.bedrooms) params.bedrooms = filters.bedrooms
+    if (filters.bathrooms) params.bathrooms = filters.bathrooms
+    if (filters.latitude) params.latitude = filters.latitude
+    if (filters.longitude) params.longitude = filters.longitude
+    if (filters.radius) params.radius = filters.radius
+    if (filters.sort && filters.sort !== 'newest') params.sort = filters.sort
+    setSearchParams(params, { replace: true })
+  }, [filters, setSearchParams])
 
   const totalPages = Math.ceil(total / limit)
 
