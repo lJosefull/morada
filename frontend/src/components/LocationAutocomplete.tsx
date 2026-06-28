@@ -105,7 +105,7 @@ export default function LocationAutocomplete({
     })
 
     autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
-      types: ['address'],
+      types: ['geocode'],
       componentRestrictions: { country: 'co' },
     })
 
@@ -226,6 +226,12 @@ export default function LocationAutocomplete({
     onChange({ location: e.target.value, latitude: '', longitude: '' })
   }
 
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter' && value && !latitude) {
+      onChange({ location: value, latitude: '', longitude: '' })
+    }
+  }
+
   return (
     <div>
       <input
@@ -233,6 +239,7 @@ export default function LocationAutocomplete({
         type="text"
         value={value}
         onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
         className={className}
         placeholder={placeholder}
       />
