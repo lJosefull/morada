@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../lib/api'
@@ -78,6 +78,18 @@ export default function PropertiesPage() {
   })
   const [geoLoading, setGeoLoading] = useState(false)
   const limit = 12
+  const [searchInput, setSearchInput] = useState(filters.search)
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => { mountedRef.current = false }
+  }, [])
+
+  useEffect(() => {
+    setSearchInput(filters.search)
+  }, [filters.search])
 
   const updateFilter = useCallback(<K extends keyof Filters>(key: K, value: Filters[K]) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
@@ -188,8 +200,15 @@ export default function PropertiesPage() {
             </div>
             <input
               type="text"
-              value={filters.search}
-              onChange={(e) => updateFilter('search', e.target.value)}
+              value={searchInput}
+              onChange={(e) => {
+                const value = e.target.value
+                setSearchInput(value)
+                clearTimeout(debounceRef.current)
+                debounceRef.current = setTimeout(() => {
+                  updateFilter('search', value)
+                }, 400)
+              }}
               placeholder={t('common.search')}
               className="w-full pl-11 pr-14 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white text-sm sm:text-base placeholder:text-gray-400 transition-all"
             />
@@ -453,6 +472,7 @@ export default function PropertiesPage() {
                         if (window.google?.maps) {
                           const geocoder = new google.maps.Geocoder()
                           geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
+                            if (!mountedRef.current) return
                             if (status === 'OK' && results?.[0]) {
                               setFilters((prev) => ({ ...prev, location: results[0].formatted_address }))
                             }

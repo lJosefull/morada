@@ -32,7 +32,12 @@ export default function LocationAutocomplete({
   const markerRef = useRef<google.maps.Marker | null>(null)
   const circleRef = useRef<google.maps.Circle | null>(null)
   const pendingCenterRef = useRef<{ lat: number; lng: number } | null>(null)
+  const onChangeRef = useRef(onChange)
+  const valueRef = useRef(value)
   const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => { onChangeRef.current = onChange }, [onChange])
+  useEffect(() => { valueRef.current = value }, [value])
 
   const hasCoords = latitude && longitude
 
@@ -81,7 +86,7 @@ export default function LocationAutocomplete({
       const lat = place.geometry.location.lat()
       const lng = place.geometry.location.lng()
 
-      onChange({
+      onChangeRef.current({
         location: place.formatted_address || '',
         latitude: lat.toString(),
         longitude: lng.toString(),
@@ -216,14 +221,14 @@ export default function LocationAutocomplete({
   }, [latitude, longitude, radius])
 
   async function reverseGeocode(lat: number, lng: number) {
-    onChange({ latitude: lat.toString(), longitude: lng.toString(), location: value })
+    onChangeRef.current({ latitude: lat.toString(), longitude: lng.toString(), location: valueRef.current })
 
     if (!window.google?.maps) return
 
     const geocoder = new google.maps.Geocoder()
     geocoder.geocode({ location: { lat, lng } }, (results, status) => {
       if (status === 'OK' && results?.[0]) {
-        onChange({
+        onChangeRef.current({
           location: results[0].formatted_address,
           latitude: lat.toString(),
           longitude: lng.toString(),
@@ -233,12 +238,12 @@ export default function LocationAutocomplete({
   }
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    onChange({ location: e.target.value, latitude: '', longitude: '' })
+    onChangeRef.current({ location: e.target.value, latitude: '', longitude: '' })
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter' && value && !latitude) {
-      onChange({ location: value, latitude: '', longitude: '' })
+    if (e.key === 'Enter' && valueRef.current && !latitude) {
+      onChangeRef.current({ location: valueRef.current, latitude: '', longitude: '' })
     }
   }
 
