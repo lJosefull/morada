@@ -10,10 +10,10 @@ const RECENT_SEARCHES_KEY = 'nav_recent_searches'
 const MAX_RECENT = 5
 
 const QUICK_LINKS = [
-  { labelKey: 'property.propertyType.house', icon: '🏠' },
-  { labelKey: 'property.propertyType.apartment', icon: '🏢' },
-  { labelKey: 'property.propertyType.land', icon: '🌳' },
-  { labelKey: 'property.propertyType.commercial', icon: '🏪' },
+  { labelKey: 'property.propertyType.house', icon: '🏠', value: 'house' },
+  { labelKey: 'property.propertyType.apartment', icon: '🏢', value: 'apartment' },
+  { labelKey: 'property.propertyType.land', icon: '🌳', value: 'land' },
+  { labelKey: 'property.propertyType.commercial', icon: '🏪', value: 'commercial' },
 ]
 
 export default function Navbar() {
@@ -100,8 +100,11 @@ export default function Navbar() {
     executeSearch(searchQuery)
   }
 
-  const handleQuickLink = (label: string) => {
-    executeSearch(label)
+  const handleQuickLink = (value: string) => {
+    setSearchQuery('')
+    setIsSearchFocused(false)
+    searchRef.current?.blur()
+    navigate(`/properties?propertyType=${encodeURIComponent(value)}`)
   }
 
   const clearSearch = () => {
@@ -249,8 +252,8 @@ export default function Navbar() {
                       <div className="flex flex-wrap gap-1.5">
                         {QUICK_LINKS.map((link) => (
                           <button
-                            key={link.labelKey}
-                            onClick={() => handleQuickLink(t(link.labelKey))}
+                            key={link.value}
+                            onClick={() => handleQuickLink(link.value)}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors"
                           >
                             <span>{link.icon}</span>
