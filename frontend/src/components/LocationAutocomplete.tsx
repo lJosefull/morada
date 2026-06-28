@@ -10,6 +10,7 @@ interface LocationAutocompleteProps {
   value: string
   latitude?: string
   longitude?: string
+  radius?: string
   onChange: (data: { location: string; latitude: string; longitude: string }) => void
   className?: string
   placeholder?: string
@@ -21,7 +22,7 @@ const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 const DEFAULT_CENTER = { lat: 4.711, lng: -74.072 }
 
 export default function LocationAutocomplete({
-  value, latitude, longitude, onChange, className = '', placeholder, showMap = true,
+  value, latitude, longitude, radius, onChange, className = '', placeholder, showMap = true,
 }: LocationAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const mapRef = useRef<HTMLDivElement>(null)
@@ -29,6 +30,7 @@ export default function LocationAutocomplete({
   const listenerRef = useRef<google.maps.MapsEventListener | null>(null)
   const mapInstanceRef = useRef<google.maps.Map | null>(null)
   const markerRef = useRef<google.maps.Marker | null>(null)
+  const circleRef = useRef<google.maps.Circle | null>(null)
   const pendingCenterRef = useRef<{ lat: number; lng: number } | null>(null)
   const [loaded, setLoaded] = useState(false)
 
@@ -150,6 +152,53 @@ export default function LocationAutocomplete({
     mapInstanceRef.current.setZoom(16)
     markerRef.current.setPosition({ lat, lng })
   }, [latitude, longitude, loaded])
+
+  useEffect(() => {
+    if (!loaded || !mapInstanceRef.current || !latitude || !longitude) {
+      if (circleRef.current) {
+        circleRef.current.setMap(null)
+        circleRef.current = null
+      }
+      return
+    }
+
+    const lat = Number(latitude)
+    const lng = Number(longitude)
+    if (isNaN(lat) || isNaN(lng)) return
+
+    const km = Number(radius)
+    if (!km || km <= 0) {
+      if (circleRef.current) {
+        circleRef.current.setMap(null)
+        circleRef.current = null
+      }
+      return
+    }
+
+    if (!circleRef.current) {
+      circleRef.current = new google.maps.Circle({
+        strokeColor: '#3B82F6',
+        strokeOpacity: 0.4,
+        strokeWeight: 2,
+        fillColor: '#3B82F6',
+        fillOpacity: 0.1,
+        map: mapInstanceRef.current,
+      })
+    }
+
+    circleRef.current.setCenter({ lat, lng })
+    circleRef.current.setRadius(km * 1000)
+
+    const bounds = circleRef.current.getBounds()
+    if (bounds) mapInstanceRef.current.fitBounds(bounds)
+
+    return () => {
+      if (circleRef.current) {
+        circleRef.current.setMap(null)
+        circleRef.current = null
+      }
+    }
+  }, [loaded, latitude, longitude, radius, showMap])
 
   async function reverseGeocode(lat: number, lng: number) {
     onChange({ latitude: lat.toString(), longitude: lng.toString(), location: value })

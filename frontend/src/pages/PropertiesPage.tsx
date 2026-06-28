@@ -398,6 +398,7 @@ export default function PropertiesPage() {
                 value={filters.location}
                 latitude={filters.latitude}
                 longitude={filters.longitude}
+                radius={filters.radius}
                 showMap={showLocationMap}
                 onChange={(data) => {
                   setFilters((prev) => ({
