@@ -62,8 +62,11 @@ export default function Navbar() {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
-          searchRef.current && !searchRef.current.contains(e.target as Node)) {
+      const target = e.target as HTMLElement
+      // Don't close if clicking on Google Places autocomplete suggestions
+      if (target.closest?.('.pac-container')) return
+      if (dropdownRef.current && !dropdownRef.current.contains(target) &&
+          searchRef.current && !searchRef.current.contains(target)) {
         setIsSearchFocused(false)
       }
     }
