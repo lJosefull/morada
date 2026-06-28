@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/auth';
 import { api } from '../lib/api';
 import { getImageUrl } from '../lib/utils';
 import { NotificationDropdown } from './NotificationDropdown';
+import LocationAutocomplete from './LocationAutocomplete';
 
 const RECENT_SEARCHES_KEY = 'nav_recent_searches'
 const MAX_RECENT = 5
@@ -30,6 +31,8 @@ export default function Navbar() {
   const [searchMinPrice, setSearchMinPrice] = useState('');
   const [searchMaxPrice, setSearchMaxPrice] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
+  const [searchLatitude, setSearchLatitude] = useState('');
+  const [searchLongitude, setSearchLongitude] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
     try {
@@ -91,12 +94,14 @@ export default function Navbar() {
     const params = new URLSearchParams()
     if (trimmed) params.set('search', trimmed)
     if (searchLocation) params.set('location', searchLocation)
+    if (searchLatitude) params.set('latitude', searchLatitude)
+    if (searchLongitude) params.set('longitude', searchLongitude)
     if (searchListingType) params.set('listingType', searchListingType)
     if (searchMinPrice) params.set('minPrice', searchMinPrice)
     if (searchMaxPrice) params.set('maxPrice', searchMaxPrice)
     const qs = params.toString()
     return `/properties${qs ? `?${qs}` : ''}`
-  }, [searchQuery, searchLocation, searchListingType, searchMinPrice, searchMaxPrice])
+  }, [searchQuery, searchLocation, searchLatitude, searchLongitude, searchListingType, searchMinPrice, searchMaxPrice])
 
   const executeSearch = useCallback((query: string) => {
     const trimmed = query.trim()
@@ -124,6 +129,8 @@ export default function Navbar() {
 
   const clearFilters = () => {
     setSearchLocation('')
+    setSearchLatitude('')
+    setSearchLongitude('')
     setSearchListingType('')
     setSearchMinPrice('')
     setSearchMaxPrice('')
@@ -240,12 +247,18 @@ export default function Navbar() {
                       <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 block">
                         {t('property.location')}
                       </label>
-                      <input
-                        type="text"
+                      <LocationAutocomplete
                         value={searchLocation}
-                        onChange={(e) => setSearchLocation(e.target.value)}
+                        latitude={searchLatitude}
+                        longitude={searchLongitude}
+                        onChange={({ location, latitude, longitude }) => {
+                          setSearchLocation(location)
+                          setSearchLatitude(latitude)
+                          setSearchLongitude(longitude)
+                        }}
                         placeholder={t('search.locationPlaceholder')}
                         className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all placeholder:text-gray-400"
+                        showMap={false}
                       />
                     </div>
 
@@ -302,7 +315,7 @@ export default function Navbar() {
                     </div>
 
                     {/* Clear filters */}
-                    {(searchLocation || searchListingType || searchMinPrice || searchMaxPrice) && (
+                    {(searchLocation || searchLatitude || searchLongitude || searchListingType || searchMinPrice || searchMaxPrice) && (
                       <button
                         onClick={clearFilters}
                         className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
@@ -583,13 +596,21 @@ export default function Navbar() {
                 />
               </div>
               {/* Mobile location filter */}
-              <input
-                type="text"
-                value={searchLocation}
-                onChange={(e) => setSearchLocation(e.target.value)}
-                placeholder={t('search.locationPlaceholder')}
-                className="w-full px-3 py-2 mb-2 text-sm bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all placeholder:text-gray-400"
-              />
+              <div className="mb-2">
+                <LocationAutocomplete
+                  value={searchLocation}
+                  latitude={searchLatitude}
+                  longitude={searchLongitude}
+                  onChange={({ location, latitude, longitude }) => {
+                    setSearchLocation(location)
+                    setSearchLatitude(latitude)
+                    setSearchLongitude(longitude)
+                  }}
+                  placeholder={t('search.locationPlaceholder')}
+                  className="w-full px-3 py-2 text-sm bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all placeholder:text-gray-400"
+                  showMap={false}
+                />
+              </div>
               {/* Mobile listing type */}
               <div className="flex gap-1.5 mb-2">
                 {[

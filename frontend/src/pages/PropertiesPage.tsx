@@ -73,7 +73,9 @@ export default function PropertiesPage() {
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [showFilters, setShowFilters] = useState(false)
-  const [showLocationMap, setShowLocationMap] = useState(false)
+  const [showLocationMap, setShowLocationMap] = useState(() => {
+    return !!(searchParams.get('latitude') && searchParams.get('longitude'))
+  })
   const [geoLoading, setGeoLoading] = useState(false)
   const limit = 12
 

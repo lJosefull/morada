@@ -64,16 +64,55 @@ export default function LocationAutocomplete({
     document.head.appendChild(script)
   }, [])
 
+  // Always init autocomplete (even without map)
   useEffect(() => {
+    if (!loaded || !inputRef.current) return
+    if (autocompleteRef.current) return
+
+    autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
+      types: ['geocode'],
+      componentRestrictions: { country: 'co' },
+    })
+
+    listenerRef.current = autocompleteRef.current.addListener('place_changed', () => {
+      const place = autocompleteRef.current?.getPlace()
+      if (!place || !place.geometry?.location) return
+
+      const lat = place.geometry.location.lat()
+      const lng = place.geometry.location.lng()
+
+      onChange({
+        location: place.formatted_address || '',
+        latitude: lat.toString(),
+        longitude: lng.toString(),
+      })
+
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.setCenter({ lat, lng })
+        mapInstanceRef.current.setZoom(16)
+        markerRef.current?.setPosition({ lat, lng })
+      }
+    })
+
+    return () => {
+      if (listenerRef.current) {
+        google.maps.event.removeListener(listenerRef.current)
+        listenerRef.current = null
+      }
+      autocompleteRef.current = null
+    }
+  }, [loaded])
+
+  // Init map + marker only when showMap is true
+  useEffect(() => {
+    if (!loaded || !inputRef.current || !mapRef.current) return
+
     if (!showMap) {
       if (circleRef.current) { circleRef.current.setMap(null); circleRef.current = null }
       if (markerRef.current) { markerRef.current.setMap(null); markerRef.current = null }
       if (mapInstanceRef.current) { mapInstanceRef.current = null }
-      if (autocompleteRef.current) { autocompleteRef.current = null }
-      if (listenerRef.current) { listenerRef.current = null }
       return
     }
-    if (!loaded || !inputRef.current || !mapRef.current) return
 
     const center = hasCoords
       ? { lat: Number(latitude), lng: Number(longitude) }
@@ -104,29 +143,6 @@ export default function LocationAutocomplete({
       reverseGeocode(e.latLng.lat(), e.latLng.lng())
     })
 
-    autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
-      types: ['geocode'],
-      componentRestrictions: { country: 'co' },
-    })
-
-    listenerRef.current = autocompleteRef.current.addListener('place_changed', () => {
-      const place = autocompleteRef.current?.getPlace()
-      if (!place || !place.geometry?.location) return
-
-      const lat = place.geometry.location.lat()
-      const lng = place.geometry.location.lng()
-
-      onChange({
-        location: place.formatted_address || '',
-        latitude: lat.toString(),
-        longitude: lng.toString(),
-      })
-
-      mapInstanceRef.current?.setCenter({ lat, lng })
-      mapInstanceRef.current?.setZoom(16)
-      markerRef.current?.setPosition({ lat, lng })
-    })
-
     if (pendingCenterRef.current) {
       const c = pendingCenterRef.current
       mapInstanceRef.current?.setCenter(c)
@@ -135,15 +151,15 @@ export default function LocationAutocomplete({
     }
 
     return () => {
-      if (listenerRef.current) {
-        google.maps.event.removeListener(listenerRef.current)
-        listenerRef.current = null
-      }
+      if (circleRef.current) { circleRef.current.setMap(null); circleRef.current = null }
+      if (markerRef.current) { markerRef.current.setMap(null); markerRef.current = null }
+      if (mapInstanceRef.current) { mapInstanceRef.current = null }
     }
   }, [loaded, showMap])
 
+  // Sync lat/lng to map marker
   useEffect(() => {
-    if (!loaded || !mapInstanceRef.current || !markerRef.current) return
+    if (!mapInstanceRef.current || !markerRef.current) return
     if (!latitude || !longitude) return
 
     const lat = Number(latitude)
@@ -156,10 +172,11 @@ export default function LocationAutocomplete({
     mapInstanceRef.current.setCenter({ lat, lng })
     mapInstanceRef.current.setZoom(16)
     markerRef.current.setPosition({ lat, lng })
-  }, [latitude, longitude, loaded])
+  }, [latitude, longitude])
 
+  // Draw / update radius circle
   useEffect(() => {
-    if (!loaded || !mapInstanceRef.current || !latitude || !longitude) {
+    if (!mapInstanceRef.current || !latitude || !longitude) {
       if (circleRef.current) {
         circleRef.current.setMap(null)
         circleRef.current = null
@@ -196,14 +213,7 @@ export default function LocationAutocomplete({
 
     const bounds = circleRef.current.getBounds()
     if (bounds) mapInstanceRef.current.fitBounds(bounds)
-
-    return () => {
-      if (circleRef.current) {
-        circleRef.current.setMap(null)
-        circleRef.current = null
-      }
-    }
-  }, [loaded, latitude, longitude, radius])
+  }, [latitude, longitude, radius])
 
   async function reverseGeocode(lat: number, lng: number) {
     onChange({ latitude: lat.toString(), longitude: lng.toString(), location: value })
