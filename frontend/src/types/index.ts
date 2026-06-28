@@ -4,6 +4,7 @@ export interface User {
   name: string
   phone?: string
   avatar?: string | null
+  emailVerified: boolean
   role: 'user' | 'admin'
   plan: 'free' | 'agent' | 'agency'
   agencyName?: string | null

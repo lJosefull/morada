@@ -1,10 +1,12 @@
-import { Inject, Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { IUserRepository, USER_REPOSITORY } from '../../domain/users/user.repository';
 import { IUser } from '../../domain/users/user.entity';
 import { RegisterDto, LoginDto } from '../../interfaces/auth/auth.dto';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
+import { MailService } from '../../infrastructure/mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -13,6 +15,7 @@ export class AuthService {
     private readonly userRepository: IUserRepository,
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -21,11 +24,18 @@ export class AuthService {
       throw new ConflictException('Email already registered');
     }
 
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
     const user = await this.userRepository.create({
       email: registerDto.email,
       name: registerDto.name,
       passwordHash: hashedPassword,
+      verificationToken,
+    });
+
+    await this.mailService.sendVerificationEmail(user.email, verificationToken).catch((err) => {
+      console.error('Failed to send verification email:', err);
     });
 
     const tokens = await this.generateTokens(user);
@@ -37,6 +47,7 @@ export class AuthService {
         name: user.name,
         phone: user.phone,
         avatar: user.avatar,
+        emailVerified: user.emailVerified,
         role: user.role,
         plan: user.plan,
         agencyName: user.agencyName,
@@ -65,12 +76,45 @@ export class AuthService {
         name: user.name,
         phone: user.phone,
         avatar: user.avatar,
+        emailVerified: user.emailVerified,
         role: user.role,
         plan: user.plan,
         agencyName: user.agencyName,
         agencyLogo: user.agencyLogo,
       },
     };
+  }
+
+  async verifyEmail(token: string) {
+    const user = await this.userRepository.findByVerificationToken(token);
+    if (!user) {
+      throw new BadRequestException('Invalid or expired verification token');
+    }
+
+    await this.userRepository.update(user.id, {
+      emailVerified: true,
+      verificationToken: null,
+    });
+
+    return { message: 'Email verified successfully' };
+  }
+
+  async resendVerification(email: string) {
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    if (user.emailVerified) {
+      throw new BadRequestException('Email already verified');
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    await this.userRepository.update(user.id, { verificationToken });
+    await this.mailService.sendVerificationEmail(user.email, verificationToken).catch((err) => {
+      console.error('Failed to send verification email:', err);
+    });
+
+    return { message: 'Verification email sent' };
   }
 
   async googleLogin(profile: { email: string; name: string; googleId: string; avatar?: string }) {
@@ -88,6 +132,7 @@ export class AuthService {
         googleId: profile.googleId,
         avatar: profile.avatar,
         passwordHash: '',
+        emailVerified: true,
       });
     }
 
@@ -100,6 +145,7 @@ export class AuthService {
         name: user.name,
         role: user.role,
         avatar: user.avatar,
+        emailVerified: user.emailVerified,
         plan: user.plan,
         agencyName: user.agencyName,
         agencyLogo: user.agencyLogo,
@@ -160,6 +206,7 @@ export class AuthService {
       name: user.name,
       phone: user.phone,
       avatar: user.avatar,
+      emailVerified: user.emailVerified,
       role: user.role,
       plan: user.plan,
       agencyName: user.agencyName,

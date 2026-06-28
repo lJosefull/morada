@@ -14,9 +14,11 @@ model User {
   name      String
   phone     String?
   avatar    String?
-  googleId  String?  @unique
-  role      String   @default("user")
-  plan      String   @default("free")
+  googleId          String?  @unique
+  emailVerified     Boolean  @default(false)
+  verificationToken String?
+  role              String   @default("user")
+  plan              String   @default("free")
   agencyName String?
   agencyLogo String?
   createdAt DateTime @default(now())

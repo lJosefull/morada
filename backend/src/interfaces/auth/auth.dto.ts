@@ -38,6 +38,18 @@ export class RefreshTokenDto {
   refreshToken!: string;
 }
 
+export class VerifyEmailDto {
+  @ApiProperty()
+  @IsString()
+  token!: string;
+}
+
+export class ResendVerificationDto {
+  @ApiProperty({ example: 'user@example.com' })
+  @IsEmail()
+  email!: string;
+}
+
 export class AuthResponseDto {
   @ApiProperty()
   accessToken!: string;
@@ -55,5 +67,6 @@ export class AuthResponseDto {
     plan: string;
     agencyName: string | null;
     agencyLogo: string | null;
+    emailVerified: boolean;
   };
 }

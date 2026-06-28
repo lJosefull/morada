@@ -25,6 +25,12 @@ export class PrismaUserRepository implements IUserRepository {
     return this.toDomain(user);
   }
 
+  async findByVerificationToken(token: string): Promise<IUser | null> {
+    const user = await this.prisma.user.findFirst({ where: { verificationToken: token } });
+    if (!user) return null;
+    return this.toDomain(user);
+  }
+
   async create(input: CreateUserInput): Promise<IUser> {
     const user = await this.prisma.user.create({
       data: {
@@ -34,6 +40,8 @@ export class PrismaUserRepository implements IUserRepository {
         phone: input.phone ?? null,
         avatar: input.avatar ?? null,
         googleId: input.googleId ?? null,
+        emailVerified: input.emailVerified ?? false,
+        verificationToken: input.verificationToken ?? null,
       },
     });
     return this.toDomain(user);
@@ -45,6 +53,8 @@ export class PrismaUserRepository implements IUserRepository {
     if (input.name) data.name = input.name;
     if (input.phone !== undefined) data.phone = input.phone;
     if (input.avatar !== undefined) data.avatar = input.avatar;
+    if (input.emailVerified !== undefined) data.emailVerified = input.emailVerified;
+    if (input.verificationToken !== undefined) data.verificationToken = input.verificationToken;
 
     const user = await this.prisma.user.update({ where: { id }, data });
     return this.toDomain(user);
@@ -58,6 +68,8 @@ export class PrismaUserRepository implements IUserRepository {
     phone: string | null;
     avatar: string | null;
     googleId: string | null;
+    emailVerified: boolean;
+    verificationToken: string | null;
     role: string;
     plan: string | null;
     agencyName: string | null;
@@ -73,6 +85,8 @@ export class PrismaUserRepository implements IUserRepository {
       phone: raw.phone,
       avatar: raw.avatar,
       googleId: raw.googleId,
+      emailVerified: raw.emailVerified,
+      verificationToken: raw.verificationToken,
       role: raw.role as 'user' | 'admin',
       plan: (raw.plan as IUser['plan']) || 'free',
       agencyName: raw.agencyName || null,

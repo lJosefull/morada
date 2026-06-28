@@ -8,6 +8,8 @@ export interface IUser {
   phone: string | null;
   avatar: string | null;
   googleId: string | null;
+  emailVerified: boolean;
+  verificationToken: string | null;
   role: 'user' | 'admin';
   plan: Plan;
   agencyName: string | null;
@@ -29,6 +31,8 @@ export type CreateUserInput = {
   avatar?: string | null;
   googleId?: string | null;
   passwordHash?: string;
+  verificationToken?: string | null;
+  emailVerified?: boolean;
 };
 
 export type UpdateUserInput = Partial<Pick<IUser, 'name' | 'phone' | 'email'>>;
