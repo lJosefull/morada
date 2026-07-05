@@ -1,10 +1,11 @@
-import { Inject, Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException, ConflictException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { IUserRepository, USER_REPOSITORY } from '../../domain/users/user.repository';
 import { IUser } from '../../domain/users/user.entity';
 import { RegisterDto, LoginDto } from '../../interfaces/auth/auth.dto';
+import { AltchaService } from '../../infrastructure/altcha/altcha.service';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { MailService } from '../../infrastructure/mail/mail.service';
 
@@ -16,9 +17,15 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    private readonly altchaService: AltchaService,
   ) {}
 
   async register(registerDto: RegisterDto) {
+    const isValid = await this.altchaService.verifyPayload(registerDto.altcha);
+    if (!isValid) {
+      throw new ForbiddenException('Bot verification failed. Please try again.');
+    }
+
     const existingUser = await this.userRepository.findByEmail(registerDto.email);
     if (existingUser) {
       throw new ConflictException('Email already registered');
@@ -51,6 +58,11 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
+    const isValid = await this.altchaService.verifyPayload(loginDto.altcha);
+    if (!isValid) {
+      throw new ForbiddenException('Bot verification failed. Please try again.');
+    }
+
     const user = await this.userRepository.findByEmail(loginDto.email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');

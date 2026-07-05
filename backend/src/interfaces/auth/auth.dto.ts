@@ -20,6 +20,10 @@ export class RegisterDto {
   @MinLength(2)
   @MaxLength(100)
   name!: string;
+
+  @ApiProperty({ example: 'altcha-payload-here' })
+  @IsString()
+  altcha!: string;
 }
 
 export class LoginDto {
@@ -30,6 +34,10 @@ export class LoginDto {
   @ApiProperty({ example: 'password123' })
   @IsString()
   password!: string;
+
+  @ApiProperty({ example: 'altcha-payload-here' })
+  @IsString()
+  altcha!: string;
 }
 
 export class RefreshTokenDto {

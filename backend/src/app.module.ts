@@ -27,6 +27,7 @@ import { RecommendationsService } from './application/recommendations/recommenda
 import { FollowController } from './interfaces/follow/follow.controller';
 import { SeoController } from './interfaces/seo/seo.controller';
 import { FollowService } from './application/follow/follow.service';
+import { AltchaService } from './infrastructure/altcha/altcha.service';
 import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
 
 @Module({
@@ -81,6 +82,7 @@ import { JwtAuthGuard } from './infrastructure/auth/jwt-auth.guard';
     NotificationsService,
     RecommendationsService,
     FollowService,
+    AltchaService,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

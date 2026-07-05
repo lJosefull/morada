@@ -1,4 +1,4 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState, useRef, useEffect, FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/auth';
@@ -9,11 +9,15 @@ interface LocationState {
   from?: { pathname: string };
 }
 
+const apiBase = import.meta.env.VITE_API_URL || '';
+
 const LoginPage: React.FC = () => {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [altchaPayload, setAltchaPayload] = useState('');
+  const altchaRef = useRef<HTMLDivElement>(null);
 
   const { login, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
@@ -21,11 +25,23 @@ const LoginPage: React.FC = () => {
 
   const from = (location.state as LocationState)?.from?.pathname || '/dashboard';
 
+  useEffect(() => {
+    const el = altchaRef.current?.querySelector('altcha-widget');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setAltchaPayload(detail?.payload || '');
+    };
+    el.addEventListener('change', handler);
+    return () => el.removeEventListener('change', handler);
+  }, []);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     clearError();
+    if (!altchaPayload) return;
     try {
-      await login(email, password);
+      await login(email, password, altchaPayload);
       navigate(from, { replace: true });
     } catch {
       // Error handled by store
@@ -113,7 +129,14 @@ const LoginPage: React.FC = () => {
             </div>
           </div>
 
-          <button type="submit" disabled={isLoading}
+          <div ref={altchaRef}>
+            <altcha-widget
+              challengeurl={`${apiBase}/api/auth/altcha-challenge`}
+              style="--altcha-max-width: 100%;"
+            ></altcha-widget>
+          </div>
+
+          <button type="submit" disabled={isLoading || !altchaPayload}
             className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
           >
             {isLoading ? <LoadingSpinner size="sm" /> : t('auth.loginButton')}

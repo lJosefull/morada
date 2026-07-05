@@ -1,9 +1,11 @@
-import React, { useState, FormEvent } from 'react'
+import React, { useState, useRef, useEffect, FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '../store/auth'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 import { SEOHead } from '../components/SEOHead'
+
+const apiBase = import.meta.env.VITE_API_URL || ''
 
 const RegisterPage: React.FC = () => {
   const { t } = useTranslation()
@@ -13,9 +15,22 @@ const RegisterPage: React.FC = () => {
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [acceptDataTreatment, setAcceptDataTreatment] = useState(false)
   const [acceptCommercial, setAcceptCommercial] = useState(false)
+  const [altchaPayload, setAltchaPayload] = useState('')
+  const altchaRef = useRef<HTMLDivElement>(null)
 
   const { register, isLoading, error, clearError } = useAuthStore()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const el = altchaRef.current?.querySelector('altcha-widget')
+    if (!el) return
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail
+      setAltchaPayload(detail?.payload || '')
+    }
+    el.addEventListener('change', handler)
+    return () => el.removeEventListener('change', handler)
+  }, [])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -25,8 +40,9 @@ const RegisterPage: React.FC = () => {
       return
     }
 
+    if (!altchaPayload) return
+
     try {
-      // Store consent evidence locally
       const consentData = {
         acceptTerms: { value: acceptTerms, timestamp: new Date().toISOString() },
         acceptDataTreatment: { value: acceptDataTreatment, timestamp: new Date().toISOString() },
@@ -36,7 +52,7 @@ const RegisterPage: React.FC = () => {
       }
       localStorage.setItem('morada-consent-' + email, JSON.stringify(consentData))
 
-      await register({ email, password, name })
+      await register({ email, password, name, altcha: altchaPayload })
       navigate('/', { replace: true })
     } catch {
       // Error handled by store
@@ -169,9 +185,16 @@ const RegisterPage: React.FC = () => {
             </p>
           )}
 
+          <div ref={altchaRef}>
+            <altcha-widget
+              challengeurl={`${apiBase}/api/auth/altcha-challenge`}
+              style="--altcha-max-width: 100%;"
+            ></altcha-widget>
+          </div>
+
           <button
             type="submit"
-            disabled={isLoading || !acceptTerms || !acceptDataTreatment}
+            disabled={isLoading || !acceptTerms || !acceptDataTreatment || !altchaPayload}
             className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
           >
             {isLoading ? <LoadingSpinner size="sm" /> : t('auth.registerButton')}

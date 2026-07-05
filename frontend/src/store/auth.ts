@@ -9,8 +9,8 @@ interface AuthState {
   refreshToken: string | null
   isLoading: boolean
   error: string | null
-  login: (email: string, password: string) => Promise<void>
-  register: (data: { email: string; password: string; name: string }) => Promise<void>
+  login: (email: string, password: string, altcha?: string) => Promise<void>
+  register: (data: { email: string; password: string; name: string; altcha?: string }) => Promise<void>
   logout: () => void
   setTokens: (accessToken: string, refreshToken: string) => void
   fetchUser: () => Promise<void>
@@ -26,11 +26,11 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       error: null,
 
-      login: async (email, password) => {
+      login: async (email, password, altcha) => {
         set({ isLoading: true, error: null })
         try {
           const { data } = await api.post<{ accessToken: string; refreshToken: string; user: User }>(
-            '/auth/login', { email, password },
+            '/auth/login', { email, password, altcha },
           )
           set({ accessToken: data.accessToken, refreshToken: data.refreshToken })
           await get().fetchUser()
@@ -41,7 +41,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      register: async (input) => {
+      register: async (input: { email: string; password: string; name: string; altcha?: string }) => {
         set({ isLoading: true, error: null })
         try {
           const { data } = await api.post<{ accessToken: string; refreshToken: string; user: User }>(

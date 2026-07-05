@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get, UseGuards, Req, Res, Query } from '@nestjs/common';
 import { AuthService } from '../../application/auth/auth.service';
 import { LoginDto, RegisterDto, RefreshTokenDto, VerifyEmailDto, ResendVerificationDto } from './auth.dto';
+import { AltchaService } from '../../infrastructure/altcha/altcha.service';
 import { JwtAuthGuard } from '../../infrastructure/auth/jwt-auth.guard';
 import { GoogleAuthGuard } from '../../infrastructure/auth/google-auth.guard';
 import { Public } from '../../infrastructure/auth/public.decorator';
@@ -11,7 +12,10 @@ import { Response } from 'express';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly altchaService: AltchaService,
+  ) {}
 
   @Public()
   @Post('register')
@@ -74,6 +78,13 @@ export class AuthController {
   @Get('google')
   @ApiOperation({ summary: 'Login with Google' })
   async googleAuth() {}
+
+  @Public()
+  @Get('altcha-challenge')
+  @ApiOperation({ summary: 'Get Altcha challenge for bot protection' })
+  async getAltchaChallenge() {
+    return this.altchaService.generateChallenge();
+  }
 
   @Public()
   @UseGuards(GoogleAuthGuard)
