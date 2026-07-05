@@ -7,12 +7,6 @@ declare namespace JSX {
 interface AltchaWidgetAttributes extends React.HTMLAttributes<HTMLElement> {
   challengeurl?: string;
   challengejson?: string;
-  style?: string;
-  ref?: React.Ref<HTMLElement>;
-}
-
-interface AltchaChangeDetail {
-  payload: string;
 }
 
 interface AltchaWidgetElement extends HTMLElement {

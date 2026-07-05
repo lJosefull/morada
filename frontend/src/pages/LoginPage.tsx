@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, FormEvent } from 'react';
+import React, { useState, useRef, FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/auth';
@@ -16,7 +16,6 @@ const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [altchaPayload, setAltchaPayload] = useState('');
   const altchaRef = useRef<HTMLDivElement>(null);
 
   const { login, isLoading, error, clearError } = useAuthStore();
@@ -25,20 +24,18 @@ const LoginPage: React.FC = () => {
 
   const from = (location.state as LocationState)?.from?.pathname || '/dashboard';
 
-  useEffect(() => {
-    const el = altchaRef.current?.querySelector('altcha-widget');
-    if (!el) return;
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      setAltchaPayload(detail?.payload || '');
-    };
-    el.addEventListener('change', handler);
-    return () => el.removeEventListener('change', handler);
-  }, []);
+  const getAltchaPayload = (): string => {
+    const wrapper = altchaRef.current;
+    if (!wrapper) return '';
+    const widget = wrapper.querySelector('altcha-widget');
+    if (!widget) return '';
+    return widget.getAttribute('payload') || (widget as any).value || '';
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     clearError();
+    const altchaPayload = getAltchaPayload();
     if (!altchaPayload) return;
     try {
       await login(email, password, altchaPayload);
@@ -135,7 +132,7 @@ const LoginPage: React.FC = () => {
             ></altcha-widget>
           </div>
 
-          <button type="submit" disabled={isLoading || !altchaPayload}
+          <button type="submit" disabled={isLoading}
             className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
           >
             {isLoading ? <LoadingSpinner size="sm" /> : t('auth.loginButton')}
