@@ -24,6 +24,8 @@ const LoginPage: React.FC = () => {
 
   const from = (location.state as LocationState)?.from?.pathname || '/dashboard';
 
+  const [altchaError, setAltchaError] = useState('');
+
   const getAltchaPayload = (): string => {
     const wrapper = altchaRef.current;
     if (!wrapper) return '';
@@ -35,8 +37,12 @@ const LoginPage: React.FC = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     clearError();
+    setAltchaError('');
     const altchaPayload = getAltchaPayload();
-    if (!altchaPayload) return;
+    if (!altchaPayload) {
+      setAltchaError('Completa la verificación anti-bots primero.');
+      return;
+    }
     try {
       await login(email, password, altchaPayload);
       navigate(from, { replace: true });
@@ -82,9 +88,9 @@ const LoginPage: React.FC = () => {
           </div>
         </div>
 
-        {error && (
+        {(error || altchaError) && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm" role="alert">
-            {error}
+            {altchaError || error}
           </div>
         )}
 

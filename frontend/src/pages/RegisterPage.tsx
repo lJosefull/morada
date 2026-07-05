@@ -28,16 +28,22 @@ const RegisterPage: React.FC = () => {
     return widget.getAttribute('payload') || (widget as any).value || ''
   }
 
+  const [altchaError, setAltchaError] = useState('')
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     clearError()
+    setAltchaError('')
 
     if (!acceptTerms || !acceptDataTreatment) {
       return
     }
 
     const altchaPayload = getAltchaPayload()
-    if (!altchaPayload) return
+    if (!altchaPayload) {
+      setAltchaError('Completa la verificación anti-bots primero.')
+      return
+    }
 
     try {
       const consentData = {
@@ -93,9 +99,9 @@ const RegisterPage: React.FC = () => {
           </div>
         </div>
 
-        {error && (
+        {(error || altchaError) && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm" role="alert">
-            {error}
+            {altchaError || error}
           </div>
         )}
 
