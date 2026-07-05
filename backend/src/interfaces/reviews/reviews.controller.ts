@@ -11,7 +11,13 @@ import {
   Req,
 } from '@nestjs/common';
 import { ReviewsService } from '../../application/reviews/reviews.service';
-import { CreateReviewDto, UpdateReviewDto, ReviewQueryDto, SetReviewReplyDto, RemoveReviewReplyDto } from './reviews.dto';
+import {
+  CreateReviewDto,
+  UpdateReviewDto,
+  ReviewQueryDto,
+  SetReviewReplyDto,
+  RemoveReviewReplyDto,
+} from './reviews.dto';
 import { JwtAuthGuard } from '../../infrastructure/auth/jwt-auth.guard';
 import { Public } from '../../infrastructure/auth/public.decorator';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
@@ -24,10 +30,7 @@ export class ReviewsController {
   @Public()
   @Get()
   @ApiOperation({ summary: 'Get all reviews for a property (paginated)' })
-  async findAll(
-    @Param('propertyId') propertyId: string,
-    @Query() query: ReviewQueryDto,
-  ) {
+  async findAll(@Param('propertyId') propertyId: string, @Query() query: ReviewQueryDto) {
     const { page = 1, limit = 10 } = query;
     return this.reviewsService.findAll(propertyId, page, limit);
   }
@@ -67,10 +70,7 @@ export class ReviewsController {
   @Delete('mine')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete my review for a property' })
-  async remove(
-    @Param('propertyId') propertyId: string,
-    @Req() req: any,
-  ) {
+  async remove(@Param('propertyId') propertyId: string, @Req() req: any) {
     return this.reviewsService.remove(propertyId, req.user.id);
   }
 
@@ -78,10 +78,7 @@ export class ReviewsController {
   @Get('mine')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get my review for a property' })
-  async getMyReview(
-    @Param('propertyId') propertyId: string,
-    @Req() req: any,
-  ) {
+  async getMyReview(@Param('propertyId') propertyId: string, @Req() req: any) {
     return this.reviewsService.getMyReview(propertyId, req.user.id);
   }
 
@@ -89,10 +86,7 @@ export class ReviewsController {
   @Patch('mine/reply')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Set owner reply to a review' })
-  async setReply(
-    @Body() dto: SetReviewReplyDto,
-    @Req() req: any,
-  ) {
+  async setReply(@Body() dto: SetReviewReplyDto, @Req() req: any) {
     return this.reviewsService.setReply(dto.reviewId, req.user.id, dto.reply);
   }
 
@@ -100,10 +94,7 @@ export class ReviewsController {
   @Delete('mine/reply')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Remove owner reply from a review' })
-  async removeReply(
-    @Body() dto: RemoveReviewReplyDto,
-    @Req() req: any,
-  ) {
+  async removeReply(@Body() dto: RemoveReviewReplyDto, @Req() req: any) {
     return this.reviewsService.removeReply(dto.reviewId, req.user.id);
   }
 }

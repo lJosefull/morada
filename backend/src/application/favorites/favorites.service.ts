@@ -1,6 +1,12 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { IFavoriteRepository, FAVORITE_REPOSITORY } from '../../domain/favorites/favorite.repository';
-import { IPropertyRepository, PROPERTY_REPOSITORY } from '../../domain/properties/property.repository';
+import {
+  IFavoriteRepository,
+  FAVORITE_REPOSITORY,
+} from '../../domain/favorites/favorite.repository';
+import {
+  IPropertyRepository,
+  PROPERTY_REPOSITORY,
+} from '../../domain/properties/property.repository';
 
 @Injectable()
 export class FavoritesService {

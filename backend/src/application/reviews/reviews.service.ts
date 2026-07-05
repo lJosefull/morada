@@ -6,10 +6,7 @@ import {
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
-import {
-  IReviewRepository,
-  REVIEW_REPOSITORY,
-} from '../../domain/reviews/review.repository';
+import { IReviewRepository, REVIEW_REPOSITORY } from '../../domain/reviews/review.repository';
 import {
   IPropertyRepository,
   PROPERTY_REPOSITORY,

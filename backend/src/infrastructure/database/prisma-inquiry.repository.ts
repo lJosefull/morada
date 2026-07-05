@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
-import {
-  IInquiryRepository,
-} from '../../domain/inquiry/inquiry.repository';
+import { IInquiryRepository } from '../../domain/inquiry/inquiry.repository';
 import {
   IInquiry,
   CreateInquiryInput,
@@ -44,11 +42,7 @@ export class PrismaInquiryRepository implements IInquiryRepository {
     return [data.map((d) => this.toDomain(d)), total];
   }
 
-  async findByUser(
-    userId: string,
-    skip = 0,
-    take = 20,
-  ): Promise<[IInquiry[], number]> {
+  async findByUser(userId: string, skip = 0, take = 20): Promise<[IInquiry[], number]> {
     const where = { userId };
 
     const [data, total] = await Promise.all([
@@ -101,9 +95,7 @@ export class PrismaInquiryRepository implements IInquiryRepository {
     return this.prisma.inquiry.count({ where: { propertyId } });
   }
 
-  async countByOwnerAndStatus(
-    ownerUserId: string,
-  ): Promise<{ status: string; count: number }[]> {
+  async countByOwnerAndStatus(ownerUserId: string): Promise<{ status: string; count: number }[]> {
     const result = await this.prisma.inquiry.groupBy({
       by: ['status'],
       where: { ownerUserId },
@@ -112,7 +104,11 @@ export class PrismaInquiryRepository implements IInquiryRepository {
     return result.map((r) => ({ status: r.status, count: r._count.status }));
   }
 
-  async addStatusChange(inquiryId: string, fromStatus: string | null, toStatus: string): Promise<void> {
+  async addStatusChange(
+    inquiryId: string,
+    fromStatus: string | null,
+    toStatus: string,
+  ): Promise<void> {
     await this.prisma.inquiryStatusChange.create({
       data: { inquiryId, fromStatus, toStatus },
     });

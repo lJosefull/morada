@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
-import {
-  IReviewRepository,
-} from '../../domain/reviews/review.repository';
+import { IReviewRepository } from '../../domain/reviews/review.repository';
 import {
   IReview,
   CreateReviewInput,
@@ -27,11 +25,7 @@ export class PrismaReviewRepository implements IReviewRepository {
     return this.toDomain(review);
   }
 
-  async findByProperty(
-    propertyId: string,
-    skip = 0,
-    take = 10,
-  ): Promise<[IReview[], number]> {
+  async findByProperty(propertyId: string, skip = 0, take = 10): Promise<[IReview[], number]> {
     const where = { propertyId };
 
     const [data, total] = await Promise.all([
@@ -52,10 +46,7 @@ export class PrismaReviewRepository implements IReviewRepository {
     return [data.map((r) => this.toDomain(r)), total];
   }
 
-  async findByUserAndProperty(
-    userId: string,
-    propertyId: string,
-  ): Promise<IReview | null> {
+  async findByUserAndProperty(userId: string, propertyId: string): Promise<IReview | null> {
     const review = await this.prisma.review.findUnique({
       where: {
         userId_propertyId: { userId, propertyId },

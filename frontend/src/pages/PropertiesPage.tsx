@@ -1,30 +1,30 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Link, useSearchParams } from 'react-router-dom'
-import { api } from '../lib/api'
-import type { Property } from '../types'
-import { SEOHead } from '../components/SEOHead'
-import { Pagination } from '../components/Pagination'
-import { formatCurrency, getImageUrl, handleImageError } from '../lib/utils'
-import AnimatedLink from '../components/AnimatedLink'
-import LocationAutocomplete from '../components/LocationAutocomplete'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link, useSearchParams } from 'react-router-dom';
+import { api } from '../lib/api';
+import type { Property } from '../types';
+import { SEOHead } from '../components/SEOHead';
+import { Pagination } from '../components/Pagination';
+import { formatCurrency, getImageUrl, handleImageError } from '../lib/utils';
+import AnimatedLink from '../components/AnimatedLink';
+import LocationAutocomplete from '../components/LocationAutocomplete';
 
-type ViewMode = 'grid' | 'list'
-type SortOption = 'newest' | 'oldest' | 'price_asc' | 'price_desc'
+type ViewMode = 'grid' | 'list';
+type SortOption = 'newest' | 'oldest' | 'price_asc' | 'price_desc';
 
 interface Filters {
-  search: string
-  listingType: string
-  propertyType: string
-  minPrice: string
-  maxPrice: string
-  bedrooms: string
-  bathrooms: string
-  sort: SortOption
-  location: string
-  latitude: string
-  longitude: string
-  radius: string
+  search: string;
+  listingType: string;
+  propertyType: string;
+  minPrice: string;
+  maxPrice: string;
+  bedrooms: string;
+  bathrooms: string;
+  sort: SortOption;
+  location: string;
+  latitude: string;
+  longitude: string;
+  radius: string;
 }
 
 const DEFAULT_FILTERS: Filters = {
@@ -40,7 +40,7 @@ const DEFAULT_FILTERS: Filters = {
   latitude: '',
   longitude: '',
   radius: '',
-}
+};
 
 const PROPERTY_TYPES = [
   { value: '', labelKey: 'search.allTypes' },
@@ -48,117 +48,119 @@ const PROPERTY_TYPES = [
   { value: 'apartment', labelKey: 'property.propertyType.apartment' },
   { value: 'land', labelKey: 'property.propertyType.land' },
   { value: 'commercial', labelKey: 'property.propertyType.commercial' },
-] as const
+] as const;
 
 const SORT_OPTIONS: { value: SortOption; labelKey: string }[] = [
   { value: 'newest', labelKey: 'search.newest' },
   { value: 'oldest', labelKey: 'search.oldest' },
   { value: 'price_asc', labelKey: 'search.priceAsc' },
   { value: 'price_desc', labelKey: 'search.priceDesc' },
-]
+];
 
 export default function PropertiesPage() {
-  const { t } = useTranslation()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [properties, setProperties] = useState<Property[]>([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
+  const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<Filters>(() => {
-    const fromUrl: Record<string, string> = {}
+    const fromUrl: Record<string, string> = {};
     for (const [key, value] of searchParams.entries()) {
-      if (key !== 'page' && key !== 'limit') fromUrl[key] = value
+      if (key !== 'page' && key !== 'limit') fromUrl[key] = value;
     }
-    return { ...DEFAULT_FILTERS, ...fromUrl }
-  })
-  const [loading, setLoading] = useState(true)
-  const [viewMode, setViewMode] = useState<ViewMode>('grid')
-  const [showFilters, setShowFilters] = useState(false)
+    return { ...DEFAULT_FILTERS, ...fromUrl };
+  });
+  const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [showFilters, setShowFilters] = useState(false);
   const [showLocationMap, setShowLocationMap] = useState(() => {
-    return !!(searchParams.get('latitude') && searchParams.get('longitude'))
-  })
-  const [geoLoading, setGeoLoading] = useState(false)
-  const limit = 12
-  const [searchInput, setSearchInput] = useState(filters.search)
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
-  const mountedRef = useRef(true)
+    return !!(searchParams.get('latitude') && searchParams.get('longitude'));
+  });
+  const [geoLoading, setGeoLoading] = useState(false);
+  const limit = 12;
+  const [searchInput, setSearchInput] = useState(filters.search);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    mountedRef.current = true
-    return () => { mountedRef.current = false }
-  }, [])
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
-    setSearchInput(filters.search)
-  }, [filters.search])
+    setSearchInput(filters.search);
+  }, [filters.search]);
 
   const updateFilter = useCallback(<K extends keyof Filters>(key: K, value: Filters[K]) => {
-    setFilters((prev) => ({ ...prev, [key]: value }))
-    setPage(1)
-  }, [])
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setPage(1);
+  }, []);
 
   const clearFilters = useCallback(() => {
-    setFilters(DEFAULT_FILTERS)
-    setPage(1)
-  }, [])
+    setFilters(DEFAULT_FILTERS);
+    setPage(1);
+  }, []);
 
   const activeFiltersCount = useMemo(
     () =>
       Object.entries(filters).filter(([key, value]) => {
-        if (key === 'sort' || key === 'latitude' || key === 'longitude') return false
-        return value !== '' && value !== 0
+        if (key === 'sort' || key === 'latitude' || key === 'longitude') return false;
+        return value !== '' && value !== 0;
       }).length,
-    [filters]
-  )
+    [filters],
+  );
 
-  const hasActiveFilters = activeFiltersCount > 0
+  const hasActiveFilters = activeFiltersCount > 0;
 
   useEffect(() => {
-    setLoading(true)
-    const params: Record<string, string | number> = { page, limit }
-    if (filters.location) params.location = filters.location
-    if (filters.search) params.search = filters.search
-    if (filters.listingType) params.listingType = filters.listingType
-    if (filters.propertyType) params.propertyType = filters.propertyType
-    if (filters.minPrice) params.minPrice = filters.minPrice
-    if (filters.maxPrice) params.maxPrice = filters.maxPrice
-    if (filters.bedrooms) params.bedrooms = filters.bedrooms
-    if (filters.bathrooms) params.bathrooms = filters.bathrooms
-    if (filters.sort && filters.sort !== 'newest') params.sort = filters.sort
-    if (filters.latitude) params.latitude = filters.latitude
-    if (filters.longitude) params.longitude = filters.longitude
-    if (filters.radius) params.radius = filters.radius
+    setLoading(true);
+    const params: Record<string, string | number> = { page, limit };
+    if (filters.location) params.location = filters.location;
+    if (filters.search) params.search = filters.search;
+    if (filters.listingType) params.listingType = filters.listingType;
+    if (filters.propertyType) params.propertyType = filters.propertyType;
+    if (filters.minPrice) params.minPrice = filters.minPrice;
+    if (filters.maxPrice) params.maxPrice = filters.maxPrice;
+    if (filters.bedrooms) params.bedrooms = filters.bedrooms;
+    if (filters.bathrooms) params.bathrooms = filters.bathrooms;
+    if (filters.sort && filters.sort !== 'newest') params.sort = filters.sort;
+    if (filters.latitude) params.latitude = filters.latitude;
+    if (filters.longitude) params.longitude = filters.longitude;
+    if (filters.radius) params.radius = filters.radius;
 
     api
       .get<{ data: Property[]; total: number }>('/properties', { params } as any)
       .then(({ data }) => {
-        setProperties(data.data || [])
-        setTotal(data.total || 0)
+        setProperties(data.data || []);
+        setTotal(data.total || 0);
       })
       .catch(() => {
-        setProperties([])
-        setTotal(0)
+        setProperties([]);
+        setTotal(0);
       })
-      .finally(() => setLoading(false))
-  }, [page, filters])
+      .finally(() => setLoading(false));
+  }, [page, filters]);
 
   useEffect(() => {
-    const params: Record<string, string> = {}
-    if (filters.search) params.search = filters.search
-    if (filters.location) params.location = filters.location
-    if (filters.listingType) params.listingType = filters.listingType
-    if (filters.propertyType) params.propertyType = filters.propertyType
-    if (filters.minPrice) params.minPrice = filters.minPrice
-    if (filters.maxPrice) params.maxPrice = filters.maxPrice
-    if (filters.bedrooms) params.bedrooms = filters.bedrooms
-    if (filters.bathrooms) params.bathrooms = filters.bathrooms
-    if (filters.latitude) params.latitude = filters.latitude
-    if (filters.longitude) params.longitude = filters.longitude
-    if (filters.radius) params.radius = filters.radius
-    if (filters.sort && filters.sort !== 'newest') params.sort = filters.sort
-    setSearchParams(params, { replace: true })
-  }, [filters, setSearchParams])
+    const params: Record<string, string> = {};
+    if (filters.search) params.search = filters.search;
+    if (filters.location) params.location = filters.location;
+    if (filters.listingType) params.listingType = filters.listingType;
+    if (filters.propertyType) params.propertyType = filters.propertyType;
+    if (filters.minPrice) params.minPrice = filters.minPrice;
+    if (filters.maxPrice) params.maxPrice = filters.maxPrice;
+    if (filters.bedrooms) params.bedrooms = filters.bedrooms;
+    if (filters.bathrooms) params.bathrooms = filters.bathrooms;
+    if (filters.latitude) params.latitude = filters.latitude;
+    if (filters.longitude) params.longitude = filters.longitude;
+    if (filters.radius) params.radius = filters.radius;
+    if (filters.sort && filters.sort !== 'newest') params.sort = filters.sort;
+    setSearchParams(params, { replace: true });
+  }, [filters, setSearchParams]);
 
-  const totalPages = Math.ceil(total / limit)
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="space-y-6">
@@ -194,20 +196,30 @@ export default function PropertiesPage() {
           {/* Search Bar — YouTube style */}
           <div className="relative flex-1 max-w-2xl group">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <svg className="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg
+                className="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </div>
             <input
               type="text"
               value={searchInput}
               onChange={(e) => {
-                const value = e.target.value
-                setSearchInput(value)
-                clearTimeout(debounceRef.current)
+                const value = e.target.value;
+                setSearchInput(value);
+                clearTimeout(debounceRef.current);
                 debounceRef.current = setTimeout(() => {
-                  updateFilter('search', value)
-                }, 400)
+                  updateFilter('search', value);
+                }, 400);
               }}
               placeholder={t('common.search')}
               className="w-full pl-11 pr-14 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white text-sm sm:text-base placeholder:text-gray-400 transition-all"
@@ -220,7 +232,12 @@ export default function PropertiesPage() {
                   className="h-full px-2 text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               )}
@@ -236,7 +253,12 @@ export default function PropertiesPage() {
               >
                 <div className="relative">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                    />
                   </svg>
                   {hasActiveFilters && (
                     <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
@@ -264,8 +286,18 @@ export default function PropertiesPage() {
                 ))}
               </select>
               <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
-                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <svg
+                  className="w-4 h-4 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </div>
             </div>
@@ -281,7 +313,12 @@ export default function PropertiesPage() {
                 title={t('common.grid')}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                  />
                 </svg>
               </button>
               <button
@@ -294,7 +331,12 @@ export default function PropertiesPage() {
                 title={t('common.list')}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
                 </svg>
               </button>
             </div>
@@ -319,9 +361,19 @@ export default function PropertiesPage() {
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {viewMode === 'grid' ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
                 ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                  />
                 )}
               </svg>
             </button>
@@ -343,8 +395,8 @@ export default function PropertiesPage() {
               label={
                 PROPERTY_TYPES.find((t) => t.value === filters.propertyType)?.labelKey
                   ? t(
-                      PROPERTY_TYPES.find((pt) => pt.value === filters.propertyType)
-                        ?.labelKey ?? ''
+                      PROPERTY_TYPES.find((pt) => pt.value === filters.propertyType)?.labelKey ??
+                        '',
                     )
                   : filters.propertyType
               }
@@ -379,8 +431,14 @@ export default function PropertiesPage() {
             <Chip
               label={`${filters.location}${filters.radius ? ` (${filters.radius} km)` : ''}`}
               onRemove={() => {
-                setFilters((prev) => ({ ...prev, location: '', latitude: '', longitude: '', radius: '' }))
-                setPage(1)
+                setFilters((prev) => ({
+                  ...prev,
+                  location: '',
+                  latitude: '',
+                  longitude: '',
+                  radius: '',
+                }));
+                setPage(1);
               }}
             />
           )}
@@ -407,8 +465,18 @@ export default function PropertiesPage() {
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                <svg
+                  className="w-4 h-4 text-blue-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                  />
                 </svg>
               </div>
               <div>
@@ -421,7 +489,12 @@ export default function PropertiesPage() {
               className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -430,8 +503,18 @@ export default function PropertiesPage() {
             <div className="flex flex-col gap-3">
               <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
                 </svg>
                 {t('property.location')}
               </label>
@@ -447,8 +530,8 @@ export default function PropertiesPage() {
                     location: data.location,
                     latitude: data.latitude,
                     longitude: data.longitude,
-                  }))
-                  setPage(1)
+                  }));
+                  setPage(1);
                 }}
                 className="w-full pl-3 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all placeholder:text-gray-400"
                 placeholder={t('search.locationPlaceholder') || 'Buscar ciudad o dirección...'}
@@ -456,32 +539,40 @@ export default function PropertiesPage() {
               <div className="flex items-center flex-wrap gap-2">
                 <button
                   onClick={() => {
-                    if (!navigator.geolocation) return
-                    setGeoLoading(true)
+                    if (!navigator.geolocation) return;
+                    setGeoLoading(true);
                     navigator.geolocation.getCurrentPosition(
                       (pos) => {
-                        const { latitude, longitude } = pos.coords
+                        const { latitude, longitude } = pos.coords;
                         setFilters((prev) => ({
                           ...prev,
                           latitude: latitude.toString(),
                           longitude: longitude.toString(),
                           radius: prev.radius || '10',
-                        }))
-                        setPage(1)
-                        setGeoLoading(false)
+                        }));
+                        setPage(1);
+                        setGeoLoading(false);
                         if (window.google?.maps) {
-                          const geocoder = new google.maps.Geocoder()
-                          geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
-                            if (!mountedRef.current) return
-                            if (status === 'OK' && results?.[0]) {
-                              setFilters((prev) => ({ ...prev, location: results[0].formatted_address }))
-                            }
-                          })
+                          const geocoder = new google.maps.Geocoder();
+                          geocoder.geocode(
+                            { location: { lat: latitude, lng: longitude } },
+                            (results, status) => {
+                              if (!mountedRef.current) return;
+                              if (status === 'OK' && results?.[0]) {
+                                setFilters((prev) => ({
+                                  ...prev,
+                                  location: results[0].formatted_address,
+                                }));
+                              }
+                            },
+                          );
                         }
                       },
-                      () => { setGeoLoading(false) },
+                      () => {
+                        setGeoLoading(false);
+                      },
                       { enableHighAccuracy: true, timeout: 10000 },
-                    )
+                    );
                   }}
                   disabled={geoLoading}
                   className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all ${
@@ -490,11 +581,28 @@ export default function PropertiesPage() {
                       : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-600 hover:bg-emerald-50'
                   }`}
                 >
-                  <svg className={`w-3.5 h-3.5 ${geoLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <svg
+                    className={`w-3.5 h-3.5 ${geoLoading ? 'animate-spin' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
                   </svg>
-                  {geoLoading ? (t('common.loading') || 'Localizando...') : (t('search.nearMe') || 'Cerca de mí')}
+                  {geoLoading
+                    ? t('common.loading') || 'Localizando...'
+                    : t('search.nearMe') || 'Cerca de mí'}
                 </button>
                 <button
                   onClick={() => setShowLocationMap((prev) => !prev)}
@@ -504,16 +612,34 @@ export default function PropertiesPage() {
                       : 'bg-white text-gray-500 border-gray-200 hover:border-blue-300 hover:text-blue-600'
                   }`}
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  <svg
+                    className="w-3.5 h-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                    />
                   </svg>
-                  {showLocationMap ? t('search.hideMap') || 'Ocultar mapa' : t('search.selectOnMap') || 'Seleccionar en mapa'}
+                  {showLocationMap
+                    ? t('search.hideMap') || 'Ocultar mapa'
+                    : t('search.selectOnMap') || 'Seleccionar en mapa'}
                 </button>
                 {filters.latitude && filters.longitude && (
                   <button
                     onClick={() => {
-                      setFilters((prev) => ({ ...prev, location: '', latitude: '', longitude: '', radius: '' }))
-                      setPage(1)
+                      setFilters((prev) => ({
+                        ...prev,
+                        location: '',
+                        latitude: '',
+                        longitude: '',
+                        radius: '',
+                      }));
+                      setPage(1);
                     }}
                     className="text-xs text-red-500 hover:text-red-600 font-medium"
                   >
@@ -523,13 +649,15 @@ export default function PropertiesPage() {
               </div>
               {filters.latitude && filters.longitude && (
                 <div className="flex items-center flex-wrap gap-2">
-                  <span className="text-xs text-gray-500 font-medium">{t('search.radius') || 'Radio'}:</span>
+                  <span className="text-xs text-gray-500 font-medium">
+                    {t('search.radius') || 'Radio'}:
+                  </span>
                   {['1', '3', '5', '10', '25', '50'].map((km) => (
                     <button
                       key={km}
                       onClick={() => {
-                        setFilters((prev) => ({ ...prev, radius: prev.radius === km ? '' : km }))
-                        setPage(1)
+                        setFilters((prev) => ({ ...prev, radius: prev.radius === km ? '' : km }));
+                        setPage(1);
                       }}
                       className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-all duration-200 ${
                         filters.radius === km
@@ -543,8 +671,8 @@ export default function PropertiesPage() {
                   {filters.radius && (
                     <button
                       onClick={() => {
-                        setFilters((prev) => ({ ...prev, radius: '' }))
-                        setPage(1)
+                        setFilters((prev) => ({ ...prev, radius: '' }));
+                        setPage(1);
                       }}
                       className="text-xs text-red-500 hover:text-red-600 font-medium"
                     >
@@ -561,7 +689,12 @@ export default function PropertiesPage() {
             <div className="space-y-2">
               <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 {t('property.listingType')}
               </label>
@@ -590,7 +723,12 @@ export default function PropertiesPage() {
             <div className="space-y-2">
               <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                  />
                 </svg>
                 {t('property.type')}
               </label>
@@ -615,7 +753,12 @@ export default function PropertiesPage() {
             <div className="space-y-2">
               <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                  />
                 </svg>
                 {t('property.bedrooms')}
               </label>
@@ -640,7 +783,12 @@ export default function PropertiesPage() {
             <div className="space-y-2">
               <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
                 </svg>
                 {t('property.bathrooms')}
               </label>
@@ -667,7 +815,12 @@ export default function PropertiesPage() {
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider sm:w-32 shrink-0">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 {t('property.price')}
               </label>
@@ -687,7 +840,12 @@ export default function PropertiesPage() {
                 </div>
                 <div className="flex items-center gap-2 text-gray-300">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                    />
                   </svg>
                 </div>
                 <div className="relative flex-1">
@@ -711,11 +869,19 @@ export default function PropertiesPage() {
           {hasActiveFilters && (
             <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-end gap-3">
               <button
-                onClick={() => { clearFilters(); setShowFilters(false) }}
+                onClick={() => {
+                  clearFilters();
+                  setShowFilters(false);
+                }}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
                 {t('search.clearFilters')}
               </button>
@@ -734,9 +900,7 @@ export default function PropertiesPage() {
       {loading ? (
         <div
           className={
-            viewMode === 'grid'
-              ? 'columns-1 sm:columns-2 lg:columns-3 gap-x-6'
-              : 'space-y-4'
+            viewMode === 'grid' ? 'columns-1 sm:columns-2 lg:columns-3 gap-x-6' : 'space-y-4'
           }
         >
           {Array.from({ length: 6 }).map((_, i) => (
@@ -749,8 +913,18 @@ export default function PropertiesPage() {
         /* Empty State */
         <div className="text-center py-20">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-6">
-            <svg className="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <svg
+              className="w-10 h-10 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
             </svg>
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('search.noResults')}</h3>
@@ -761,7 +935,12 @@ export default function PropertiesPage() {
               className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-lg transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
               {t('search.clearFilters')}
             </button>
@@ -775,7 +954,8 @@ export default function PropertiesPage() {
               {t('search.results')}: <span className="font-semibold text-gray-700">{total}</span>
               {total > limit && (
                 <>
-                  {' '}— {t('common.page')} {page} {t('common.of')} {totalPages}
+                  {' '}
+                  — {t('common.page')} {page} {t('common.of')} {totalPages}
                 </>
               )}
             </p>
@@ -796,7 +976,7 @@ export default function PropertiesPage() {
                 </div>
               ) : (
                 <PropertyListCard key={p.id} property={p} t={t} />
-              )
+              ),
             )}
           </div>
 
@@ -809,7 +989,7 @@ export default function PropertiesPage() {
         </>
       )}
     </div>
-  )
+  );
 }
 
 /* ─── Chip Component ─── */
@@ -822,11 +1002,16 @@ function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
         className="p-0.5 rounded-full hover:bg-blue-200/60 text-blue-400 hover:text-blue-700 transition-colors"
       >
         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
         </svg>
       </button>
     </span>
-  )
+  );
 }
 
 /* ─── Skeleton Card ─── */
@@ -848,7 +1033,7 @@ function SkeletonCard({ viewMode }: { viewMode: ViewMode }) {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -864,7 +1049,7 @@ function SkeletonCard({ viewMode }: { viewMode: ViewMode }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 /* ─── Property Grid Card (Pinterest-style Masonry) ─── */
@@ -886,8 +1071,18 @@ function PropertyGridCard({ property: p, t }: { property: Property; t: (key: str
           />
         ) : (
           <div className="w-full aspect-[4/3] flex items-center justify-center">
-            <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <svg
+              className="w-12 h-12 text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
             </svg>
           </div>
         )}
@@ -895,9 +1090,7 @@ function PropertyGridCard({ property: p, t }: { property: Property; t: (key: str
         {/* Listing type badge — top right */}
         <span
           className={`absolute top-3 right-3 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full ${
-            p.listingType === 'sale'
-              ? 'bg-emerald-500 text-white'
-              : 'bg-blue-500 text-white'
+            p.listingType === 'sale' ? 'bg-emerald-500 text-white' : 'bg-blue-500 text-white'
           }`}
         >
           {p.listingType === 'sale' ? t('property.forSale') : t('property.forRent')}
@@ -913,35 +1106,44 @@ function PropertyGridCard({ property: p, t }: { property: Property; t: (key: str
 
       {/* Minimal info below image */}
       <div className="p-4 space-y-2">
-        <h3 className="font-semibold text-gray-900 line-clamp-1 text-sm">
-          {p.aiTitle || p.title}
-        </h3>
+        <h3 className="font-semibold text-gray-900 line-clamp-1 text-sm">{p.aiTitle || p.title}</h3>
 
         <div className="flex items-center gap-1.5 text-xs text-gray-400">
-          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          <svg
+            className="w-3.5 h-3.5 shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+            />
           </svg>
           <span className="truncate">{p.location}</span>
         </div>
 
         <div className="flex items-center gap-3 text-xs text-gray-500 pt-1.5 border-t border-gray-50">
-          {p.propertyType && (
-            <span className="capitalize">{p.propertyType}</span>
-          )}
-          {p.bedrooms && (
-            <span>{p.bedrooms} hab</span>
-          )}
+          {p.propertyType && <span className="capitalize">{p.propertyType}</span>}
+          {p.bedrooms && <span>{p.bedrooms} hab</span>}
           {p.bathrooms && (
-            <span>{p.bathrooms} baño{p.bathrooms > 1 ? 's' : ''}</span>
+            <span>
+              {p.bathrooms} baño{p.bathrooms > 1 ? 's' : ''}
+            </span>
           )}
-          {p.surface && (
-            <span>{p.surface} m²</span>
-          )}
+          {p.surface && <span>{p.surface} m²</span>}
         </div>
       </div>
     </AnimatedLink>
-  )
+  );
 }
 
 /* ─── Property List Card ─── */
@@ -968,9 +1170,7 @@ function PropertyListCard({ property: p, t }: { property: Property; t: (key: str
           )}
           <span
             className={`absolute top-2 left-2 px-2 py-0.5 text-xs font-medium rounded-full ${
-              p.listingType === 'sale'
-                ? 'bg-blue-500 text-white'
-                : 'bg-emerald-500 text-white'
+              p.listingType === 'sale' ? 'bg-blue-500 text-white' : 'bg-emerald-500 text-white'
             }`}
           >
             {p.listingType === 'sale' ? t('property.forSale') : t('property.forRent')}
@@ -980,25 +1180,46 @@ function PropertyListCard({ property: p, t }: { property: Property; t: (key: str
           <div>
             <h3 className="font-semibold text-gray-900 line-clamp-1">{p.aiTitle || p.title}</h3>
             <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
-              <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              <svg
+                className="w-3.5 h-3.5 shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
               </svg>
               {p.location}
             </p>
           </div>
           <div className="flex items-center justify-between mt-3">
-            <p className="text-xl font-bold text-blue-600">
-              {formatCurrency(p.price, p.currency)}
-            </p>
+            <p className="text-xl font-bold text-blue-600">{formatCurrency(p.price, p.currency)}</p>
             <div className="flex items-center gap-3 text-sm text-gray-500">
-              {p.bedrooms && <span>{p.bedrooms} {t('property.bedrooms')}</span>}
-              {p.bathrooms && <span>{p.bathrooms} {t('property.bathrooms')}</span>}
+              {p.bedrooms && (
+                <span>
+                  {p.bedrooms} {t('property.bedrooms')}
+                </span>
+              )}
+              {p.bathrooms && (
+                <span>
+                  {p.bathrooms} {t('property.bathrooms')}
+                </span>
+              )}
               {p.surface && <span>{p.surface} m²</span>}
             </div>
           </div>
         </div>
       </div>
     </AnimatedLink>
-  )
+  );
 }

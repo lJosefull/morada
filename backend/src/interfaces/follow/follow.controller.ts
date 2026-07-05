@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Req,
-  UseGuards,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Req, UseGuards, Query } from '@nestjs/common';
 import { FollowService } from '../../application/follow/follow.service';
 import { JwtAuthGuard } from '../../infrastructure/auth/jwt-auth.guard';
 import { Public } from '../../infrastructure/auth/public.decorator';

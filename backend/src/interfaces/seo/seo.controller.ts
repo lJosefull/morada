@@ -21,21 +21,33 @@ export class SeoController {
 
     if (!property) {
       // Return default SEO for not-found
-      return res.type('html').send(this.defaultHtml('Propiedad no encontrada', 'La propiedad que buscas no está disponible'));
+      return res
+        .type('html')
+        .send(
+          this.defaultHtml('Propiedad no encontrada', 'La propiedad que buscas no está disponible'),
+        );
     }
 
     const title = `${property.title} | Morada`;
     const desc = (property.description || '').slice(0, 200);
     const price = property.price ? `$${Number(property.price).toLocaleString('es-CL')}` : '';
     const img = property.images?.[0]?.url
-      ? (property.images[0].url.startsWith('http') ? property.images[0].url : `${API_URL}${property.images[0].url}`)
+      ? property.images[0].url.startsWith('http')
+        ? property.images[0].url
+        : `${API_URL}${property.images[0].url}`
       : '';
     const pageUrl = `${SITE_URL}/properties/${id}`;
 
     res.type('html').send(this.propertyHtml(title, desc, img, pageUrl, price));
   }
 
-  private propertyHtml(title: string, desc: string, img: string, url: string, price: string): string {
+  private propertyHtml(
+    title: string,
+    desc: string,
+    img: string,
+    url: string,
+    price: string,
+  ): string {
     return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -81,6 +93,10 @@ export class SeoController {
   }
 
   private e(t: string): string {
-    return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    return t
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 }

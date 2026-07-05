@@ -5,9 +5,7 @@ import { IUserRepository, USER_REPOSITORY } from '../../domain/users/user.reposi
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(
-    @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
-  ) {
+  constructor(@Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,

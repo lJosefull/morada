@@ -34,15 +34,17 @@ export class FollowService {
       select: { name: true },
     });
 
-    await this.prisma.notification.create({
-      data: {
-        userId: followingId,
-        type: 'follow',
-        title: 'New follower',
-        message: `${follower?.name || 'Someone'} started following you`,
-        link: `/agents/${followerId}`,
-      },
-    }).catch((err) => console.error('Failed to create notification:', err));
+    await this.prisma.notification
+      .create({
+        data: {
+          userId: followingId,
+          type: 'follow',
+          title: 'New follower',
+          message: `${follower?.name || 'Someone'} started following you`,
+          link: `/agents/${followerId}`,
+        },
+      })
+      .catch((err) => console.error('Failed to create notification:', err));
 
     return { following: true };
   }

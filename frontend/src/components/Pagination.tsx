@@ -12,7 +12,7 @@ export const Pagination = memo(function Pagination({
   totalPages,
   onPageChange,
 }: PaginationProps) {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
   const getPageNumbers = (): (number | string)[] => {
     const pages: (number | string)[] = [];
     const delta = 2;
@@ -62,10 +62,7 @@ export const Pagination = memo(function Pagination({
       {getPageNumbers().map((page, index) => {
         if (page === '...') {
           return (
-            <span
-              key={`ellipsis-${index}`}
-              className="px-3 py-2 text-sm text-gray-500"
-            >
+            <span key={`ellipsis-${index}`} className="px-3 py-2 text-sm text-gray-500">
               ...
             </span>
           );

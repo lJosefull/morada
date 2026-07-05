@@ -1,4 +1,4 @@
-export type Plan = 'free' | 'agent' | 'agency'
+export type Plan = 'free' | 'agent' | 'agency';
 
 export interface IUser {
   id: string;
@@ -22,7 +22,7 @@ export const PLAN_LIMITS: Record<Plan, { maxProperties: number; maxImages: numbe
   free: { maxProperties: 3, maxImages: 5 },
   agent: { maxProperties: 50, maxImages: 20 },
   agency: { maxProperties: Infinity, maxImages: 50 },
-}
+};
 
 export type CreateUserInput = {
   email: string;

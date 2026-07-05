@@ -1,5 +1,8 @@
 import { Inject, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { IPropertyRepository, PROPERTY_REPOSITORY } from '../../domain/properties/property.repository';
+import {
+  IPropertyRepository,
+  PROPERTY_REPOSITORY,
+} from '../../domain/properties/property.repository';
 import {
   IViewRepository,
   VIEW_REPOSITORY,
@@ -25,10 +28,10 @@ export class ViewService {
       throw new NotFoundException('Property not found');
     }
 
-    let isUnique = !userId
+    let isUnique = !userId;
     if (userId) {
-      const existing = await this.viewRepository.countByUserAndProperty(userId, propertyId)
-      isUnique = existing === 0
+      const existing = await this.viewRepository.countByUserAndProperty(userId, propertyId);
+      isUnique = existing === 0;
     }
 
     const input: CreatePropertyViewInput = {

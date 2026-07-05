@@ -8,20 +8,28 @@ import * as express from 'express';
 
 async function bootstrap() {
   // Validate critical secrets before starting
-  if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'your-super-secret-jwt-key-change-in-production') {
+  if (
+    !process.env.JWT_SECRET ||
+    process.env.JWT_SECRET === 'your-super-secret-jwt-key-change-in-production'
+  ) {
     throw new Error('JWT_SECRET must be set and changed from the default value');
   }
-  if (!process.env.JWT_REFRESH_SECRET || process.env.JWT_REFRESH_SECRET === 'your-super-secret-refresh-key-change-in-production') {
+  if (
+    !process.env.JWT_REFRESH_SECRET ||
+    process.env.JWT_REFRESH_SECRET === 'your-super-secret-refresh-key-change-in-production'
+  ) {
     throw new Error('JWT_REFRESH_SECRET must be set and changed from the default value');
   }
 
   const app = await NestFactory.create(AppModule);
 
   // Security headers
-  app.use(helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-    contentSecurityPolicy: false, // disabled for Swagger UI
-  }));
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      contentSecurityPolicy: false, // disabled for Swagger UI
+    }),
+  );
 
   // Serve uploaded files
   const uploadsPath = resolve(process.env.UPLOAD_DIR || './uploads');

@@ -10,20 +10,20 @@ export const PLACEHOLDER_IMAGE =
       </g>
       <text x="200" y="195" text-anchor="middle" fill="#9ca3af" font-family="sans-serif" font-size="14">Sin imagen</text>
     </svg>`,
-  )
+  );
 
 export function getImageUrl(url: string | null | undefined): string {
-  if (!url) return PLACEHOLDER_IMAGE
-  if (url.startsWith('http')) return url
+  if (!url) return PLACEHOLDER_IMAGE;
+  if (url.startsWith('http')) return url;
   if (url.startsWith('/uploads')) {
-    const base = import.meta.env.VITE_API_URL || ''
-    return `${base}${url}`
+    const base = import.meta.env.VITE_API_URL || '';
+    return `${base}${url}`;
   }
-  return url
+  return url;
 }
 
 export function handleImageError(e: React.SyntheticEvent<HTMLImageElement>): void {
-  e.currentTarget.src = PLACEHOLDER_IMAGE
+  e.currentTarget.src = PLACEHOLDER_IMAGE;
 }
 
 const CURRENCY_LOCALE: Record<string, string> = {
@@ -32,21 +32,21 @@ const CURRENCY_LOCALE: Record<string, string> = {
   USD: 'en-US',
   EUR: 'es-ES',
   UF: 'es-CL',
-}
+};
 
 export function formatCurrency(amount: number, currency = 'COP'): string {
   if (currency === 'UF') {
-    return `UF ${amount.toLocaleString('es-CL')}`
+    return `UF ${amount.toLocaleString('es-CL')}`;
   }
-  const locale = CURRENCY_LOCALE[currency] || 'es-CL'
+  const locale = CURRENCY_LOCALE[currency] || 'es-CL';
   try {
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency,
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount)
+    }).format(amount);
   } catch {
-    return `${currency} ${amount.toLocaleString('es-CL')}`
+    return `${currency} ${amount.toLocaleString('es-CL')}`;
   }
 }

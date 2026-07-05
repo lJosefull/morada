@@ -4,8 +4,8 @@ export interface IReview {
   userId: string;
   rating: number; // 1-5
   comment: string;
-  reply: string | null;       // Owner's reply to this review
-  replyDate: Date | null;    // When the owner replied
+  reply: string | null; // Owner's reply to this review
+  replyDate: Date | null; // When the owner replied
   createdAt: Date;
   updatedAt: Date;
   user?: {

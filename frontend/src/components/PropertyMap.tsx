@@ -1,54 +1,54 @@
-import { useEffect, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
+import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 // Fix default marker icon missing in bundlers
-delete (L.Icon.Default.prototype as any)._getIconUrl
+delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-})
+});
 
 interface PropertyMapProps {
-  latitude: number
-  longitude: number
-  title?: string
-  className?: string
+  latitude: number;
+  longitude: number;
+  title?: string;
+  className?: string;
 }
 
 export function PropertyMap({ latitude, longitude, title, className = '' }: PropertyMapProps) {
-  const { t } = useTranslation()
-  const mapRef = useRef<HTMLDivElement>(null)
-  const mapInstanceRef = useRef<L.Map | null>(null)
+  const { t } = useTranslation();
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
-    if (!mapRef.current || mapInstanceRef.current) return
+    if (!mapRef.current || mapInstanceRef.current) return;
 
     const map = L.map(mapRef.current, {
       center: [latitude, longitude],
       zoom: 15,
       zoomControl: true,
       scrollWheelZoom: false,
-    })
+    });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19,
-    }).addTo(map)
+    }).addTo(map);
 
     L.marker([latitude, longitude])
       .addTo(map)
-      .bindPopup(title || t('map.title'))
+      .bindPopup(title || t('map.title'));
 
-    mapInstanceRef.current = map
+    mapInstanceRef.current = map;
 
     return () => {
-      map.remove()
-      mapInstanceRef.current = null
-    }
-  }, [latitude, longitude, title])
+      map.remove();
+      mapInstanceRef.current = null;
+    };
+  }, [latitude, longitude, title]);
 
   return (
     <div
@@ -56,5 +56,5 @@ export function PropertyMap({ latitude, longitude, title, className = '' }: Prop
       className={`rounded-xl overflow-hidden border border-gray-200 ${className}`}
       style={{ height: '300px' }}
     />
-  )
+  );
 }

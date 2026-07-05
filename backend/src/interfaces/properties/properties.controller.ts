@@ -43,12 +43,10 @@ export class PropertiesController {
   @UseGuards(JwtAuthGuard)
   @Get('feed')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get personalized property feed based on user preferences and location' })
-  async getFeed(
-    @Req() req: any,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
+  @ApiOperation({
+    summary: 'Get personalized property feed based on user preferences and location',
+  })
+  async getFeed(@Req() req: any, @Query('page') page?: string, @Query('limit') limit?: string) {
     return this.recommendationsService.getFeed(
       req.user.id,
       page ? parseInt(page, 10) : 1,
@@ -74,10 +72,7 @@ export class PropertiesController {
   @Post()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new property' })
-  async create(
-    @Body() createPropertyDto: CreatePropertyDto,
-    @Req() req: any,
-  ) {
+  async create(@Body() createPropertyDto: CreatePropertyDto, @Req() req: any) {
     return this.propertiesService.create(createPropertyDto, req.user.id);
   }
 

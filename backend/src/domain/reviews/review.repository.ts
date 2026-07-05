@@ -5,16 +5,9 @@ export const REVIEW_REPOSITORY = 'REVIEW_REPOSITORY';
 export interface IReviewRepository {
   findById(id: string): Promise<IReview | null>;
 
-  findByProperty(
-    propertyId: string,
-    skip?: number,
-    take?: number,
-  ): Promise<[IReview[], number]>;
+  findByProperty(propertyId: string, skip?: number, take?: number): Promise<[IReview[], number]>;
 
-  findByUserAndProperty(
-    userId: string,
-    propertyId: string,
-  ): Promise<IReview | null>;
+  findByUserAndProperty(userId: string, propertyId: string): Promise<IReview | null>;
 
   create(input: CreateReviewInput): Promise<IReview>;
 

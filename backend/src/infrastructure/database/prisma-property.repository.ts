@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import { IPropertyRepository, PropertyFilters } from '../../domain/properties/property.repository';
-import { IProperty, CreatePropertyInput, UpdatePropertyInput } from '../../domain/properties/property.entity';
+import {
+  IProperty,
+  CreatePropertyInput,
+  UpdatePropertyInput,
+} from '../../domain/properties/property.entity';
 
 @Injectable()
 export class PrismaPropertyRepository implements IPropertyRepository {
@@ -10,7 +14,20 @@ export class PrismaPropertyRepository implements IPropertyRepository {
   async findById(id: string): Promise<IProperty | null> {
     const property = await this.prisma.property.findFirst({
       where: { id, status: { not: 'hidden' } },
-      include: { images: true, user: { select: { id: true, name: true, email: true, phone: true, plan: true, agencyName: true, agencyLogo: true } } },
+      include: {
+        images: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            plan: true,
+            agencyName: true,
+            agencyLogo: true,
+          },
+        },
+      },
     });
     if (!property) return null;
     return this.toDomain(property);
@@ -19,21 +36,48 @@ export class PrismaPropertyRepository implements IPropertyRepository {
   async findByIdIncludingHidden(id: string): Promise<IProperty | null> {
     const property = await this.prisma.property.findUnique({
       where: { id },
-      include: { images: true, user: { select: { id: true, name: true, email: true, phone: true, plan: true, agencyName: true, agencyLogo: true } } },
+      include: {
+        images: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            plan: true,
+            agencyName: true,
+            agencyLogo: true,
+          },
+        },
+      },
     });
     if (!property) return null;
     return this.toDomain(property);
   }
 
-  async findMany(
-    filters: PropertyFilters,
-    skip = 0,
-    take = 20,
-  ): Promise<[IProperty[], number]> {
+  async findMany(filters: PropertyFilters, skip = 0, take = 20): Promise<[IProperty[], number]> {
     const where = this.buildWhereClause(filters);
-    const include = { images: true, user: { select: { id: true, name: true, email: true, phone: true, plan: true, agencyName: true, agencyLogo: true } as const } };
+    const include = {
+      images: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          plan: true,
+          agencyName: true,
+          agencyLogo: true,
+        } as const,
+      },
+    };
 
-    if (filters.latitude !== undefined && filters.longitude !== undefined && filters.radius !== undefined && filters.radius > 0) {
+    if (
+      filters.latitude !== undefined &&
+      filters.longitude !== undefined &&
+      filters.radius !== undefined &&
+      filters.radius > 0
+    ) {
       const allProperties = await this.prisma.property.findMany({
         where,
         orderBy: { createdAt: 'desc' },
@@ -43,8 +87,10 @@ export class PrismaPropertyRepository implements IPropertyRepository {
       const filtered = allProperties.filter((p) => {
         if (p.latitude === null || p.longitude === null) return false;
         const dist = this.haversineDistance(
-          filters.latitude!, filters.longitude!,
-          p.latitude, p.longitude,
+          filters.latitude!,
+          filters.longitude!,
+          p.latitude,
+          p.longitude,
         );
         return dist <= filters.radius!;
       });
@@ -78,7 +124,20 @@ export class PrismaPropertyRepository implements IPropertyRepository {
         longitude: input.longitude ?? null,
         user: { connect: { id: input.userId } },
       },
-      include: { images: true, user: { select: { id: true, name: true, email: true, phone: true, plan: true, agencyName: true, agencyLogo: true } } },
+      include: {
+        images: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            plan: true,
+            agencyName: true,
+            agencyLogo: true,
+          },
+        },
+      },
     });
     return this.toDomain(property);
   }
@@ -133,10 +192,17 @@ export class PrismaPropertyRepository implements IPropertyRepository {
     if (filters.userId) where.userId = filters.userId;
     if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
       where.price = {};
-      if (filters.minPrice !== undefined) (where.price as Record<string, unknown>).gte = filters.minPrice;
-      if (filters.maxPrice !== undefined) (where.price as Record<string, unknown>).lte = filters.maxPrice;
+      if (filters.minPrice !== undefined)
+        (where.price as Record<string, unknown>).gte = filters.minPrice;
+      if (filters.maxPrice !== undefined)
+        (where.price as Record<string, unknown>).lte = filters.maxPrice;
     }
-    if (filters.latitude !== undefined && filters.longitude !== undefined && filters.radius !== undefined && filters.radius > 0) {
+    if (
+      filters.latitude !== undefined &&
+      filters.longitude !== undefined &&
+      filters.radius !== undefined &&
+      filters.radius > 0
+    ) {
       const latDelta = filters.radius / 111;
       const lngDelta = filters.radius / (111 * Math.cos((filters.latitude * Math.PI) / 180));
       where.latitude = { gte: filters.latitude - latDelta, lte: filters.latitude + latDelta };
@@ -179,15 +245,17 @@ export class PrismaPropertyRepository implements IPropertyRepository {
       userId: raw.userId,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
-      user: raw.user ? {
-        id: raw.user.id,
-        name: raw.user.name,
-        email: raw.user.email,
-        phone: raw.user.phone,
-        plan: raw.user.plan,
-        agencyName: raw.user.agencyName,
-        agencyLogo: raw.user.agencyLogo,
-      } : undefined,
+      user: raw.user
+        ? {
+            id: raw.user.id,
+            name: raw.user.name,
+            email: raw.user.email,
+            phone: raw.user.phone,
+            plan: raw.user.plan,
+            agencyName: raw.user.agencyName,
+            agencyLogo: raw.user.agencyLogo,
+          }
+        : undefined,
       images: (raw.images || []).map((img: IProperty['images'][number]) => ({
         id: img.id,
         url: img.url,

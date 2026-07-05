@@ -1,11 +1,19 @@
 import { Inject, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { IInquiryRepository, INQUIRY_REPOSITORY } from '../../domain/inquiry/inquiry.repository';
 import {
-  IInquiryRepository,
-  INQUIRY_REPOSITORY,
-} from '../../domain/inquiry/inquiry.repository';
-import { IPropertyRepository, PROPERTY_REPOSITORY } from '../../domain/properties/property.repository';
-import { CreateInquiryInput, UpdateInquiryStatusInput, UpdateInquiryNotesInput } from '../../domain/inquiry/inquiry.entity';
-import { CreateInquiryDto, UpdateInquiryStatusDto, UpdateInquiryNotesDto } from '../../interfaces/inquiry/inquiry.dto';
+  IPropertyRepository,
+  PROPERTY_REPOSITORY,
+} from '../../domain/properties/property.repository';
+import {
+  CreateInquiryInput,
+  UpdateInquiryStatusInput,
+  UpdateInquiryNotesInput,
+} from '../../domain/inquiry/inquiry.entity';
+import {
+  CreateInquiryDto,
+  UpdateInquiryStatusDto,
+  UpdateInquiryNotesDto,
+} from '../../interfaces/inquiry/inquiry.dto';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 
 @Injectable()
@@ -37,15 +45,17 @@ export class InquiryService {
     const inquiry = await this.inquiryRepository.create(input);
 
     // Create notification for property owner
-    await this.prisma.notification.create({
-      data: {
-        userId: property.userId,
-        type: 'inquiry_new',
-        title: 'New inquiry received',
-        message: `${dto.name} is interested in "${property.title}"`,
-        link: `/inquiries`,
-      },
-    }).catch((err) => console.error('Failed to create notification:', err));
+    await this.prisma.notification
+      .create({
+        data: {
+          userId: property.userId,
+          type: 'inquiry_new',
+          title: 'New inquiry received',
+          message: `${dto.name} is interested in "${property.title}"`,
+          link: `/inquiries`,
+        },
+      })
+      .catch((err) => console.error('Failed to create notification:', err));
 
     return inquiry;
   }

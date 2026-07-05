@@ -14,10 +14,7 @@ export const ErrorAlert = memo(function ErrorAlert({
   className = '',
 }: ErrorAlertProps) {
   return (
-    <div
-      className={`bg-red-50 border-l-4 border-red-500 p-4 rounded-lg ${className}`}
-      role="alert"
-    >
+    <div className={`bg-red-50 border-l-4 border-red-500 p-4 rounded-lg ${className}`} role="alert">
       <div className="flex items-start">
         <div className="flex-shrink-0">
           <svg

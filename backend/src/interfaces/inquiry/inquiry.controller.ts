@@ -1,14 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, Req } from '@nestjs/common';
 import { InquiryService } from '../../application/inquiry/inquiry.service';
 import { CreateInquiryDto, UpdateInquiryStatusDto, UpdateInquiryNotesDto } from './inquiry.dto';
 import { JwtAuthGuard } from '../../infrastructure/auth/jwt-auth.guard';
@@ -35,10 +25,7 @@ export class InquiryController {
   @Get('inquiries/mine')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get inquiries for my properties' })
-  async findMine(
-    @Req() req: any,
-    @Query('status') status?: string,
-  ) {
+  async findMine(@Req() req: any, @Query('status') status?: string) {
     return this.inquiryService.findMine(req.user.id, status);
   }
 
@@ -46,10 +33,7 @@ export class InquiryController {
   @Get('inquiries/mine/:id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get inquiry detail' })
-  async findOne(
-    @Param('id') id: string,
-    @Req() req: any,
-  ) {
+  async findOne(@Param('id') id: string, @Req() req: any) {
     return this.inquiryService.findOne(id, req.user.id);
   }
 
@@ -69,11 +53,7 @@ export class InquiryController {
   @Patch('inquiries/mine/:id/notes')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update inquiry notes' })
-  async updateNotes(
-    @Param('id') id: string,
-    @Body() dto: UpdateInquiryNotesDto,
-    @Req() req: any,
-  ) {
+  async updateNotes(@Param('id') id: string, @Body() dto: UpdateInquiryNotesDto, @Req() req: any) {
     return this.inquiryService.updateNotes(id, dto, req.user.id);
   }
 

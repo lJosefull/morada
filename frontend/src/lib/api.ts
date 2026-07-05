@@ -15,9 +15,7 @@ class ApiClient {
 
   constructor() {
     this.client = axios.create({
-      baseURL: import.meta.env.VITE_API_URL 
-        ? `${import.meta.env.VITE_API_URL}/api`
-        : '/api',
+      baseURL: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api',
       timeout: 30000,
     });
 
@@ -138,15 +136,27 @@ class ApiClient {
     return this.client.get(url, config);
   }
 
-  async post<T>(url: string, data?: unknown, config?: InternalAxiosRequestConfig): Promise<{ data: T }> {
+  async post<T>(
+    url: string,
+    data?: unknown,
+    config?: InternalAxiosRequestConfig,
+  ): Promise<{ data: T }> {
     return this.client.post(url, data, config);
   }
 
-  async put<T>(url: string, data?: unknown, config?: InternalAxiosRequestConfig): Promise<{ data: T }> {
+  async put<T>(
+    url: string,
+    data?: unknown,
+    config?: InternalAxiosRequestConfig,
+  ): Promise<{ data: T }> {
     return this.client.put(url, data, config);
   }
 
-  async patch<T>(url: string, data?: unknown, config?: InternalAxiosRequestConfig): Promise<{ data: T }> {
+  async patch<T>(
+    url: string,
+    data?: unknown,
+    config?: InternalAxiosRequestConfig,
+  ): Promise<{ data: T }> {
     return this.client.patch(url, data, config);
   }
 

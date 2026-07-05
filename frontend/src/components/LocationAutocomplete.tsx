@@ -1,205 +1,230 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react';
 
 declare global {
   interface Window {
-    initGoogleMaps?: () => void
+    initGoogleMaps?: () => void;
   }
 }
 
 interface LocationAutocompleteProps {
-  value: string
-  latitude?: string
-  longitude?: string
-  radius?: string
-  onChange: (data: { location: string; latitude: string; longitude: string }) => void
-  className?: string
-  placeholder?: string
-  showMap?: boolean
+  value: string;
+  latitude?: string;
+  longitude?: string;
+  radius?: string;
+  onChange: (data: { location: string; latitude: string; longitude: string }) => void;
+  className?: string;
+  placeholder?: string;
+  showMap?: boolean;
 }
 
-const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-const DEFAULT_CENTER = { lat: 4.711, lng: -74.072 }
+const DEFAULT_CENTER = { lat: 4.711, lng: -74.072 };
 
 export default function LocationAutocomplete({
-  value, latitude, longitude, radius, onChange, className = '', placeholder, showMap = true,
+  value,
+  latitude,
+  longitude,
+  radius,
+  onChange,
+  className = '',
+  placeholder,
+  showMap = true,
 }: LocationAutocompleteProps) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const mapRef = useRef<HTMLDivElement>(null)
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null)
-  const listenerRef = useRef<google.maps.MapsEventListener | null>(null)
-  const mapInstanceRef = useRef<google.maps.Map | null>(null)
-  const markerRef = useRef<google.maps.Marker | null>(null)
-  const circleRef = useRef<google.maps.Circle | null>(null)
-  const pendingCenterRef = useRef<{ lat: number; lng: number } | null>(null)
-  const onChangeRef = useRef(onChange)
-  const valueRef = useRef(value)
-  const [loaded, setLoaded] = useState(false)
-
-  useEffect(() => { onChangeRef.current = onChange }, [onChange])
-  useEffect(() => { valueRef.current = value }, [value])
-
-  const hasCoords = latitude && longitude
+  const inputRef = useRef<HTMLInputElement>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const listenerRef = useRef<google.maps.MapsEventListener | null>(null);
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const markerRef = useRef<google.maps.Marker | null>(null);
+  const circleRef = useRef<google.maps.Circle | null>(null);
+  const pendingCenterRef = useRef<{ lat: number; lng: number } | null>(null);
+  const onChangeRef = useRef(onChange);
+  const valueRef = useRef(value);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (!API_KEY) return
+    onChangeRef.current = onChange;
+  }, [onChange]);
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
+
+  const hasCoords = latitude && longitude;
+
+  useEffect(() => {
+    if (!API_KEY) return;
 
     if (window.google?.maps?.places) {
-      setLoaded(true)
-      return
+      setLoaded(true);
+      return;
     }
 
     if (document.querySelector('#google-maps-script')) {
       const check = setInterval(() => {
         if (window.google?.maps?.places) {
-          clearInterval(check)
-          setLoaded(true)
+          clearInterval(check);
+          setLoaded(true);
         }
-      }, 300)
-      return () => clearInterval(check)
+      }, 300);
+      return () => clearInterval(check);
     }
 
-    window.initGoogleMaps = () => setLoaded(true)
+    window.initGoogleMaps = () => setLoaded(true);
 
-    const script = document.createElement('script')
-    script.id = 'google-maps-script'
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&libraries=places&callback=initGoogleMaps`
-    script.async = true
-    script.defer = true
-    document.head.appendChild(script)
-  }, [])
+    const script = document.createElement('script');
+    script.id = 'google-maps-script';
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&libraries=places&callback=initGoogleMaps`;
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+  }, []);
 
   // Always init autocomplete (even without map)
   useEffect(() => {
-    if (!loaded || !inputRef.current) return
-    if (autocompleteRef.current) return
+    if (!loaded || !inputRef.current) return;
+    if (autocompleteRef.current) return;
 
     autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
       types: ['geocode'],
       componentRestrictions: { country: 'co' },
-    })
+    });
 
     listenerRef.current = autocompleteRef.current.addListener('place_changed', () => {
-      const place = autocompleteRef.current?.getPlace()
-      if (!place || !place.geometry?.location) return
+      const place = autocompleteRef.current?.getPlace();
+      if (!place || !place.geometry?.location) return;
 
-      const lat = place.geometry.location.lat()
-      const lng = place.geometry.location.lng()
+      const lat = place.geometry.location.lat();
+      const lng = place.geometry.location.lng();
 
       onChangeRef.current({
         location: place.formatted_address || '',
         latitude: lat.toString(),
         longitude: lng.toString(),
-      })
+      });
 
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.setCenter({ lat, lng })
-        mapInstanceRef.current.setZoom(16)
-        markerRef.current?.setPosition({ lat, lng })
+        mapInstanceRef.current.setCenter({ lat, lng });
+        mapInstanceRef.current.setZoom(16);
+        markerRef.current?.setPosition({ lat, lng });
       }
-    })
+    });
 
     return () => {
       if (listenerRef.current) {
-        google.maps.event.removeListener(listenerRef.current)
-        listenerRef.current = null
+        google.maps.event.removeListener(listenerRef.current);
+        listenerRef.current = null;
       }
-      autocompleteRef.current = null
-    }
-  }, [loaded])
+      autocompleteRef.current = null;
+    };
+  }, [loaded]);
 
   // Init map + marker only when showMap is true
   useEffect(() => {
-    if (!loaded || !inputRef.current || !mapRef.current) return
+    if (!loaded || !inputRef.current || !mapRef.current) return;
 
     if (!showMap) {
-      if (circleRef.current) { circleRef.current.setMap(null); circleRef.current = null }
-      if (markerRef.current) { markerRef.current.setMap(null); markerRef.current = null }
-      if (mapInstanceRef.current) { mapInstanceRef.current = null }
-      return
+      if (circleRef.current) {
+        circleRef.current.setMap(null);
+        circleRef.current = null;
+      }
+      if (markerRef.current) {
+        markerRef.current.setMap(null);
+        markerRef.current = null;
+      }
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current = null;
+      }
+      return;
     }
 
-    const center = hasCoords
-      ? { lat: Number(latitude), lng: Number(longitude) }
-      : DEFAULT_CENTER
+    const center = hasCoords ? { lat: Number(latitude), lng: Number(longitude) } : DEFAULT_CENTER;
 
     mapInstanceRef.current = new google.maps.Map(mapRef.current, {
       center,
       zoom: 14,
       mapTypeControl: false,
       streetViewControl: false,
-    })
+    });
 
     markerRef.current = new google.maps.Marker({
       position: center,
       map: mapInstanceRef.current,
       draggable: true,
-    })
+    });
 
     markerRef.current.addListener('dragend', () => {
-      const pos = markerRef.current!.getPosition()
-      if (!pos) return
-      reverseGeocode(pos.lat(), pos.lng())
-    })
+      const pos = markerRef.current!.getPosition();
+      if (!pos) return;
+      reverseGeocode(pos.lat(), pos.lng());
+    });
 
     mapInstanceRef.current.addListener('click', (e: google.maps.MapMouseEvent) => {
-      if (!e.latLng) return
-      markerRef.current!.setPosition(e.latLng)
-      reverseGeocode(e.latLng.lat(), e.latLng.lng())
-    })
+      if (!e.latLng) return;
+      markerRef.current!.setPosition(e.latLng);
+      reverseGeocode(e.latLng.lat(), e.latLng.lng());
+    });
 
     if (pendingCenterRef.current) {
-      const c = pendingCenterRef.current
-      mapInstanceRef.current?.setCenter(c)
-      markerRef.current?.setPosition(c)
-      pendingCenterRef.current = null
+      const c = pendingCenterRef.current;
+      mapInstanceRef.current?.setCenter(c);
+      markerRef.current?.setPosition(c);
+      pendingCenterRef.current = null;
     }
 
     return () => {
-      if (circleRef.current) { circleRef.current.setMap(null); circleRef.current = null }
-      if (markerRef.current) { markerRef.current.setMap(null); markerRef.current = null }
-      if (mapInstanceRef.current) { mapInstanceRef.current = null }
-    }
-  }, [loaded, showMap])
+      if (circleRef.current) {
+        circleRef.current.setMap(null);
+        circleRef.current = null;
+      }
+      if (markerRef.current) {
+        markerRef.current.setMap(null);
+        markerRef.current = null;
+      }
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [loaded, showMap]);
 
   // Sync lat/lng to map marker
   useEffect(() => {
-    if (!mapInstanceRef.current || !markerRef.current) return
-    if (!latitude || !longitude) return
+    if (!mapInstanceRef.current || !markerRef.current) return;
+    if (!latitude || !longitude) return;
 
-    const lat = Number(latitude)
-    const lng = Number(longitude)
-    if (isNaN(lat) || isNaN(lng)) return
+    const lat = Number(latitude);
+    const lng = Number(longitude);
+    if (isNaN(lat) || isNaN(lng)) return;
 
-    const currentPos = markerRef.current.getPosition()
-    if (currentPos && currentPos.lat() === lat && currentPos.lng() === lng) return
+    const currentPos = markerRef.current.getPosition();
+    if (currentPos && currentPos.lat() === lat && currentPos.lng() === lng) return;
 
-    mapInstanceRef.current.setCenter({ lat, lng })
-    mapInstanceRef.current.setZoom(16)
-    markerRef.current.setPosition({ lat, lng })
-  }, [latitude, longitude])
+    mapInstanceRef.current.setCenter({ lat, lng });
+    mapInstanceRef.current.setZoom(16);
+    markerRef.current.setPosition({ lat, lng });
+  }, [latitude, longitude]);
 
   // Draw / update radius circle
   useEffect(() => {
     if (!mapInstanceRef.current || !latitude || !longitude) {
       if (circleRef.current) {
-        circleRef.current.setMap(null)
-        circleRef.current = null
+        circleRef.current.setMap(null);
+        circleRef.current = null;
       }
-      return
+      return;
     }
 
-    const lat = Number(latitude)
-    const lng = Number(longitude)
-    if (isNaN(lat) || isNaN(lng)) return
+    const lat = Number(latitude);
+    const lng = Number(longitude);
+    if (isNaN(lat) || isNaN(lng)) return;
 
-    const km = Number(radius)
+    const km = Number(radius);
     if (!km || km <= 0) {
       if (circleRef.current) {
-        circleRef.current.setMap(null)
-        circleRef.current = null
+        circleRef.current.setMap(null);
+        circleRef.current = null;
       }
-      return
+      return;
     }
 
     if (!circleRef.current) {
@@ -210,40 +235,44 @@ export default function LocationAutocomplete({
         fillColor: '#3B82F6',
         fillOpacity: 0.1,
         map: mapInstanceRef.current,
-      })
+      });
     }
 
-    circleRef.current.setCenter({ lat, lng })
-    circleRef.current.setRadius(km * 1000)
+    circleRef.current.setCenter({ lat, lng });
+    circleRef.current.setRadius(km * 1000);
 
-    const bounds = circleRef.current.getBounds()
-    if (bounds) mapInstanceRef.current.fitBounds(bounds)
-  }, [latitude, longitude, radius])
+    const bounds = circleRef.current.getBounds();
+    if (bounds) mapInstanceRef.current.fitBounds(bounds);
+  }, [latitude, longitude, radius]);
 
   async function reverseGeocode(lat: number, lng: number) {
-    onChangeRef.current({ latitude: lat.toString(), longitude: lng.toString(), location: valueRef.current })
+    onChangeRef.current({
+      latitude: lat.toString(),
+      longitude: lng.toString(),
+      location: valueRef.current,
+    });
 
-    if (!window.google?.maps) return
+    if (!window.google?.maps) return;
 
-    const geocoder = new google.maps.Geocoder()
+    const geocoder = new google.maps.Geocoder();
     geocoder.geocode({ location: { lat, lng } }, (results, status) => {
       if (status === 'OK' && results?.[0]) {
         onChangeRef.current({
           location: results[0].formatted_address,
           latitude: lat.toString(),
           longitude: lng.toString(),
-        })
+        });
       }
-    })
+    });
   }
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    onChangeRef.current({ location: e.target.value, latitude: '', longitude: '' })
+    onChangeRef.current({ location: e.target.value, latitude: '', longitude: '' });
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter' && valueRef.current && !latitude) {
-      onChangeRef.current({ location: valueRef.current, latitude: '', longitude: '' })
+      onChangeRef.current({ location: valueRef.current, latitude: '', longitude: '' });
     }
   }
 
@@ -266,5 +295,5 @@ export default function LocationAutocomplete({
         />
       )}
     </div>
-  )
+  );
 }

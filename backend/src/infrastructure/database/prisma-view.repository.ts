@@ -1,9 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
-import {
-  IViewRepository,
-  IDailyStatsRepository,
-} from '../../domain/views/view.repository';
+import { IViewRepository, IDailyStatsRepository } from '../../domain/views/view.repository';
 import {
   IPropertyView,
   IDailyPropertyStats,

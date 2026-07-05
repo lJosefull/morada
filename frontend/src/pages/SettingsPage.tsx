@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
-import { api } from '../lib/api'
-import { useAuthStore } from '../store/auth'
-import { getImageUrl } from '../lib/utils'
-import VersionBadge from '../components/VersionBadge'
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { api } from '../lib/api';
+import { useAuthStore } from '../store/auth';
+import { getImageUrl } from '../lib/utils';
+import VersionBadge from '../components/VersionBadge';
 
-type TabId = 'profile' | 'security'
+type TabId = 'profile' | 'security';
 
 const tabs: { id: TabId; label: string; icon: string }[] = [
   {
@@ -18,109 +18,105 @@ const tabs: { id: TabId; label: string; icon: string }[] = [
     label: 'Security',
     icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z',
   },
-
-]
+];
 
 export default function SettingsPage() {
-  const { t } = useTranslation()
-  const user = useAuthStore((s) => s.user)
-  const fetchUser = useAuthStore((s) => s.fetchUser)
+  const { t } = useTranslation();
+  const user = useAuthStore((s) => s.user);
+  const fetchUser = useAuthStore((s) => s.fetchUser);
 
-  const [activeTab, setActiveTab] = useState<TabId>('profile')
+  const [activeTab, setActiveTab] = useState<TabId>('profile');
 
   // Profile form
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [profileSaving, setProfileSaving] = useState(false)
-  const [profileError, setProfileError] = useState<string | null>(null)
-  const [profileSuccess, setProfileSuccess] = useState<string | null>(null)
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
 
   // Security form
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [passwordSaving, setPasswordSaving] = useState(false)
-  const [passwordError, setPasswordError] = useState<string | null>(null)
-  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null)
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
 
   // Avatar
-  const [avatarUploading, setAvatarUploading] = useState(false)
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null)
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setPendingAvatarFile(file)
-    setAvatarPreview(URL.createObjectURL(file))
-  }
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPendingAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  };
 
   useEffect(() => {
     if (user) {
-      setName(user.name)
-      setEmail(user.email)
-      setPhone(user.phone || '')
+      setName(user.name);
+      setEmail(user.email);
+      setPhone(user.phone || '');
     }
-  }, [user])
+  }, [user]);
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setProfileError(null)
-    setProfileSuccess(null)
-    setProfileSaving(true)
+    e.preventDefault();
+    setProfileError(null);
+    setProfileSuccess(null);
+    setProfileSaving(true);
     try {
       if (pendingAvatarFile) {
-        setAvatarUploading(true)
-        const fd = new FormData()
-        fd.append('avatar', pendingAvatarFile)
-        await api.post('/users/me/avatar', fd)
-        setPendingAvatarFile(null)
-        setAvatarPreview(null)
-        setAvatarUploading(false)
+        setAvatarUploading(true);
+        const fd = new FormData();
+        fd.append('avatar', pendingAvatarFile);
+        await api.post('/users/me/avatar', fd);
+        setPendingAvatarFile(null);
+        setAvatarPreview(null);
+        setAvatarUploading(false);
       }
 
-      const body: Record<string, string> = {}
-      if (name !== user?.name) body.name = name
-      if (email !== user?.email) body.email = email
-      if (phone !== (user?.phone || '')) body.phone = phone
+      const body: Record<string, string> = {};
+      if (name !== user?.name) body.name = name;
+      if (email !== user?.email) body.email = email;
+      if (phone !== (user?.phone || '')) body.phone = phone;
       if (Object.keys(body).length > 0) {
-        await api.patch('/users/me', body)
+        await api.patch('/users/me', body);
       }
-      await fetchUser()
-      setProfileSuccess(t('common.profileUpdated'))
+      await fetchUser();
+      setProfileSuccess(t('common.profileUpdated'));
     } catch (err) {
-      const message = err instanceof Error ? err.message : t('common.profileUpdateError')
-      setProfileError(message)
+      const message = err instanceof Error ? err.message : t('common.profileUpdateError');
+      setProfileError(message);
     } finally {
-      setProfileSaving(false)
-      setAvatarUploading(false)
+      setProfileSaving(false);
+      setAvatarUploading(false);
     }
-  }
+  };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setPasswordError(null)
-    setPasswordSuccess(null)
+    e.preventDefault();
+    setPasswordError(null);
+    setPasswordSuccess(null);
     if (newPassword !== confirmPassword)
-      return void setPasswordError(t('common.passwordsDoNotMatch'))
-    if (newPassword.length < 6)
-      return void setPasswordError(t('common.passwordTooShort'))
-    setPasswordSaving(true)
+      return void setPasswordError(t('common.passwordsDoNotMatch'));
+    if (newPassword.length < 6) return void setPasswordError(t('common.passwordTooShort'));
+    setPasswordSaving(true);
     try {
-      await api.patch('/users/me/password', { currentPassword, newPassword })
-      setCurrentPassword('')
-      setNewPassword('')
-      setConfirmPassword('')
-      setPasswordSuccess(t('common.passwordUpdated'))
+      await api.patch('/users/me/password', { currentPassword, newPassword });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordSuccess(t('common.passwordUpdated'));
     } catch (err) {
-      setPasswordError(
-        err instanceof Error ? err.message : t('common.incorrectPassword')
-      )
+      setPasswordError(err instanceof Error ? err.message : t('common.incorrectPassword'));
     } finally {
-      setPasswordSaving(false)
+      setPasswordSaving(false);
     }
-  }
+  };
 
   if (!user) {
     return (
@@ -130,7 +126,7 @@ export default function SettingsPage() {
           <p className="text-sm text-gray-400">{t('common.loading')}</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -138,12 +134,8 @@ export default function SettingsPage() {
       <div className="max-w-5xl mx-auto">
         {/* ── Page Header ── */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-            {t('settings.title')}
-          </h1>
-          <p className="text-gray-500 mt-1">
-            {t('settings.title')}
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{t('settings.title')}</h1>
+          <p className="text-gray-500 mt-1">{t('settings.title')}</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -154,16 +146,18 @@ export default function SettingsPage() {
               <div className="p-6 text-center border-b border-gray-100">
                 {user.avatar ? (
                   <div className="relative w-20 h-20 mx-auto">
-                    <img src={getImageUrl(user.avatar)} alt={user.name} className="w-20 h-20 rounded-full object-cover shadow-lg shadow-indigo-200" />
+                    <img
+                      src={getImageUrl(user.avatar)}
+                      alt={user.name}
+                      className="w-20 h-20 rounded-full object-cover shadow-lg shadow-indigo-200"
+                    />
                   </div>
                 ) : (
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold mx-auto shadow-lg shadow-indigo-200">
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <h2 className="mt-4 font-semibold text-gray-900">
-                  {user.name}
-                </h2>
+                <h2 className="mt-4 font-semibold text-gray-900">{user.name}</h2>
                 <p className="text-sm text-gray-500">{user.email}</p>
                 <span className="inline-block mt-2 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full">
                   {t('profile.contactInfo')}
@@ -193,11 +187,11 @@ export default function SettingsPage() {
                   <button
                     key={tab.id}
                     onClick={() => {
-                      setActiveTab(tab.id)
-                      setProfileError(null)
-                      setProfileSuccess(null)
-                      setPasswordError(null)
-                      setPasswordSuccess(null)
+                      setActiveTab(tab.id);
+                      setProfileError(null);
+                      setProfileSuccess(null);
+                      setPasswordError(null);
+                      setPasswordSuccess(null);
                     }}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                       activeTab === tab.id
@@ -253,18 +247,11 @@ export default function SettingsPage() {
             {activeTab === 'profile' && (
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
                 <div className="px-8 py-6 border-b border-gray-100">
-                  <h2 className="text-xl font-bold text-gray-900">
-                    {t('settings.profile')}
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {t('settings.profile')}
-                  </p>
+                  <h2 className="text-xl font-bold text-gray-900">{t('settings.profile')}</h2>
+                  <p className="text-sm text-gray-500 mt-1">{t('settings.profile')}</p>
                 </div>
 
-                <form
-                  onSubmit={handleProfileSubmit}
-                  className="px-8 py-6 space-y-6"
-                >
+                <form onSubmit={handleProfileSubmit} className="px-8 py-6 space-y-6">
                   <div className="flex items-center gap-6 pb-6 border-b border-gray-100">
                     <div className="relative">
                       {avatarPreview || user.avatar ? (
@@ -291,9 +278,24 @@ export default function SettingsPage() {
                           className="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors"
                         />
                         {avatarUploading && (
-                          <svg className="w-5 h-5 text-blue-600 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          <svg
+                            className="w-5 h-5 text-blue-600 animate-spin flex-shrink-0"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                            />
                           </svg>
                         )}
                       </div>
@@ -331,15 +333,15 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="max-w-md">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t('auth.phone')}
-                      </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('auth.phone')}
+                    </label>
                     <input
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-400"
-                        placeholder={t('inquiries.yourPhone')}
+                      placeholder={t('inquiries.yourPhone')}
                     />
                   </div>
 
@@ -360,13 +362,13 @@ export default function SettingsPage() {
                         />
                       </svg>
                       <span className="flex-1">{profileError}</span>
-                        <button
-                          type="button"
-                          onClick={() => setProfileError(null)}
-                          className="font-semibold hover:underline text-sm"
-                        >
-                          {t('common.close')}
-                        </button>
+                      <button
+                        type="button"
+                        onClick={() => setProfileError(null)}
+                        className="font-semibold hover:underline text-sm"
+                      >
+                        {t('common.close')}
+                      </button>
                     </div>
                   )}
 
@@ -387,13 +389,13 @@ export default function SettingsPage() {
                         />
                       </svg>
                       <span className="flex-1">{profileSuccess}</span>
-                        <button
-                          type="button"
-                          onClick={() => setProfileSuccess(null)}
-                          className="font-semibold hover:underline text-sm"
-                        >
-                          {t('common.close')}
-                        </button>
+                      <button
+                        type="button"
+                        onClick={() => setProfileSuccess(null)}
+                        className="font-semibold hover:underline text-sm"
+                      >
+                        {t('common.close')}
+                      </button>
                     </div>
                   )}
 
@@ -422,9 +424,9 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        setName(user.name)
-                        setEmail(user.email)
-                        setPhone(user.phone || '')
+                        setName(user.name);
+                        setEmail(user.email);
+                        setPhone(user.phone || '');
                       }}
                       className="px-6 py-3 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all"
                     >
@@ -440,19 +442,14 @@ export default function SettingsPage() {
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
                 <div className="px-8 py-6 border-b border-gray-100">
                   <h2 className="text-xl font-bold text-gray-900">{t('settings.account')}</h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {t('settings.account')}
-                  </p>
+                  <p className="text-sm text-gray-500 mt-1">{t('settings.account')}</p>
                 </div>
 
-                <form
-                  onSubmit={handlePasswordSubmit}
-                  className="px-8 py-6 space-y-6"
-                >
+                <form onSubmit={handlePasswordSubmit} className="px-8 py-6 space-y-6">
                   <div className="max-w-md">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t('auth.currentPassword')}
-                      </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('auth.currentPassword')}
+                    </label>
                     <input
                       type="password"
                       value={currentPassword}
@@ -509,9 +506,7 @@ export default function SettingsPage() {
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <p className="text-sm text-amber-800">
-                      {t('auth.passwordHint')}
-                    </p>
+                    <p className="text-sm text-amber-800">{t('auth.passwordHint')}</p>
                   </div>
 
                   {/* Password Error */}
@@ -531,13 +526,13 @@ export default function SettingsPage() {
                         />
                       </svg>
                       <span className="flex-1">{passwordError}</span>
-                        <button
-                          type="button"
-                          onClick={() => setPasswordError(null)}
-                          className="font-semibold hover:underline text-sm"
-                        >
-                          {t('common.close')}
-                        </button>
+                      <button
+                        type="button"
+                        onClick={() => setPasswordError(null)}
+                        className="font-semibold hover:underline text-sm"
+                      >
+                        {t('common.close')}
+                      </button>
                     </div>
                   )}
 
@@ -558,13 +553,13 @@ export default function SettingsPage() {
                         />
                       </svg>
                       <span className="flex-1">{passwordSuccess}</span>
-                        <button
-                          type="button"
-                          onClick={() => setPasswordSuccess(null)}
-                          className="font-semibold hover:underline text-sm"
-                        >
-                          {t('common.close')}
-                        </button>
+                      <button
+                        type="button"
+                        onClick={() => setPasswordSuccess(null)}
+                        className="font-semibold hover:underline text-sm"
+                      >
+                        {t('common.close')}
+                      </button>
                     </div>
                   )}
 
@@ -602,9 +597,9 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        setCurrentPassword('')
-                        setNewPassword('')
-                        setConfirmPassword('')
+                        setCurrentPassword('');
+                        setNewPassword('');
+                        setConfirmPassword('');
                       }}
                       className="px-6 py-3 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all"
                     >
@@ -614,11 +609,9 @@ export default function SettingsPage() {
                 </form>
               </div>
             )}
-
-
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

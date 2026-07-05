@@ -1,4 +1,11 @@
-import { Inject, Injectable, NotFoundException, ConflictException, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { IUserRepository, USER_REPOSITORY } from '../../domain/users/user.repository';
 import { IUser } from '../../domain/users/user.entity';
 import {

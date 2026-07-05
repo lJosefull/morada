@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Query,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, UseGuards, Req } from '@nestjs/common';
 import { FavoritesService } from '../../application/favorites/favorites.service';
 import { ToggleFavoriteDto, CheckFavoritesDto } from './favorites.dto';
 import { JwtAuthGuard } from '../../infrastructure/auth/jwt-auth.guard';
@@ -21,10 +13,7 @@ export class FavoritesController {
 
   @Post('toggle')
   @ApiOperation({ summary: 'Toggle a property as favorite' })
-  async toggle(
-    @Body() dto: ToggleFavoriteDto,
-    @Req() req: any,
-  ) {
+  async toggle(@Body() dto: ToggleFavoriteDto, @Req() req: any) {
     return this.favoritesService.toggle(req.user.id, dto.propertyId);
   }
 
@@ -41,11 +30,11 @@ export class FavoritesController {
     description: 'Comma-separated property IDs',
     example: 'id1,id2,id3',
   })
-  async check(
-    @Req() req: any,
-    @Query('propertyIds') propertyIds: string,
-  ) {
-    const ids = propertyIds.split(',').map((s: string) => s.trim()).filter(Boolean);
+  async check(@Req() req: any, @Query('propertyIds') propertyIds: string) {
+    const ids = propertyIds
+      .split(',')
+      .map((s: string) => s.trim())
+      .filter(Boolean);
     return this.favoritesService.check(req.user.id, ids);
   }
 }

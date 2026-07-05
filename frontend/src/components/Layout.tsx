@@ -1,8 +1,8 @@
-import { Outlet } from 'react-router-dom'
-import Navbar from './Navbar'
-import LegalFooter from './LegalFooter'
-import CookieConsent from './CookieConsent'
-import VerificationBanner from './VerificationBanner'
+import { Outlet } from 'react-router-dom';
+import Navbar from './Navbar';
+import LegalFooter from './LegalFooter';
+import CookieConsent from './CookieConsent';
+import VerificationBanner from './VerificationBanner';
 
 export default function Layout() {
   return (
@@ -15,5 +15,5 @@ export default function Layout() {
       <LegalFooter />
       <CookieConsent />
     </div>
-  )
+  );
 }

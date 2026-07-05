@@ -1,57 +1,72 @@
-import { useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useParams, Link } from 'react-router-dom'
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useParams, Link } from 'react-router-dom';
 
 const LEGAL_FILES: Record<string, { title: string; path: string }> = {
-  'terms': { title: 'Términos y Condiciones', path: '/legal/terminos-y-condiciones.html' },
-  'privacy': { title: 'Política de Privacidad', path: '/legal/politica-de-privacidad.html' },
-  'data-policy': { title: 'Política de Tratamiento de Datos', path: '/legal/politica-de-tratamiento-de-datos.html' },
-  'cookies': { title: 'Política de Cookies', path: '/legal/politica-de-cookies.html' },
-  'acceptable-use': { title: 'Política de Uso Aceptable', path: '/legal/politica-de-uso-aceptable.html' },
-  'intellectual-property': { title: 'Política de Propiedad Intelectual', path: '/legal/politica-de-propiedad-intelectual.html' },
-  'listing-policy': { title: 'Política de Publicación de Inmuebles', path: '/legal/politica-de-publicacion-de-inmuebles.html' },
-  'consent': { title: 'Consentimiento de Datos Personales', path: '/legal/consentimiento-datos-personales.html' },
-}
+  terms: { title: 'Términos y Condiciones', path: '/legal/terminos-y-condiciones.html' },
+  privacy: { title: 'Política de Privacidad', path: '/legal/politica-de-privacidad.html' },
+  'data-policy': {
+    title: 'Política de Tratamiento de Datos',
+    path: '/legal/politica-de-tratamiento-de-datos.html',
+  },
+  cookies: { title: 'Política de Cookies', path: '/legal/politica-de-cookies.html' },
+  'acceptable-use': {
+    title: 'Política de Uso Aceptable',
+    path: '/legal/politica-de-uso-aceptable.html',
+  },
+  'intellectual-property': {
+    title: 'Política de Propiedad Intelectual',
+    path: '/legal/politica-de-propiedad-intelectual.html',
+  },
+  'listing-policy': {
+    title: 'Política de Publicación de Inmuebles',
+    path: '/legal/politica-de-publicacion-de-inmuebles.html',
+  },
+  consent: {
+    title: 'Consentimiento de Datos Personales',
+    path: '/legal/consentimiento-datos-personales.html',
+  },
+};
 
 export default function LegalPage() {
-  const { t } = useTranslation()
-  const { docId } = useParams<{ docId: string }>()
-  const [content, setContent] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+  const { t } = useTranslation();
+  const { docId } = useParams<{ docId: string }>();
+  const [content, setContent] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  const doc = docId ? LEGAL_FILES[docId] : null
+  const doc = docId ? LEGAL_FILES[docId] : null;
 
   useEffect(() => {
     if (!doc) {
-      setLoading(false)
-      setError(true)
-      return
+      setLoading(false);
+      setError(true);
+      return;
     }
 
-    setLoading(true)
-    setError(false)
+    setLoading(true);
+    setError(false);
 
     fetch(doc.path)
       .then((res) => {
-        if (!res.ok) throw new Error('Not found')
-        return res.text()
+        if (!res.ok) throw new Error('Not found');
+        return res.text();
       })
       .then((html) => {
         // Extract the content inside .container to avoid duplicating layout
-        const match = html.match(/<div class="container">([\s\S]*)<\/div>\s*<\/body>/)
+        const match = html.match(/<div class="container">([\s\S]*)<\/div>\s*<\/body>/);
         if (match) {
-          setContent(match[1])
+          setContent(match[1]);
         } else {
-          setContent(html)
+          setContent(html);
         }
-        setLoading(false)
+        setLoading(false);
       })
       .catch(() => {
-        setError(true)
-        setLoading(false)
-      })
-  }, [docId])
+        setError(true);
+        setLoading(false);
+      });
+  }, [docId]);
 
   if (loading) {
     return (
@@ -61,7 +76,7 @@ export default function LegalPage() {
           <p className="text-sm text-gray-400">{t('legal.loading')}</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !doc) {
@@ -73,7 +88,7 @@ export default function LegalPage() {
           {t('legal.viewTerms')}
         </Link>
       </div>
-    )
+    );
   }
 
   return (
@@ -103,5 +118,5 @@ export default function LegalPage() {
         dangerouslySetInnerHTML={{ __html: content }}
       />
     </div>
-  )
+  );
 }

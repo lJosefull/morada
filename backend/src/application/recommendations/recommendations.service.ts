@@ -50,7 +50,17 @@ export class RecommendationsService {
       },
       include: {
         images: { take: 1, orderBy: { isPrimary: 'desc' } },
-        user: { select: { id: true, name: true, email: true, phone: true, plan: true, agencyName: true, agencyLogo: true } },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            plan: true,
+            agencyName: true,
+            agencyLogo: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -134,7 +144,17 @@ export class RecommendationsService {
       },
       include: {
         images: { take: 1, orderBy: { isPrimary: 'desc' } },
-        user: { select: { id: true, name: true, email: true, phone: true, plan: true, agencyName: true, agencyLogo: true } },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            plan: true,
+            agencyName: true,
+            agencyLogo: true,
+          },
+        },
       },
     });
 
@@ -239,10 +259,23 @@ export class RecommendationsService {
       typeWeights[p.propertyType] = (typeWeights[p.propertyType] || 0) + weight;
       listingWeights[p.listingType] = (listingWeights[p.listingType] || 0) + weight;
 
-      if (p.price) { weightedPriceSum += p.price * weight; weightSum += weight; }
-      if (p.bedrooms) { bedroomSum += p.bedrooms * weight; bedroomWeight += weight; }
-      if (p.bathrooms) { bathroomSum += p.bathrooms * weight; bathroomWeight += weight; }
-      if (p.latitude && p.longitude) { latSum += p.latitude * weight; lngSum += p.longitude * weight; coordWeight += weight; }
+      if (p.price) {
+        weightedPriceSum += p.price * weight;
+        weightSum += weight;
+      }
+      if (p.bedrooms) {
+        bedroomSum += p.bedrooms * weight;
+        bedroomWeight += weight;
+      }
+      if (p.bathrooms) {
+        bathroomSum += p.bathrooms * weight;
+        bathroomWeight += weight;
+      }
+      if (p.latitude && p.longitude) {
+        latSum += p.latitude * weight;
+        lngSum += p.longitude * weight;
+        coordWeight += weight;
+      }
     }
 
     // Normalize type weights to percentages
@@ -258,7 +291,10 @@ export class RecommendationsService {
       let sqDiffSum = 0;
       let sqWeightSum = 0;
       for (const { property: p, weight } of unique) {
-        if (p.price) { sqDiffSum += weight * (p.price - avgPrice) ** 2; sqWeightSum += weight; }
+        if (p.price) {
+          sqDiffSum += weight * (p.price - avgPrice) ** 2;
+          sqWeightSum += weight;
+        }
       }
       priceStd = sqWeightSum > 0 ? Math.sqrt(sqDiffSum / sqWeightSum) : null;
     }
@@ -356,7 +392,15 @@ export class RecommendationsService {
   private scoreWithProfile(property: any, profile: UserProfile): ScoredProperty {
     let score = 0;
     const matchReasons: string[] = [];
-    const weights = { type: 0.20, listing: 0.08, price: 0.17, bedrooms: 0.08, bathrooms: 0.04, proximity: 0.25, popularity: 0.18 };
+    const weights = {
+      type: 0.2,
+      listing: 0.08,
+      price: 0.17,
+      bedrooms: 0.08,
+      bathrooms: 0.04,
+      proximity: 0.25,
+      popularity: 0.18,
+    };
 
     if (profile.totalInteractions === 0) {
       // Cold start: no profile, use popularity
@@ -397,11 +441,17 @@ export class RecommendationsService {
     }
 
     // 6. Location proximity (25%)
-    if (profile.avgLatitude !== null && profile.avgLongitude !== null
-        && property.latitude && property.longitude) {
+    if (
+      profile.avgLatitude !== null &&
+      profile.avgLongitude !== null &&
+      property.latitude &&
+      property.longitude
+    ) {
       const distanceKm = this.haversineDistance(
-        profile.avgLatitude, profile.avgLongitude,
-        property.latitude, property.longitude,
+        profile.avgLatitude,
+        profile.avgLongitude,
+        property.latitude,
+        property.longitude,
       );
       if (distanceKm <= 3) {
         score += weights.proximity * 1.0;
@@ -453,15 +503,17 @@ export class RecommendationsService {
       aiDescription: raw.aiDescription,
       aiStatus: raw.aiStatus,
       userId: raw.userId,
-      user: raw.user ? {
-        id: raw.user.id,
-        name: raw.user.name,
-        email: raw.user.email,
-        phone: raw.user.phone,
-        plan: raw.user.plan,
-        agencyName: raw.user.agencyName,
-        agencyLogo: raw.user.agencyLogo,
-      } : undefined,
+      user: raw.user
+        ? {
+            id: raw.user.id,
+            name: raw.user.name,
+            email: raw.user.email,
+            phone: raw.user.phone,
+            plan: raw.user.plan,
+            agencyName: raw.user.agencyName,
+            agencyLogo: raw.user.agencyLogo,
+          }
+        : undefined,
       images: (raw.images || []).map((img: any) => ({
         id: img.id,
         url: img.url,
@@ -487,12 +539,15 @@ export class RecommendationsService {
     const R = 6371;
     const dLat = this.toRad(lat2 - lat1);
     const dLng = this.toRad(lng2 - lng1);
-    const a = Math.sin(dLat / 2) ** 2
-      + Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) * Math.sin(dLng / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
-  private toRad(deg: number): number { return (deg * Math.PI) / 180; }
+  private toRad(deg: number): number {
+    return (deg * Math.PI) / 180;
+  }
 
   private getTopKey(obj: Record<string, number>): string | null {
     const keys = Object.keys(obj);

@@ -1,6 +1,12 @@
 import { Controller, Post, Body, Get, UseGuards, Req, Res, Query } from '@nestjs/common';
 import { AuthService } from '../../application/auth/auth.service';
-import { LoginDto, RegisterDto, RefreshTokenDto, VerifyEmailDto, ResendVerificationDto } from './auth.dto';
+import {
+  LoginDto,
+  RegisterDto,
+  RefreshTokenDto,
+  VerifyEmailDto,
+  ResendVerificationDto,
+} from './auth.dto';
 import { AltchaService } from '../../infrastructure/altcha/altcha.service';
 import { JwtAuthGuard } from '../../infrastructure/auth/jwt-auth.guard';
 import { GoogleAuthGuard } from '../../infrastructure/auth/google-auth.guard';
