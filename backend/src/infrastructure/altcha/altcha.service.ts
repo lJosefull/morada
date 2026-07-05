@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { createChallenge, verifySolution, HmacAlgorithm } from 'altcha-lib';
+import { createChallenge, verifySolution } from 'altcha-lib/v1';
 
 @Injectable()
 export class AltchaService {
@@ -12,10 +12,11 @@ export class AltchaService {
   }
 
   async generateChallenge(): Promise<{
-    algorithm: HmacAlgorithm;
+    algorithm: string;
     challenge: string;
     salt: string;
     signature: string;
+    maxnumber: number;
   }> {
     return createChallenge({
       hmacKey: this.hmacKey,

@@ -1,18 +1,28 @@
-declare module 'altcha-lib' {
-  export type HmacAlgorithm = 'SHA-1' | 'SHA-256' | 'SHA-512';
+declare module 'altcha-lib/v1' {
+  export type Algorithm = 'SHA-1' | 'SHA-256' | 'SHA-512';
 
   export interface ChallengeOptions {
     hmacKey: string;
     maxNumber?: number;
     saltLength?: number;
-    algorithm?: HmacAlgorithm;
+    algorithm?: Algorithm;
+    salt?: string;
+    number?: number;
+    params?: string | Record<string, string>;
+    expires?: Date;
   }
 
   export interface Challenge {
-    algorithm: HmacAlgorithm;
+    algorithm: string;
     challenge: string;
+    maxnumber: number;
     salt: string;
     signature: string;
+  }
+
+  export interface Solution {
+    number: number;
+    took: number;
   }
 
   export function createChallenge(options: ChallengeOptions): Promise<Challenge>;
@@ -24,10 +34,10 @@ declare module 'altcha-lib' {
   ): Promise<boolean>;
 
   export function solveChallenge(
-    challenge: Challenge,
+    challenge: string,
     salt: string,
-    algorithm: HmacAlgorithm,
-    max: number,
+    algorithm?: Algorithm,
+    max?: number,
     start?: number,
-  ): Promise<{ number: number; took: number }>;
+  ): { promise: Promise<Solution | null>; controller: AbortController };
 }
