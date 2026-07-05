@@ -129,10 +129,9 @@ const LoginPage: React.FC = () => {
             </div>
           </div>
 
-          <div ref={altchaRef}>
+          <div ref={altchaRef} className="altcha-wrapper">
             <altcha-widget
               challengeurl={`${apiBase}/api/auth/altcha-challenge`}
-              style="--altcha-max-width: 100%;"
             ></altcha-widget>
           </div>
 
