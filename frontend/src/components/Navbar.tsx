@@ -145,7 +145,7 @@ export default function Navbar() {
     const url = buildSearchUrl();
     setSearchQuery('');
     navigate(url);
-  }, [navigate, saveRecentSearch, buildSearchUrl]);
+  }, [navigate, saveRecentSearch, buildSearchUrl, searchQuery]);
 
   const clearFilters = () => {
     setSearchLocation('');

@@ -74,7 +74,6 @@ export class PrismaInquiryRepository implements IInquiryRepository {
   }
 
   async updateStatus(id: string, input: UpdateInquiryStatusInput): Promise<IInquiry> {
-    const old = await this.prisma.inquiry.findUnique({ where: { id } });
     const inquiry = await this.prisma.inquiry.update({
       where: { id },
       data: { status: input.status },
@@ -114,7 +113,6 @@ export class PrismaInquiryRepository implements IInquiryRepository {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private toDomain(raw: any): IInquiry {
     return {
       id: raw.id,

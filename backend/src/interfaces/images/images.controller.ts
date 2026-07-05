@@ -7,7 +7,6 @@ import {
   Body,
   HttpCode,
   HttpStatus,
-  UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { ImagesService } from '../../application/images/images.service';

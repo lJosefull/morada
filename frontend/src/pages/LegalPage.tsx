@@ -66,7 +66,7 @@ export default function LegalPage() {
         setError(true);
         setLoading(false);
       });
-  }, [docId]);
+  }, [docId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (

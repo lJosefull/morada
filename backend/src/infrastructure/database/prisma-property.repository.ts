@@ -221,7 +221,6 @@ export class PrismaPropertyRepository implements IPropertyRepository {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private toDomain(raw: any): IProperty {
     return {
       id: raw.id,

@@ -48,7 +48,7 @@ export function PropertyMap({ latitude, longitude, title, className = '' }: Prop
       map.remove();
       mapInstanceRef.current = null;
     };
-  }, [latitude, longitude, title]);
+  }, [latitude, longitude, title, t]);
 
   return (
     <div

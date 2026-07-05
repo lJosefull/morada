@@ -78,7 +78,7 @@ export default function PropertyDetailPage() {
       .get<Property[]>(`/properties/${id}/also-viewed`)
       .then(({ data }) => setAlsoViewed(data))
       .catch((err) => console.error('Failed to load also-viewed:', err));
-  }, [id]);
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!id || !isOwner) return;
@@ -92,7 +92,7 @@ export default function PropertyDetailPage() {
       .get<DailyView[]>(`/properties/${id}/stats/daily`)
       .then(({ data }) => setDailyStats(data.slice(-14)))
       .catch((err) => console.error('Failed to load daily stats:', err));
-  }, [id, isOwner]);
+  }, [id, isOwner, addToast]);
 
   useEffect(() => {
     if (!id || !user) return;

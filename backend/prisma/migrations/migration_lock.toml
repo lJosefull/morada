@@ -1,0 +1,4 @@
+# Prisma Migration Lock
+# Automatically generated - do not edit manually
+
+provider = "postgresql"

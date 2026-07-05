@@ -203,7 +203,7 @@ export default function PropertyForm({ property, isEditing = false }: PropertyFo
     return () => {
       pendingFiles.forEach((pf) => URL.revokeObjectURL(pf.url));
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDeleteImage = (imageId: string) => {
     setDeletedImageIds((prev) => {

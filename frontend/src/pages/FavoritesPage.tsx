@@ -35,7 +35,7 @@ export default function FavoritesPage() {
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, t]);
 
   useEffect(() => {
     fetchFavorites();

@@ -40,7 +40,7 @@ export default function InquiryKanban() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchInquiries();

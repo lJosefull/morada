@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
@@ -28,11 +28,7 @@ export default function MyInquiriesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchInquiries();
-  }, []);
-
-  const fetchInquiries = async () => {
+  const fetchInquiries = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -43,7 +39,11 @@ export default function MyInquiriesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    fetchInquiries();
+  }, [fetchInquiries]);
 
   if (loading) {
     return (

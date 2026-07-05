@@ -60,7 +60,6 @@ export class PrismaFavoriteRepository implements IFavoriteRepository {
     return this.prisma.favorite.count({ where: { propertyId } });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private toDomain(raw: any): IFavorite {
     return {
       id: raw.id,
@@ -70,7 +69,6 @@ export class PrismaFavoriteRepository implements IFavoriteRepository {
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private toDomainWithProperty(raw: any): FavoriteWithProperty {
     return {
       id: raw.id,

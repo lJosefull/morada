@@ -164,7 +164,6 @@ export class PrismaReviewRepository implements IReviewRepository {
     return inquiry !== null;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private toDomain(raw: any): IReview {
     return {
       id: raw.id,

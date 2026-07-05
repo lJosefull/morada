@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Query, UseGuards, Req } from '@nestjs/common';
 import { FavoritesService } from '../../application/favorites/favorites.service';
-import { ToggleFavoriteDto, CheckFavoritesDto } from './favorites.dto';
+import { ToggleFavoriteDto } from './favorites.dto';
 import { JwtAuthGuard } from '../../infrastructure/auth/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 

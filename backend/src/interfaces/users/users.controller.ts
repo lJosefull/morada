@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Post, Param, Body, Req, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Patch, Post, Param, Body, Req } from '@nestjs/common';
 import { Request } from 'express';
 import { UsersService } from '../../application/users/users.service';
 import { UpdateProfileDto, ChangePasswordDto } from './users.dto';

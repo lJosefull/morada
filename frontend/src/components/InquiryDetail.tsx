@@ -42,7 +42,7 @@ export default function InquiryDetail({ inquiryId, onClose, onStatusChange }: In
       })
       .catch(() => addToast(t('common.error'), 'error'))
       .finally(() => setLoading(false));
-  }, [inquiryId]);
+  }, [inquiryId, addToast, t]);
 
   const handleStatusChange = async (newStatus: string) => {
     if (!inquiry || newStatus === inquiry.status) return;

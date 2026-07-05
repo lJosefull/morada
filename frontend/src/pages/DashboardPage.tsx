@@ -159,7 +159,7 @@ export default function DashboardPage() {
       return;
     }
     fetchData();
-  }, [accessToken]);
+  }, [accessToken, navigate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchData = async () => {
     setLoading(true);

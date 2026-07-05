@@ -37,7 +37,7 @@ export default function PublicProfilePage() {
       .then(({ data }) => setProfile(data))
       .catch(() => setError(t('property.notFound')))
       .finally(() => setLoading(false));
-  }, [userId]);
+  }, [userId, t]);
 
   if (loading) {
     return (

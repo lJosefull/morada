@@ -53,7 +53,7 @@ export default function FeedPage() {
       })
       .catch(() => addToast(t('common.error'), 'error'))
       .finally(() => setLoading(false));
-  }, [page]);
+  }, [page, addToast, t]);
 
   const reasonColors: Record<string, string> = {
     'very close to your area': 'bg-green-100 text-green-700',

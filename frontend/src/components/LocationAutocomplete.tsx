@@ -185,7 +185,7 @@ export default function LocationAutocomplete({
         mapInstanceRef.current = null;
       }
     };
-  }, [loaded, showMap]);
+  }, [loaded, showMap]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync lat/lng to map marker
   useEffect(() => {

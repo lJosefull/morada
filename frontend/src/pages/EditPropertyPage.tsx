@@ -25,7 +25,7 @@ export default function EditPropertyPage() {
       })
       .catch(() => setProperty(null))
       .finally(() => setLoading(false));
-  }, [id, user?.id]);
+  }, [id, user]);
 
   if (loading)
     return (

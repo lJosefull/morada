@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Res, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Param, Res } from '@nestjs/common';
 import { ApiTags, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { Response } from 'express';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
