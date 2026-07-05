@@ -213,3 +213,11 @@ model UserFollow {
   @@index([followerId])
   @@index([followingId])
 }
+
+model UsedAltchaNonce {
+  id        String   @id @default(cuid())
+  nonce     String   @unique
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
