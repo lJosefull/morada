@@ -1,4 +1,4 @@
-import React, { useState, useRef, FormEvent } from 'react'
+import React, { useState, useRef, useEffect, FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '../store/auth'
@@ -16,17 +16,24 @@ const RegisterPage: React.FC = () => {
   const [acceptDataTreatment, setAcceptDataTreatment] = useState(false)
   const [acceptCommercial, setAcceptCommercial] = useState(false)
   const altchaRef = useRef<HTMLDivElement>(null)
+  const altchaPayloadRef = useRef<string>('')
 
   const { register, isLoading, error, clearError } = useAuthStore()
   const navigate = useNavigate()
 
-  const getAltchaPayload = (): string => {
+  useEffect(() => {
     const wrapper = altchaRef.current
-    if (!wrapper) return ''
+    if (!wrapper) return
     const widget = wrapper.querySelector('altcha-widget')
-    if (!widget) return ''
-    return widget.getAttribute('payload') || (widget as any).value || ''
-  }
+    if (!widget) return
+    const handler = (e: Event) => {
+      altchaPayloadRef.current = (e as CustomEvent).detail?.payload || ''
+    }
+    widget.addEventListener('verified', handler)
+    return () => widget.removeEventListener('verified', handler)
+  }, [])
+
+  const getAltchaPayload = (): string => altchaPayloadRef.current
 
   const [altchaError, setAltchaError] = useState('')
 
@@ -44,6 +51,7 @@ const RegisterPage: React.FC = () => {
       setAltchaError('Completa la verificación anti-bots primero.')
       return
     }
+    altchaPayloadRef.current = ''
 
     try {
       const consentData = {

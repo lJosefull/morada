@@ -1,4 +1,4 @@
-import React, { useState, useRef, FormEvent } from 'react';
+import React, { useState, useRef, useEffect, FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/auth';
@@ -17,6 +17,7 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const altchaRef = useRef<HTMLDivElement>(null);
+  const altchaPayloadRef = useRef<string>('');
 
   const { login, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
@@ -26,13 +27,19 @@ const LoginPage: React.FC = () => {
 
   const [altchaError, setAltchaError] = useState('');
 
-  const getAltchaPayload = (): string => {
+  useEffect(() => {
     const wrapper = altchaRef.current;
-    if (!wrapper) return '';
+    if (!wrapper) return;
     const widget = wrapper.querySelector('altcha-widget');
-    if (!widget) return '';
-    return widget.getAttribute('payload') || (widget as any).value || '';
-  };
+    if (!widget) return;
+    const handler = (e: Event) => {
+      altchaPayloadRef.current = (e as CustomEvent).detail?.payload || '';
+    };
+    widget.addEventListener('verified', handler);
+    return () => widget.removeEventListener('verified', handler);
+  }, []);
+
+  const getAltchaPayload = (): string => altchaPayloadRef.current;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -43,6 +50,7 @@ const LoginPage: React.FC = () => {
       setAltchaError('Completa la verificación anti-bots primero.');
       return;
     }
+    altchaPayloadRef.current = '';
     try {
       await login(email, password, altchaPayload);
       navigate(from, { replace: true });
