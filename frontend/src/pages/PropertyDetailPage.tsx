@@ -31,7 +31,9 @@ export default function PropertyDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const API_BASE = import.meta.env.VITE_API_URL || 'https://morada-api.viewsoft.com.co';
-  const passed = location.state as Property | null;
+  const locationState = location.state as { property?: Property; filters?: string } | null;
+  const passed = locationState?.property ?? null;
+  const savedFilters = locationState?.filters ?? null;
   const typeLabels: Record<string, string> = {
     apartment: t('property.propertyType.apartment'),
     house: t('property.propertyType.house'),
@@ -120,7 +122,7 @@ export default function PropertyDetailPage() {
     return (
       <div className="text-center py-20">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('property.notFound')}</h2>
-        <Link to="/properties" className="text-blue-600 hover:underline">
+        <Link to={savedFilters ? `/properties?${savedFilters}` : '/properties'} className="text-blue-600 hover:underline">
           {t('property.backToProperties')}
         </Link>
       </div>
@@ -142,7 +144,7 @@ export default function PropertyDetailPage() {
         url={`/property/${property.id}`}
       />
       <Link
-        to="/properties"
+        to={savedFilters ? `/properties?${savedFilters}` : '/properties'}
         className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

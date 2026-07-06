@@ -972,10 +972,10 @@ export default function PropertiesPage() {
             {properties.map((p) =>
               viewMode === 'grid' ? (
                 <div key={p.id} className="break-inside-avoid mb-6">
-                  <PropertyGridCard property={p} t={t} />
+                  <PropertyGridCard property={p} t={t} filtersParam={searchParams.toString()} />
                 </div>
               ) : (
-                <PropertyListCard key={p.id} property={p} t={t} />
+                <PropertyListCard key={p.id} property={p} t={t} filtersParam={searchParams.toString()} />
               ),
             )}
           </div>
@@ -1053,11 +1053,11 @@ function SkeletonCard({ viewMode }: { viewMode: ViewMode }) {
 }
 
 /* ─── Property Grid Card (Pinterest-style Masonry) ─── */
-function PropertyGridCard({ property: p, t }: { property: Property; t: (key: string) => string }) {
+function PropertyGridCard({ property: p, t, filtersParam }: { property: Property; t: (key: string) => string; filtersParam: string }) {
   return (
     <AnimatedLink
       to={`/property/${p.id}`}
-      state={p}
+      state={{ property: p, filters: filtersParam }}
       className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all hover:-translate-y-1 overflow-hidden block group"
     >
       {/* Image — variable height, dominant */}
@@ -1147,11 +1147,11 @@ function PropertyGridCard({ property: p, t }: { property: Property; t: (key: str
 }
 
 /* ─── Property List Card ─── */
-function PropertyListCard({ property: p, t }: { property: Property; t: (key: string) => string }) {
+function PropertyListCard({ property: p, t, filtersParam }: { property: Property; t: (key: string) => string; filtersParam: string }) {
   return (
     <AnimatedLink
       to={`/property/${p.id}`}
-      state={p}
+      state={{ property: p, filters: filtersParam }}
       className="bg-white rounded-xl shadow-sm border hover:shadow-md transition-all overflow-hidden block group"
     >
       <div className="flex flex-col sm:flex-row">
