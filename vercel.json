@@ -3,6 +3,9 @@
   "installCommand": "cd frontend && pnpm install --no-frozen-lockfile",
   "buildCommand": "cd frontend && pnpm run build",
   "outputDirectory": "frontend/dist",
+  "env": {
+    "ENABLE_EXPERIMENTAL_COREPACK": "1"
+  },
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
   ]
