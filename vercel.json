@@ -1,8 +1,9 @@
 {
-  "framework": null,
-  "installCommand": "cd frontend && npm install --legacy-peer-deps",
-  "buildCommand": "cd frontend && npm run build",
-  "outputDirectory": "frontend/dist",
+  "rootDirectory": "frontend",
+  "outputDirectory": "dist",
+  "env": {
+    "ENABLE_EXPERIMENTAL_COREPACK": "1"
+  },
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
   ]
