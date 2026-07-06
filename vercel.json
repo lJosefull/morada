@@ -1,6 +1,5 @@
 {
   "framework": null,
-  "nodeVersion": "20.x",
   "installCommand": "cd frontend && pnpm install --no-frozen-lockfile",
   "buildCommand": "cd frontend && pnpm run build",
   "outputDirectory": "frontend/dist",
