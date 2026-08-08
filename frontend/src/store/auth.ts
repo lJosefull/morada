@@ -8,6 +8,7 @@ interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   isLoading: boolean;
+  isFetchingUser: boolean;
   error: string | null;
   login: (email: string, password: string, altcha?: string) => Promise<void>;
   register: (data: {
@@ -29,6 +30,7 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       refreshToken: null,
       isLoading: false,
+      isFetchingUser: false,
       error: null,
 
       login: async (email, password, altcha) => {
@@ -41,6 +43,7 @@ export const useAuthStore = create<AuthState>()(
           }>('/auth/login', { email, password, altcha });
           set({ accessToken: data.accessToken, refreshToken: data.refreshToken });
           await get().fetchUser();
+          set({ isLoading: false });
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Login failed';
           set({ error: message, isLoading: false });
@@ -63,6 +66,7 @@ export const useAuthStore = create<AuthState>()(
           }>('/auth/register', input);
           set({ accessToken: data.accessToken, refreshToken: data.refreshToken });
           await get().fetchUser();
+          set({ isLoading: false });
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Registration failed';
           set({ error: message, isLoading: false });
@@ -75,7 +79,13 @@ export const useAuthStore = create<AuthState>()(
         if (refreshToken) {
           api.post('/auth/logout', { refreshToken }).catch(() => {});
         }
-        set({ user: null, accessToken: null, refreshToken: null, error: null });
+        set({
+          user: null,
+          accessToken: null,
+          refreshToken: null,
+          error: null,
+          isFetchingUser: false,
+        });
       },
 
       setTokens: (accessToken, refreshToken) => {
@@ -83,12 +93,12 @@ export const useAuthStore = create<AuthState>()(
       },
 
       fetchUser: async () => {
-        set({ isLoading: true });
+        set({ isFetchingUser: true });
         try {
           const { data } = await api.get<User>('/auth/profile');
-          set({ user: data, isLoading: false, error: null });
+          set({ user: data, isFetchingUser: false, error: null });
         } catch {
-          set({ isLoading: false });
+          set({ isFetchingUser: false });
         }
       },
 

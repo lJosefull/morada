@@ -8,21 +8,21 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { accessToken, isLoading } = useAuthStore();
+  const { accessToken, isFetchingUser } = useAuthStore();
   const location = useLocation();
   const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
-    if (!isLoading) return;
+    if (!isFetchingUser) return;
     const timer = setTimeout(() => setTimedOut(true), 3000);
     return () => clearTimeout(timer);
-  }, [isLoading]);
+  }, [isFetchingUser]);
 
-  if (timedOut || (!isLoading && !accessToken)) {
+  if (timedOut || (!isFetchingUser && !accessToken)) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (isLoading) {
+  if (isFetchingUser) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" message="Checking authentication..." />
