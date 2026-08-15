@@ -10,7 +10,7 @@ Marketplace inmobiliario colombiano en español. Agentes publican propiedades (c
 
 - **Marca/UI:** Morada (app) · **Repo/docs:** InmobiliarIA
 - **Moneda por defecto:** COP (también soporta CLP, USD, EUR, UF)
-- **Deploy:** Vercel (frontend) + Railway (backend, API `morada-api.viewsoft.com.co`)
+- **Deploy:** Vercel (frontend) + Docker compose (backend y Postgres local)
 
 ---
 
@@ -293,7 +293,6 @@ diskStorage en `UPLOAD_DIR`, filename `uuid()+ext`, solo `image/jpeg|png|webp|gi
 |---|---|
 | **Docker (local)** | `docker compose up --build`. Postgres 16-alpine (healthcheck), backend (Dockerfile multi-stage node:24, `prisma db push --accept-data-loss` + `migrate resolve --applied add_email_verification`), frontend (nginx:alpine, puerto 5173→80) |
 | **Vercel (frontend)** | `vercel.json`: build `cd frontend && npm run build`, output `frontend/dist`, SPA rewrites. Edge Middleware `/og/:id` genera OG meta tags (`morada.viewsoft.com.co`) |
-| **Railway (backend)** | `railway.toml`: Dockerfile backend, healthcheck `/api/properties`, volumen `/app/uploads` |
 | **nginx.conf (frontend prod)** | Security headers (CSP con Google Maps/fonts), proxy `/api/`, `/uploads/`, `/docs` → backend:3000, SPA fallback, cache estáticos 1y |
 
 ---
