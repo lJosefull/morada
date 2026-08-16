@@ -39,11 +39,17 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+    const verificationToken = crypto.randomBytes(32).toString('hex');
     const user = await this.userRepository.create({
       email: registerDto.email,
       name: registerDto.name,
       passwordHash: hashedPassword,
-      emailVerified: true,
+      emailVerified: false,
+      verificationToken,
+    });
+
+    this.mailService.sendVerificationEmail(user.email, verificationToken).catch((err) => {
+      console.error('Failed to send verification email:', err);
     });
 
     const tokens = await this.generateTokens(user);
@@ -78,6 +84,12 @@ export class AuthService {
     const isPasswordValid = await bcrypt.compare(loginDto.password, user.passwordHash);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (!user.emailVerified) {
+      throw new ForbiddenException(
+        'Email not verified. Please verify your email before logging in.',
+      );
     }
 
     const tokens = await this.generateTokens(user);
@@ -134,6 +146,11 @@ export class AuthService {
     let user = await this.userRepository.findByEmail(profile.email);
     if (user) {
       if (!user.googleId) {
+        if (user.passwordHash && !user.emailVerified) {
+          throw new ForbiddenException(
+            'Email not verified. Please verify your email before linking a Google account.',
+          );
+        }
         const updateData: Record<string, unknown> = { googleId: profile.googleId };
         if (profile.avatar) updateData.avatar = profile.avatar;
         user = await this.userRepository.update(user.id, updateData as unknown as Partial<IUser>);

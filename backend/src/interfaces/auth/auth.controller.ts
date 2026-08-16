@@ -97,10 +97,14 @@ export class AuthController {
   @Get('google/callback')
   @ApiExcludeEndpoint()
   async googleCallback(@Req() req: any, @Res() res: Response) {
-    const result = await this.authService.googleLogin(req.user);
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    res.redirect(
-      `${frontendUrl}/auth/callback#accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`,
-    );
+    try {
+      const result = await this.authService.googleLogin(req.user);
+      res.redirect(
+        `${frontendUrl}/auth/callback#accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`,
+      );
+    } catch {
+      res.redirect(`${frontendUrl}/auth/callback#error=google_login_failed`);
+    }
   }
 }

@@ -53,6 +53,7 @@ export class PrismaUserRepository implements IUserRepository {
     if (input.name) data.name = input.name;
     if (input.phone !== undefined) data.phone = input.phone;
     if (input.avatar !== undefined) data.avatar = input.avatar;
+    if (input.googleId !== undefined) data.googleId = input.googleId;
     if (input.emailVerified !== undefined) data.emailVerified = input.emailVerified;
     if (input.verificationToken !== undefined) data.verificationToken = input.verificationToken;
 
