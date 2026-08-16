@@ -11,7 +11,7 @@ import { AltchaService } from '../../infrastructure/altcha/altcha.service';
 import { JwtAuthGuard } from '../../infrastructure/auth/jwt-auth.guard';
 import { GoogleAuthGuard } from '../../infrastructure/auth/google-auth.guard';
 import { Public } from '../../infrastructure/auth/public.decorator';
-import { Throttle } from '@nestjs/throttler';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { Response } from 'express';
 
@@ -25,7 +25,8 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @SkipThrottle({ short: true, medium: true })
+  @Throttle({ long: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Register a new user' })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
@@ -33,7 +34,8 @@ export class AuthController {
 
   @Public()
   @Post('login')
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @SkipThrottle({ short: true, medium: true })
+  @Throttle({ long: { limit: 10, ttl: 60000 } })
   @ApiOperation({ summary: 'Login user' })
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
@@ -41,7 +43,8 @@ export class AuthController {
 
   @Public()
   @Post('refresh')
-  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  @SkipThrottle({ short: true, medium: true })
+  @Throttle({ long: { limit: 20, ttl: 60000 } })
   @ApiOperation({ summary: 'Refresh access token' })
   async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshToken(refreshTokenDto.refreshToken);
@@ -49,7 +52,8 @@ export class AuthController {
 
   @Public()
   @Post('verify-email')
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @SkipThrottle({ short: true, medium: true })
+  @Throttle({ long: { limit: 10, ttl: 60000 } })
   @ApiOperation({ summary: 'Verify email with token' })
   async verifyEmail(@Body() dto: VerifyEmailDto) {
     return this.authService.verifyEmail(dto.token);
@@ -57,7 +61,8 @@ export class AuthController {
 
   @Public()
   @Post('resend-verification')
-  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @SkipThrottle({ short: true, medium: true })
+  @Throttle({ long: { limit: 3, ttl: 60000 } })
   @ApiOperation({ summary: 'Resend verification email' })
   async resendVerification(@Body() dto: ResendVerificationDto) {
     return this.authService.resendVerification(dto.email);
@@ -97,10 +102,14 @@ export class AuthController {
   @Get('google/callback')
   @ApiExcludeEndpoint()
   async googleCallback(@Req() req: any, @Res() res: Response) {
-    const result = await this.authService.googleLogin(req.user);
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    res.redirect(
-      `${frontendUrl}/auth/callback#accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`,
-    );
+    try {
+      const result = await this.authService.googleLogin(req.user);
+      res.redirect(
+        `${frontendUrl}/auth/callback#accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`,
+      );
+    } catch {
+      res.redirect(`${frontendUrl}/auth/callback#error=google_login_failed`);
+    }
   }
 }

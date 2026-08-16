@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
-import { resolve } from 'path';
+import { resolve, extname } from 'path';
 import * as express from 'express';
 
 async function bootstrap() {
@@ -31,9 +31,26 @@ async function bootstrap() {
     }),
   );
 
-  // Serve uploaded files
+  // Serve uploaded files with forced safe headers: content is never served as
+  // executable/HTML (only allowlisted image types, everything else octet-stream)
   const uploadsPath = resolve(process.env.UPLOAD_DIR || './uploads');
-  app.use('/uploads', express.static(uploadsPath));
+  const UPLOAD_CONTENT_TYPES: Record<string, string> = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.webp': 'image/webp',
+    '.gif': 'image/gif',
+  };
+  app.use(
+    '/uploads',
+    express.static(uploadsPath, {
+      setHeaders: (res, filePath) => {
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        const contentType = UPLOAD_CONTENT_TYPES[extname(filePath).toLowerCase()];
+        res.setHeader('Content-Type', contentType ?? 'application/octet-stream');
+      },
+    }),
+  );
 
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
   app.enableCors({

@@ -1,10 +1,18 @@
-import { Inject, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
+import { unlink } from 'fs/promises';
 import { IImageRepository, IMAGE_REPOSITORY } from '../../domain/images/image.repository';
 import {
   IPropertyRepository,
   PROPERTY_REPOSITORY,
 } from '../../domain/properties/property.repository';
 import { IImage } from '../../domain/images/image.entity';
+import { validateImageMagicBytes } from '../../infrastructure/upload/multer.config';
 
 @Injectable()
 export class ImagesService {
@@ -29,6 +37,11 @@ export class ImagesService {
     if (!property) throw new NotFoundException('Property not found');
     if (property.userId !== userId)
       throw new ForbiddenException('You can only upload images to your own properties');
+
+    if (!validateImageMagicBytes(file.path, file.mimetype)) {
+      await unlink(file.path).catch(() => undefined);
+      throw new BadRequestException('Invalid image file: content does not match image type');
+    }
 
     const url = `/uploads/${file.filename}`;
     return this.imageRepository.create({
