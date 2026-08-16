@@ -14,6 +14,8 @@ import {
 } from '../../domain/properties/property.repository';
 import { UpdateProfileDto, ChangePasswordDto } from '../../interfaces/users/users.dto';
 import * as bcrypt from 'bcrypt';
+import { unlink } from 'fs/promises';
+import { validateImageMagicBytes } from '../../infrastructure/upload/multer.config';
 
 @Injectable()
 export class UsersService {
@@ -90,6 +92,10 @@ export class UsersService {
   async updateAvatar(userId: string, file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No file provided');
+    }
+    if (!validateImageMagicBytes(file.path, file.mimetype)) {
+      await unlink(file.path).catch(() => undefined);
+      throw new BadRequestException('Invalid image file: content does not match image type');
     }
     const url = `/uploads/${file.filename}`;
     await this.userRepository.update(userId, { avatar: url } as any);
